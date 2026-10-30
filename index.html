@@ -63,6 +63,7 @@ h1,h2,h3,p{margin:0}
 .tbtn span{display:none}
 .tbtn.lbl span{display:block}
 .canvas-col{--bw:min(100%,36dvh);display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.work{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;min-width:0}
 .board{width:var(--bw)}
 .optbar{width:max(var(--bw),min(100%,430px));min-height:46px;display:flex;align-items:center;gap:12px;padding:3px 10px;background:var(--card);border-radius:12px;box-shadow:var(--shadow);font-size:13px;overflow-x:auto;scrollbar-width:none}
 .optbar::-webkit-scrollbar{display:none}
@@ -227,21 +228,44 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 @media (max-height:520px){.coach{display:none!important}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01s!important}}
 
-/* ---------- desktop / tablet landscape: toolbar | canvas | tabbed inspector ---------- */
+/* ---------- desktop / tablet landscape: workbench (toolbar, options, board) | tabbed inspector ---------- */
 @media (min-width:860px),(min-width:640px) and (orientation:landscape){
-  .app{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:16px;padding:0 16px 16px;height:calc(100dvh - 56px)}
-  .stage{position:static;flex-direction:row;align-items:flex-start;gap:10px;padding:0;background:none;box-shadow:none;min-height:0;overflow:hidden}
-  .tools{flex-direction:column;overflow-x:hidden;overflow-y:auto;max-height:100%;background:var(--card);border-radius:14px;padding:6px;box-shadow:var(--shadow);gap:2px}
-  .tools .vsep{width:26px;height:1px;margin:3px 0}
-  .tbtn{width:56px;height:50px}
+  .top{max-width:none;padding:6px 16px;min-height:52px}
+  .app{max-width:none;display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,27vw,420px);gap:12px;padding:0 12px 12px;height:calc(100dvh - 52px)}
+  .stage{position:static;display:flex;flex-direction:column;gap:8px;padding:8px;min-height:0;min-width:0;overflow:hidden;box-shadow:none;
+    background:color-mix(in srgb,var(--fg) 4%,var(--bg));border-radius:18px;container-type:inline-size}
+  .tools{flex-direction:row;flex-wrap:wrap;overflow:visible;max-height:none;background:var(--card);border-radius:14px;padding:4px 6px;box-shadow:var(--shadow);gap:2px;align-items:center}
+  .tools .vsep{width:1px;height:28px;margin:0 6px}
+  .tools .vsep.push{margin-left:auto}
+  .tbtn{width:58px;height:48px}
   .tbtn span{display:block}
-  .canvas-col{flex:1;justify-content:flex-start;--bw:min(100%,max(240px,calc(100dvh - 56px - 16px - 58px)))}
+  @container (max-width:660px){.tbtn{width:44px;height:44px}.tools .tbtn.lbl span,.tools .tbtn span{display:none}.tools .vsep{margin:0 3px}}
+  .canvas-col{flex:1;min-height:0;align-items:stretch;gap:8px}
+  .optbar{width:100%;flex-wrap:wrap;overflow:visible;row-gap:6px;padding:5px 12px}
+  .optbar .o{flex-wrap:wrap}
+  .optbar .srow{flex:1 1 220px;min-width:200px}
+  .work{flex:1;min-height:0;flex-direction:row;justify-content:center;gap:12px;container-type:size}
+  .board{width:min(calc(100cqw - var(--sw,0px)),calc(100cqh - var(--sh,0px)))}
+  .canvas-col.with-strip .work{--sw:172px}
+  .work .tablestrip{width:150px;flex:none;max-height:100cqh;overflow:auto;padding:12px 10px;justify-content:center;gap:10px}
+  .work .tablestrip .ts-row{flex-direction:column;align-items:center;justify-content:center;gap:14px}
   .inspector{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;border-radius:14px}
   .tabs{position:sticky;top:0;bottom:auto;z-index:5;border:0;border-radius:12px;padding:4px;background:var(--card);box-shadow:var(--shadow);backdrop-filter:none}
   .tab{flex-direction:row;gap:7px;min-height:42px;font-size:13.5px}
   .tab .n{width:20px;height:20px;font-size:11.5px}
   .panel{padding:10px 0 24px}
   .toast{bottom:28px}
+  @container (max-width:620px){
+    .canvas-col.with-strip .work{flex-direction:column;--sw:0px;--sh:150px;gap:8px}
+    .work .tablestrip{width:100%;max-height:none;padding:8px 10px;overflow:hidden}
+    .work .tablestrip .ts-row{flex-direction:row;align-items:flex-end;justify-content:space-around}}
+  @container (max-width:560px){#bZoomIn,#bZoomOut{display:none}.tools .tbtn{width:38px}.tools .vsep{display:none}.tools{gap:1px}}
+}
+@media (min-width:600px) and (max-width:859px) and (orientation:portrait){
+  .canvas-col{--bw:min(100%,44dvh)}
+  .canvas-col.with-strip .work{flex-direction:row;align-items:flex-start;justify-content:center;gap:10px}
+  .canvas-col.with-strip{--bw:min(calc(100% - 170px),44dvh)}
+  .work .tablestrip{width:150px}.work .tablestrip .ts-row{flex-direction:column;align-items:center;gap:12px}
 }
 @media (max-width:859px) and (not (orientation:landscape)),(max-width:639px){
   .mob-hide{display:none!important}
@@ -251,7 +275,9 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
   .optbar .srow label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .optbar .nv{display:none}
   .optbar{width:min(100%,430px)}
-  .optbar .srow{flex:1 1 90px;min-width:90px}
+  .optbar .srow{flex:1 1 60px;min-width:60px}
+  .optbar .chip{padding:0 10px}
+  .optbar .seg button{padding:0 10px}
   .optbar .o{gap:8px}
   .coach{padding:8px 8px 8px 12px}
   body.kb .stage,body.kb .tabs{display:none}
@@ -286,7 +312,6 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 
 /* table-size preview: the token at the sizes it will have in play */
 .canvas-col.with-strip{--bw:min(100%,max(200px,calc(36dvh - 110px)))}
-@media (min-width:860px),(min-width:640px) and (orientation:landscape){.canvas-col.with-strip{--bw:min(100%,max(240px,calc(100dvh - 56px - 16px - 58px - 190px)))}}
 .tablestrip{width:var(--bw);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px 6px;display:flex;flex-direction:column;gap:4px;
   background:conic-gradient(var(--chk1) 25%,var(--chk2) 0 50%,var(--chk1) 0 75%,var(--chk2) 0) 0 0/24px 24px}
 .tablestrip[hidden]{display:none}
@@ -298,6 +323,10 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 .tablestrip canvas{display:block}
 @media (max-width:859px) and (not (orientation:landscape)),(max-width:639px){.tablestrip{padding:6px 8px 4px}}
 .row>label[for=fname]{white-space:nowrap}
+
+/* the first-run hint would cover a small board */
+.board{container-type:inline-size}
+@container (max-width:330px){.coach{display:none}}
 
 </style>
 </head>
@@ -325,7 +354,7 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
       <button class="tbtn lbl" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
       <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
       <button class="tbtn" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
-      <span class="vsep"></span>
+      <span class="vsep push"></span>
       <button class="tbtn mob-hide" id="bUndo" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" disabled><i data-ic="undo"></i><span>Undo</span></button>
       <button class="tbtn mob-hide" id="bRedo" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" disabled><i data-ic="redo"></i><span>Redo</span></button>
       <span class="vsep mob-hide"></span>
@@ -347,6 +376,7 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
           <button class="chip" id="strandChip" aria-pressed="false" title="Hair-aware: Add paints in only what differs from the background. Remove erases only background-like pixels.">Hair-aware</button>
         </div>
       </div>
+      <div class="work">
       <div class="board" id="board" data-bg="checker">
         <canvas id="cv" tabindex="0" role="application" aria-label="Token preview. In Move, arrow keys move the picture. In Select and Brush, arrow keys move a cursor and Enter applies it; Shift plus Enter removes. Plus and minus zoom. Press question mark for all shortcuts."></canvas>
         <div class="badge" id="badge" aria-hidden="true"><i></i><span></span></div>
@@ -362,6 +392,7 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
       <div class="tablestrip" id="tableStrip" data-bg="checker" hidden role="img" aria-label="The token shown at 40, 80 and 120 pixels, like on a table">
         <span class="ts-h">Table size</span>
         <div class="ts-row"><figure><canvas data-px="40"></canvas><figcaption>40 px</figcaption></figure><figure><canvas data-px="80"></canvas><figcaption>80 px</figcaption></figure><figure><canvas data-px="120"></canvas><figcaption>120 px</figcaption></figure></div>
+      </div>
       </div>
     </div>
   </section>
@@ -525,7 +556,7 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
   <h2 id="helpH">How it works</h2>
   <ol>
     <li><b>Image</b>: open a photo (or paste / drop one) and position it inside the ring.</li>
-    <li><b>Hair and edges</b>: tap <i>Fix edges automatically</i> in the Pop-out tab. Use <i>Auto sensitivity</i> and <i>Shrink / grow</i> to tune the cut-out, or the <i>Hair-aware</i> brush for stray hair.</li>
+    <li><b>Hair and edges</b>: tap <i>Fix edges automatically</i> in the Pop-out tab. Use <i>Auto detail</i> and <i>Shrink / grow</i> to tune the cut-out, or the <i>Hair-aware</i> brush for stray hair.</li>
     <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Brush</i> or <i>Auto</i>.</li>
     <li><b>Ring</b>: pick a Look, or build your own shape, colour and texture.</li>
     <li><b>Export</b>: choose a size and download a transparent PNG. Tokens keep their editable project inside, so you can reopen them with <i>Open</i>.</li>
@@ -1619,7 +1650,7 @@ const SL={
  rot:{label:'Rotate',min:-180,max:180,step:1,unit:'°',k:Math.PI/180,def:0,fx:'view',tip:'Rotate the picture'},
  pad:{label:'Margin',min:0,max:45,step:.1,unit:'%',k:.01,def:8,fx:'draw',tip:'Empty space around the ring so pop-out art can extend past it'},
  feather:{label:'Feather',min:0,max:12,step:.5,unit:'px',k:1,def:.5,fx:'soft',tip:'Fades the outer edge of the cut-out inward. Soft hair edges are left alone. Try Show mask to see it.'},
- autoSens:{label:'Auto sensitivity',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
+ autoSens:{label:'Auto detail',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
  autoShrink:{label:'Shrink / grow',min:-10,max:10,step:1,unit:'px',k:1,def:0,fx:'auto',tip:'Moves the whole Auto outline in (positive) or out (negative), like shrinking a wand selection. Runs Auto again.'},
  gap:{label:'Close small gaps',min:0,max:40,step:1,unit:'px',k:1,def:0,fx:'gap',tip:'Removes background-coloured gaps between curls up to this width. Larger gaps: use the Brush set to Remove.'},
  shadow:{label:'Drop shadow',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'fit',tip:'Shadow the pop-out casts onto the ring'},

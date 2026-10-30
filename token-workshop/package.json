@@ -1,0 +1,19 @@
+{
+  "name": "token-workshop",
+  "version": "3.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Round token maker for tabletop games. One self-contained HTML file, no runtime dependencies.",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node --test tests/*.test.mjs",
+    "lint": "node build.mjs && eslint dist/app.js",
+    "quality": "node build.mjs && node scripts/quality.mjs",
+    "shots": "node build.mjs && node scripts/screenshots.mjs"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "playwright": "^1.48.0"
+  }
+}
