@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Token Workshop</title>
+<style>
+/*__STYLES__*/
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>Token Workshop</h1>
+  <button class="ibtn mob-only" id="bUndo2" title="Undo" aria-label="Undo" disabled><i data-ic="undo"></i></button>
+  <button class="ibtn mob-only" id="bRedo2" title="Redo" aria-label="Redo" disabled><i data-ic="redo"></i></button>
+  <button class="btn" id="bOpen" aria-label="Open a photo or a saved token" title="Open a photo, or a token you exported earlier. You can also drop or paste an image."><i data-ic="upload"></i><span>Open</span></button>
+  <button class="ibtn" id="bHelp" title="How it works, shortcuts, appearance" aria-label="Help and shortcuts">?</button>
+</header>
+<input id="file" type="file" accept="image/*" hidden>
+
+<main class="app">
+  <!-- ======== STAGE ======== -->
+  <section class="stage" aria-label="Token preview and tools">
+    <div class="tools" role="toolbar" aria-label="Tools">
+      <button class="tbtn lbl" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
+      <button class="tbtn lbl" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
+      <button class="tbtn lbl" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
+      <span class="vsep"></span>
+      <button class="tbtn lbl" id="bAuto" title="Auto-select the main subject" aria-label="Auto-select subject"><i data-ic="spark"></i><span>Auto</span></button>
+      <button class="tbtn lbl" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
+      <button class="tbtn lbl" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
+      <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
+      <button class="tbtn" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
+      <span class="vsep"></span>
+      <button class="tbtn mob-hide" id="bUndo" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" disabled><i data-ic="undo"></i><span>Undo</span></button>
+      <button class="tbtn mob-hide" id="bRedo" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" disabled><i data-ic="redo"></i><span>Redo</span></button>
+      <span class="vsep mob-hide"></span>
+      <button class="tbtn mob-hide" id="bZoomIn" title="Zoom in (hold to repeat). Move: resizes the picture. Select and Brush: magnifies the workspace." aria-label="Zoom in"><i data-ic="zin"></i><span>Zoom +</span></button>
+      <button class="tbtn mob-hide" id="bZoomOut" title="Zoom out (hold to repeat). Move: resizes the picture. Select and Brush: magnifies the workspace." aria-label="Zoom out"><i data-ic="zout"></i><span>Zoom −</span></button>
+    </div>
+
+    <div class="canvas-col">
+      <div class="optbar" id="optbar" aria-label="Tool options">
+        <div class="o" data-for="move"><span class="hintline">Drag to move · pinch to resize the picture</span></div>
+        <div class="o" data-for="select">
+          <div class="seg modeSeg" role="group" aria-label="Selection mode"><button data-v="add" aria-pressed="true" title="Clicks add to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="Clicks remove from the pop-out (hold Alt/Option)">Remove</button></div>
+          <div data-sl="tol"></div>
+          <button class="chip" id="contig" aria-pressed="true" title="On: only the area touching your click. Off: every matching colour in the picture.">Touching only</button>
+        </div>
+        <div class="o" data-for="brush">
+          <div class="seg modeSeg" role="group" aria-label="Brush mode"><button data-v="add" aria-pressed="true" title="Paint to add to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="Paint to remove from the pop-out (hold Alt/Option)">Remove</button></div>
+          <div data-sl="brush"></div><div data-sl="bsoft"></div>
+          <button class="chip" id="strandChip" aria-pressed="false" title="Hair-aware: Add paints in only what differs from the background. Remove erases only background-like pixels.">Hair-aware</button>
+        </div>
+      </div>
+      <div class="board" id="board" data-bg="checker">
+        <canvas id="cv" tabindex="0" role="application" aria-label="Token preview. In Move, arrow keys move the picture. In Select and Brush, arrow keys move a cursor and Enter applies it; Shift plus Enter removes. Plus and minus zoom. Press question mark for all shortcuts."></canvas>
+        <div class="badge" id="badge" aria-hidden="true"><i></i><span></span></div>
+        <div class="pill" id="busy" role="status"><span class="spin"></span><span id="busyT">Working…</span></div>
+        <div class="hud" id="hud" aria-hidden="true"></div>
+        <button class="vreset" id="viewReset" hidden title="Return the workspace to full view">Reset view</button>
+        <div class="coach" id="coach" hidden>
+          <p><b>Click the part that should pop out of the ring,</b> or tap <b>Auto</b> in the toolbar.</p>
+          <button class="btn primary" id="coachOk">Got it</button>
+        </div>
+        <div class="dropov">Drop image to open</div>
+      </div>
+      <div class="tablestrip" id="tableStrip" data-bg="checker" hidden role="img" aria-label="The token shown at 40, 80 and 120 pixels, like on a table">
+        <span class="ts-h">Table size</span>
+        <div class="ts-row"><figure><canvas data-px="40"></canvas><figcaption>40 px</figcaption></figure><figure><canvas data-px="80"></canvas><figcaption>80 px</figcaption></figure><figure><canvas data-px="120"></canvas><figcaption>120 px</figcaption></figure></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== INSPECTOR ======== -->
+  <aside class="inspector" aria-label="Token settings">
+    <div class="tabs" role="tablist" aria-label="Steps">
+      <button class="tab" role="tab" id="t-image" aria-controls="p-image" aria-selected="true" data-tab="image"><span class="n">1</span><span>Image</span></button>
+      <button class="tab" role="tab" id="t-popout" aria-controls="p-popout" aria-selected="false" data-tab="popout" tabindex="-1"><span class="n">2</span><span>Pop-out</span></button>
+      <button class="tab" role="tab" id="t-ring" aria-controls="p-ring" aria-selected="false" data-tab="ring" tabindex="-1"><span class="n">3</span><span>Ring</span></button>
+      <button class="tab" role="tab" id="t-export" aria-controls="p-export" aria-selected="false" data-tab="export" tabindex="-1"><span class="n">4</span><span>Export</span></button>
+    </div>
+
+    <!-- 1 IMAGE -->
+    <section class="panel" id="p-image" role="tabpanel" aria-labelledby="t-image" tabindex="-1">
+      <h2 class="cap">Picture</h2>
+      <div class="group"><p class="note" id="srcInfo"></p></div>
+      <h2 class="cap">Position</h2>
+      <div class="group">
+        <div data-sl="zoom"></div><div data-sl="rot"></div>
+        <div class="acts"><button class="btn" id="bFlip">Flip</button><button class="btn" id="bReset" title="Reset position, zoom and rotation (0)">Reset view</button></div>
+      </div>
+      <h2 class="cap">Adjust picture <span class="sp"></span><button class="link" id="bAdjReset" title="Back to the original colours">Reset</button></h2>
+      <div class="group">
+        <div data-sl="bri"></div><div data-sl="con"></div><div data-sl="sat"></div>
+        <div class="acts"><button class="btn" id="bMatch" title="Nudge brightness and colour so the picture sits well against the current ring"><i data-ic="spark"></i>Match to ring</button></div>
+      </div>
+      <h2 class="cap">Background</h2>
+      <div class="group">
+        <div class="row"><label for="bgOn">Fill behind picture<span class="sub">Helps with transparent art</span></label>
+          <div class="grow"><input id="bg" type="color" aria-label="Background colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
+      </div>
+      <button class="next" data-next="popout">Next: choose the pop-out <span aria-hidden="true">→</span></button>
+    </section>
+
+    <!-- 2 POP-OUT -->
+    <section class="panel" id="p-popout" role="tabpanel" aria-labelledby="t-popout" tabindex="-1" hidden>
+      <h2 class="cap">Selection</h2>
+      <div class="group">
+        <p class="note" style="padding-bottom:4px"><b id="selStat">Nothing selected</b></p>
+        <p class="note" style="padding-top:0">Pick what pops out with <b>Select</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.</p>
+      </div>
+      <h2 class="cap">Edges <span class="sp"></span><button class="link" id="bMaskView" aria-pressed="false" title="Show the selection as black and white to spot holes, specks and halos (M)">Show mask</button></h2>
+      <div class="group">
+        <p class="note" style="padding-bottom:4px">Hair, fur, or a halo of the old background around the outline? Tap once, then adjust.</p>
+        <div class="acts"><button class="btn primary" id="bFixEdges"><i data-ic="spark"></i>Fix edges automatically</button></div>
+        <div data-sl="autoSens"></div><div data-sl="autoShrink"></div><div data-sl="feather"></div>
+        <details class="adv" id="edgeAdv"><summary>More</summary>
+          <div data-sl="defr"></div><div data-sl="gap"></div>
+          <div class="acts"><button class="btn" id="bClean" title="Remove tiny stray bits and fill tiny holes">Remove specks &amp; holes</button></div>
+        </details>
+      </div>
+      <h2 class="cap">Look</h2>
+      <div class="group">
+        <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
+        <div data-sl="shadow"></div>
+      </div>
+      <h2 class="cap">Canvas</h2>
+      <div class="group">
+        <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Never crops pop-out art</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
+        <div data-sl="pad" id="rowPad"></div>
+      </div>
+      <button class="next" data-next="ring">Next: style the ring <span aria-hidden="true">→</span></button>
+    </section>
+
+    <!-- 3 RING -->
+    <section class="panel" id="p-ring" role="tabpanel" aria-labelledby="t-ring" tabindex="-1" hidden>
+      <h2 class="cap">Looks <span class="sp"></span>
+        <button class="link" id="bShuffleLook" title="Try a random look"><i data-ic="shuffle"></i>Shuffle</button>
+        <button class="link" id="bSaveLook" title="Save the current ring style"><i data-ic="plus"></i>Save</button></h2>
+      <div class="group"><div class="looks" id="looks" role="list" aria-label="Ring looks"></div></div>
+
+      <h2 class="cap">Shape</h2>
+      <div class="group">
+        <div class="grid pat-grid" id="patGrid" role="group" aria-label="Ring shape"></div>
+        <div data-sl="width"></div><div data-sl="count" id="rowCount"></div><div data-sl="depth" id="rowDepth"></div><div data-sl="lineW" id="rowLine"></div>
+      </div>
+
+      <h2 class="cap">Colour <span class="sp"></span><output id="colorName"></output></h2>
+      <div class="group">
+        <p class="sub-h">Metals, gems &amp; stone</p>
+        <div class="grid sw-grid" id="gridMetal" role="group" aria-label="Metals, gems and stone"></div>
+        <p class="sub-h">Gradients</p>
+        <div class="grid sw-grid" id="gridGrad" role="group" aria-label="Gradients"></div>
+        <div class="row" id="rowGradFrom" hidden><label for="g1">From</label><div class="grow"><span class="pal" data-for="g1"></span><input id="g1" type="color"></div></div>
+        <div class="row" id="rowGradTo" hidden><label for="g2">To</label><div class="grow"><span class="pal" data-for="g2"></span><input id="g2" type="color"></div></div>
+        <div data-sl="gAng" id="rowGradAng" hidden></div>
+        <div class="row" id="rowCustom"><label for="color">Custom colour</label><div class="grow"><span class="pal" data-for="color"></span><input id="color" type="color"></div></div>
+        <div class="row" id="rowAccent"><label for="accent">Accent colour<span class="sub">Second colour used by this shape</span></label><div class="grow"><span class="pal" data-for="accent"></span><input id="accent" type="color"></div></div>
+      </div>
+
+      <h2 class="cap">Lighting</h2>
+      <div class="group"><div data-sl="lAng"></div><div data-sl="lInt"></div></div>
+
+      <h2 class="cap">Texture</h2>
+      <div class="group">
+        <div class="chips" id="texGrid" role="group" aria-label="Texture"></div>
+        <div data-sl="texAmt" id="rowTexAmt" hidden></div>
+        <div data-sl="texDens" id="rowTexDens" hidden></div>
+        <div data-sl="eAmt" id="rowEAmt" hidden></div><div data-sl="eLen" id="rowELen" hidden></div>
+        <div data-sl="texRot" id="rowTexRot" hidden></div>
+        <div class="row" id="rowEnergy" hidden><label for="eCol">Energy colour</label><div class="grow"><span class="pal" data-for="eCol"></span><input id="eCol" type="color"></div></div>
+        <div class="row" id="rowShuffleTex" hidden><label>Pattern</label><div class="grow"><button class="btn" id="bTexShuffle" title="Generate a different random pattern"><i data-ic="shuffle"></i>New pattern</button></div></div>
+      </div>
+      <button class="next" data-next="export">Next: export <span aria-hidden="true">→</span></button>
+    </section>
+
+    <!-- 4 EXPORT -->
+    <section class="panel" id="p-export" role="tabpanel" aria-labelledby="t-export" tabindex="-1" hidden>
+      <h2 class="cap">Size</h2>
+      <div class="group">
+        <div class="row" style="padding-block:10px"><div class="seg full" id="sizes" role="group" aria-label="Export size in pixels">
+          <button data-v="256" aria-pressed="false">256<span class="px">px</span></button><button data-v="512" aria-pressed="true">512<span class="px">px</span></button><button data-v="1024" aria-pressed="false">1024<span class="px">px</span></button><button data-v="2048" aria-pressed="false">2048<span class="px">px</span></button></div></div>
+        <p class="note" id="expNote"></p>
+      </div>
+      <h2 class="cap">What to export</h2>
+      <div class="group">
+        <div class="row" style="padding-block:10px"><div class="seg full" id="whatSeg" role="group" aria-label="What to export">
+          <button data-v="token" aria-pressed="true">Token</button><button data-v="ring" aria-pressed="false">Ring only</button><button data-v="pop" aria-pressed="false">Pop-out only</button><button data-v="layers" aria-pressed="false">All layers</button></div></div>
+        <p class="note" id="whatNote"></p>
+      </div>
+      <h2 class="cap">File</h2>
+      <div class="group">
+        <div class="row"><label>Format</label><div class="grow"><div class="seg" id="fmtSeg" role="group" aria-label="File format"><button data-v="png" aria-pressed="true">PNG</button><button data-v="webp" aria-pressed="false">WebP</button></div></div></div>
+        <p class="note" style="padding-block:0 6px">WebP files are smaller. Both formats keep transparency and the editable data.</p>
+        <div class="row"><label for="fname">File name</label><div class="grow"><input id="fname" class="txt" type="text" value="token" maxlength="60" placeholder="token" title="The file extension is added for you"><span id="fext" style="color:var(--sub)">.png</span></div></div>
+        <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds your picture and settings so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
+      </div>
+      <div class="dl-row">
+        <button class="btn primary big" id="bDownload" title="Download the token as a transparent PNG (Ctrl/⌘+S)"><i data-ic="download"></i><span id="dlWhat">Download PNG</span> <small id="dlSize">512 px</small></button>
+        <button class="btn" id="bCopy" title="Copy the token to the clipboard at the selected size (without editable data)">Copy image</button>
+      </div>
+      <h2 class="cap">At table size</h2>
+      <div class="table-prev" aria-label="Live previews of the token at small sizes">
+        <figure><canvas class="mini" data-s="96" style="width:96px;height:96px"></canvas>Large</figure>
+        <figure><canvas class="mini" data-s="64" style="width:64px;height:64px"></canvas>Medium</figure>
+        <figure><canvas class="mini" data-s="40" style="width:40px;height:40px"></canvas>Small</figure>
+      </div>
+      <p class="note" style="padding-inline:4px">Check that the art still reads when the token is small.</p>
+    </section>
+  </aside>
+</main>
+
+<div class="menu" id="moreMenu" role="menu" aria-label="More selection tools" hidden>
+  <button role="menuitem" id="mInvert"><i data-ic="invert"></i>Invert selection</button>
+  <button role="menuitem" id="mGrow"><i data-ic="grow"></i>Grow selection</button>
+  <button role="menuitem" id="mShrink"><i data-ic="shrink"></i>Shrink selection</button>
+  <hr>
+  <button role="menuitemcheckbox" id="mTable" aria-checked="false"><i data-ic="eye"></i>Table-size preview<i class="ck" data-ic="check"></i></button>
+  <button role="menuitemcheckbox" id="mMask" aria-checked="false"><i data-ic="eye"></i>Show mask (black and white)<i class="ck" data-ic="check"></i></button>
+  <button role="menuitemcheckbox" id="mAutoFix" aria-checked="true"><i data-ic="spark"></i>Auto also fixes edges<i class="ck" data-ic="check"></i></button>
+  <hr>
+  <p class="menu-h" id="bgH">Preview background</p>
+  <button role="menuitemradio" data-bg="checker" aria-checked="true">Checkerboard<i class="ck" data-ic="check"></i></button>
+  <button role="menuitemradio" data-bg="map" aria-checked="false">Table map<i class="ck" data-ic="check"></i></button>
+  <button role="menuitemradio" data-bg="dark" aria-checked="false">Dark<i class="ck" data-ic="check"></i></button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="helpDlg" aria-labelledby="helpH"><div class="dlg">
+  <h2 id="helpH">How it works</h2>
+  <ol>
+    <li><b>Image</b>: open a photo (or paste / drop one) and position it inside the ring.</li>
+    <li><b>Hair and edges</b>: tap <i>Fix edges automatically</i> in the Pop-out tab. Use <i>Auto sensitivity</i> and <i>Shrink / grow</i> to tune the cut-out, or the <i>Hair-aware</i> brush for stray hair.</li>
+    <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Brush</i> or <i>Auto</i>.</li>
+    <li><b>Ring</b>: pick a Look, or build your own shape, colour and texture.</li>
+    <li><b>Export</b>: choose a size and download a transparent PNG. Tokens keep their editable project inside, so you can reopen them with <i>Open</i>.</li>
+  </ol>
+  <h3>Shortcuts</h3>
+  <dl>
+    <dt><kbd>V</kbd> <kbd>W</kbd> <kbd>B</kbd></dt><dd>Move · Select · Brush</dd>
+    <dt><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Select, Brush: move the cursor, Enter applies it (Shift+Enter removes). Move: arrows move the picture</dd>
+    <dt><kbd>M</kbd></dt><dd>Show the selection as a black and white mask</dd>
+    <dt><kbd>P</kbd></dt><dd>Preview: see the finished token without outlines</dd>
+    <dt><kbd>I</kbd></dt><dd>Show only the pop-out (Isolate)</dd>
+    <dt><kbd>P</kbd></dt><dd>Preview the finished token without outlines</dd>
+    <dt><kbd>Alt</kbd> / <kbd>⌥</kbd> (hold)</dt><dd>Temporarily remove instead of add</dd>
+    <dt><kbd>Space</kbd> (hold) + drag</dt><dd>Pan the picture (or the zoomed workspace) with any tool</dd>
+    <dt><kbd>Ctrl/⌘</kbd> + scroll, or pinch</dt><dd>Move tool: resize the picture. Select and Brush: zoom the workspace to reach small details</dd>
+    <dt><kbd>Arrows</kbd>, <kbd>+</kbd> <kbd>−</kbd>, <kbd>0</kbd></dt><dd>Nudge, fine zoom, reset (preview focused)</dd>
+    <dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>Brush size</dd>
+    <dt><kbd>Delete</kbd></dt><dd>Clear the selection</dd>
+    <dt><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> / <kbd>Shift</kbd>+<kbd>Z</kbd></dt><dd>Undo / redo</dd>
+    <dt><kbd>Ctrl/⌘</kbd>+<kbd>S</kbd></dt><dd>Download (PNG, WebP or layers)</dd>
+    <dt><kbd>Double-click</kbd> a slider</dt><dd>Reset it to its default</dd>
+  </dl>
+  <h3>Appearance</h3>
+  <div class="seg full" id="themeSeg" role="group" aria-label="Appearance"><button data-v="auto" aria-pressed="true">Automatic</button><button data-v="light" aria-pressed="false">Light</button><button data-v="dark" aria-pressed="false">Dark</button></div>
+  <div class="foot"><button class="btn primary" id="helpClose">Done</button></div>
+</div></dialog>
+
+<dialog id="saveDlg" aria-labelledby="saveH"><form method="dialog" class="dlg" id="saveForm">
+  <h2 id="saveH">Save this look</h2>
+  <input type="text" id="saveName" maxlength="24" placeholder="Name, e.g. Dragon Gold" aria-label="Look name" autocomplete="off">
+  <div class="foot"><span class="grow"></span><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="ok">Save</button></div>
+</form></dialog>
+
+<dialog id="importDlg" aria-labelledby="impH"><div class="dlg">
+  <h2 id="impH">Open saved token?</h2>
+  <img class="proj-prev" id="impPrev" alt="Preview of the token you chose">
+  <p>This image was exported from Token Workshop and still contains its editable project: the picture, your pop-out selection and the ring style.</p>
+  <div class="foot"><button class="btn" id="impCancel">Cancel</button><button class="btn" id="impPlain">Use as plain photo</button><button class="btn primary" id="impProject">Open project</button></div>
+</div></dialog>
+
+<script>
+/*__SCRIPT__*/
+</script>
+</body>
+</html>
