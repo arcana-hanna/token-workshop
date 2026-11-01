@@ -20,7 +20,7 @@ const SL={
  rot:{label:'Rotate',min:-180,max:180,step:1,unit:'°',k:Math.PI/180,def:0,fx:'view',tip:'Rotate the picture'},
  pad:{label:'Margin',min:0,max:45,step:.1,unit:'%',k:.01,def:8,fx:'draw',tip:'Empty space around the ring so pop-out art can extend past it'},
  feather:{label:'Feather',min:0,max:12,step:.5,unit:'px',k:1,def:.5,fx:'soft',tip:'Fades the outer edge of the cut-out inward. Soft hair edges are left alone. Try Show mask to see it.'},
- autoSens:{label:'Auto sensitivity',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
+ autoSens:{label:'Auto detail',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
  autoShrink:{label:'Shrink / grow',min:-10,max:10,step:1,unit:'px',k:1,def:0,fx:'auto',tip:'Moves the whole Auto outline in (positive) or out (negative), like shrinking a wand selection. Runs Auto again.'},
  gap:{label:'Close small gaps',min:0,max:40,step:1,unit:'px',k:1,def:0,fx:'gap',tip:'Removes background-coloured gaps between curls up to this width. Larger gaps: use the Brush set to Remove.'},
  shadow:{label:'Drop shadow',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'fit',tip:'Shadow the pop-out casts onto the ring'},
@@ -29,6 +29,7 @@ const SL={
  width:{label:'Ring width',min:4,max:30,step:1,unit:'%',k:.01,def:11,fx:'ring',tip:'How thick the ring is'},
  count:{label:'Count',min:6,max:60,step:1,unit:'',k:1,def:()=>PAT[st.formula].n,fx:'ring',tip:'How many teeth, beads, segments or ticks'},
  depth:{label:'Depth',min:0,max:100,step:1,unit:'%',k:.01,def:()=>Math.round(PAT[st.formula].d*100),fx:'ring',tip:'How pronounced the shape detail is'},
+ gMid:{label:'Colour balance',min:10,max:90,step:1,unit:'%',k:.01,def:50,fx:'ring',tip:'Where the two colours meet. Lower = more of the second colour, higher = more of the first'},
  gAng:{label:'Angle',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:45,fx:'ring',tip:'0° is left to right, 90° is top to bottom'},
  texAmt:{label:'Intensity',min:5,max:100,step:1,unit:'%',k:.01,def:60,fx:'draw',tip:'How strongly the texture shows on the ring'},
  texDens:{label:'Scale',min:15,max:150,step:1,unit:'%',k:.03,def:100,fx:'draw',tip:'Higher values repeat the texture more often, which makes the grain finer'},
@@ -37,6 +38,12 @@ const SL={
  lAng:{label:'Light from',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:135,fx:'ring',tip:'Direction the light comes from: 0° right, 90° bottom, 180° left, 270° top'},
  eAmt:{label:'Amount',min:1,max:24,step:1,unit:'',k:1,def:5,fx:'draw',tip:'How many lightning bolts'},
  eLen:{label:'Length',min:20,max:200,step:1,unit:'%',k:.01,def:100,fx:'draw',tip:'How far each bolt travels around the ring'},
+ bgGMid:{label:'Colour balance',min:10,max:90,step:1,unit:'%',k:.01,def:50,fx:'draw',tip:'Where the two colours meet'},
+ bgGAng:{label:'Angle',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:90,fx:'draw',tip:'0° is left to right, 90° is top to bottom'},
+ bgBlur:{label:'Blur',min:0,max:100,step:1,unit:'',k:1,def:40,fx:'draw',tip:'How soft the blurred backdrop is'},
+ bgBri:{label:'Backdrop brightness',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'draw',tip:'Lighten or darken only the backdrop'},
+ bgSat:{label:'Backdrop saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'draw',tip:'How vivid the backdrop colours are'},
+ bgEdge:{label:'Edge blend',min:0,max:100,step:1,unit:'%',k:1,def:20,fx:'draw',tip:'Softens the border between backdrop and character'},
  bri:{label:'Brightness',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'Make the picture lighter or darker'},
  con:{label:'Contrast',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'Difference between light and dark areas'},
  sat:{label:'Saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'How vivid the colours are. -100 is black and white.'},
@@ -78,7 +85,15 @@ function bindSeg(root,get,set){const bs=[...root.querySelectorAll('button')];con
   bs.forEach(b=>b.addEventListener('click',()=>{set(b.dataset.v);sync();}));syncers.push(sync);return bs;}
 bindSwitch('bgOn','bgOn');bindSwitch('popOn','popOn',()=>{st.fitDirty=true;});bindSwitch('embedOn','embedOn');
 bindSwitch('autoFit','autoFit',()=>{if(!st.autoFit)st.pad=st.padCur;else st.fitDirty=true;updVis();SLI.pad.sync();});
-bindColor('bg','bg');bindColor('accent','accent',()=>thumbsSoon());bindColor('eCol','eCol',()=>thumbsSoon());
+bindColor('bg','bg');bindColor('bgCol','bgCol');bindColor('bgG1','bgG1');bindColor('bgG2','bgG2');
+bindSeg($('#bgModeSeg'),()=>st.bgMode,v=>{st.bgMode=v;updBgVis();draw();commit();});
+function updBgVis(){const m=st.bgMode,sh=(id,on)=>$('#'+id).hidden=!on;
+  sh('rowBgCol',m==='colour');sh('rowBgG1',m==='gradient');sh('rowBgG2',m==='gradient');sh('rowBgMid',m==='gradient');sh('rowBgAng',m==='gradient');sh('rowBgBlur',m==='blur');sh('rowBgRing',m==='colour');
+  sh('rowBgBri',m!=='clear');sh('rowBgSat',m!=='clear');sh('bgClearNote',m==='clear');
+  $('#bgName').textContent={keep:'Original',colour:'Colour',gradient:'Gradient',blur:'Blurred',clear:'Removed'}[m];}
+syncers.push(updBgVis);
+$('#bBgAuto').onclick=autoBackground;$('#bBgRest').onclick=bgFromPopout;
+$('#bBgRing').onclick=()=>{st.bgMode='colour';st.bgCol=mix(st.gradOn?st.g1:st.color,'#000000',.55);syncUI();draw();commit();};bindColor('accent','accent',()=>thumbsSoon());bindColor('eCol','eCol',()=>thumbsSoon());
 bindColor('g1','g1',()=>{st.colorKey='Custom gradient';updColorSel();thumbsSoon();});bindColor('g2','g2',()=>{st.colorKey='Custom gradient';updColorSel();thumbsSoon();});
 bindColor('color','color',()=>{st.gradOn=false;st.colorKey='Custom';updColorSel();updVis();thumbsSoon();});
 $('#contig').onclick=()=>{st.contig=!st.contig;syncUI();wandDone();};
@@ -95,10 +110,14 @@ TEX.forEach(([id,name])=>{const b=document.createElement('button');b.className='
 bindSeg($('#texGrid'),()=>st.tex,v=>{st.tex=v;if(v!=='none'){st.texAmt=TEX_AMT[v];SLI.texAmt.sync();}updVis();draw();thumbsSoon();commit();});
 
 /* ---------- tools & badge ---------- */
-function setTool(v){wand=null;st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
+let popTool='select';
+/* each step has its own tool set: Place, Ring and Export drag the picture (Move); Pop-out uses the selection tools */
+function stepTool(){setTool(tab==='popout'||tab==='bg'?(st.tool==='move'?popTool:st.tool):'move');}
+function goTool(v){if(v==='move'){if(tab!=='image')setTab('image');}else if(tab!=='popout'&&tab!=='bg')setTab('popout');setTool(v);}
+function setTool(v){if(v!=='move')popTool=v;wand=null;st.lasso=null;st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
   $$('#optbar .o').forEach(o=>o.hidden=o.dataset.for!==v);cv.dataset.tool=v;updBadge();draw();}
 $$('.tbtn[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',brush:'Brush'}[st.tool];
+function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',lasso:'Lasso',brush:'Brush'}[st.tool];
   b.className='badge'+(st.tool==='move'||st.space?'':' '+m);b.lastChild.textContent=st.space?'Pan (Space held)':st.tool==='move'?T:T+' · '+(m==='sub'?'Remove':'Add');}
 
 /* ---------- selection actions: toolbar buttons + "More" menu ---------- */
@@ -151,6 +170,7 @@ function holdBtn(btn,fn){let t=0,iv=0,held=false;
   btn.addEventListener('pointerdown',e=>{if(e.button)return;held=true;fn();t=setTimeout(()=>{iv=setInterval(fn,80);},420);});
   ['pointerup','pointerleave','pointercancel'].forEach(n=>btn.addEventListener(n,stop));
   btn.addEventListener('click',e=>{if(e.detail===0){fn();commit();}});}
+holdBtn($('#bPicSmaller'),()=>stepZoom(-1));holdBtn($('#bPicLarger'),()=>stepZoom(1));
 holdBtn($('#bZoomIn'),()=>zoomStep(1));holdBtn($('#bZoomOut'),()=>zoomStep(-1));
 $('#bReset').onclick=()=>{resetView();commit();};
 $('#viewReset').onclick=resetWorkspace;

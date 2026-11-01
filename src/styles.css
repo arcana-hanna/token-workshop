@@ -56,6 +56,7 @@ h1,h2,h3,p{margin:0}
 .tbtn span{display:none}
 .tbtn.lbl span{display:block}
 .canvas-col{--bw:min(100%,36dvh);display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.work{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;min-width:0}
 .board{width:var(--bw)}
 .optbar{width:max(var(--bw),min(100%,430px));min-height:46px;display:flex;align-items:center;gap:12px;padding:3px 10px;background:var(--card);border-radius:12px;box-shadow:var(--shadow);font-size:13px;overflow-x:auto;scrollbar-width:none}
 .optbar::-webkit-scrollbar{display:none}
@@ -69,7 +70,7 @@ h1,h2,h3,p{margin:0}
 .board::after{content:"";position:absolute;inset:0;border-radius:inherit;border:1.5px dashed rgba(128,128,128,.4);pointer-events:none}
 .board.drop::after{border:3px solid var(--accent);background:var(--accent-soft)}
 canvas#cv{display:block;width:100%;height:100%;touch-action:none;outline:none;cursor:grab}
-canvas#cv[data-tool=select]{cursor:crosshair}
+canvas#cv[data-tool=select],canvas#cv[data-tool=lasso]{cursor:crosshair}
 canvas#cv[data-tool=brush]{cursor:none}
 canvas#cv.grabbing{cursor:grabbing!important}
 .board:focus-within{box-shadow:0 0 0 3px var(--ring)}
@@ -220,21 +221,45 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 @media (max-height:520px){.coach{display:none!important}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01s!important}}
 
-/* ---------- desktop / tablet landscape: toolbar | canvas | tabbed inspector ---------- */
+/* ---------- desktop / tablet landscape: workbench (toolbar, options, board) | tabbed inspector ---------- */
 @media (min-width:860px),(min-width:640px) and (orientation:landscape){
-  .app{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:16px;padding:0 16px 16px;height:calc(100dvh - 56px)}
-  .stage{position:static;flex-direction:row;align-items:flex-start;gap:10px;padding:0;background:none;box-shadow:none;min-height:0;overflow:hidden}
-  .tools{flex-direction:column;overflow-x:hidden;overflow-y:auto;max-height:100%;background:var(--card);border-radius:14px;padding:6px;box-shadow:var(--shadow);gap:2px}
-  .tools .vsep{width:26px;height:1px;margin:3px 0}
-  .tbtn{width:56px;height:50px}
+  .top{max-width:none;padding:6px 16px;min-height:52px}
+  .app{max-width:none;display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,27vw,420px);gap:12px;padding:0 12px 12px;height:calc(100dvh - 52px)}
+  .stage{position:static;display:flex;flex-direction:column;gap:8px;padding:8px;min-height:0;min-width:0;overflow:hidden;box-shadow:none;
+    background:color-mix(in srgb,var(--fg) 4%,var(--bg));border-radius:18px;container-type:inline-size}
+  .tools{flex-direction:row;flex-wrap:wrap;overflow:visible;max-height:none;background:var(--card);border-radius:14px;padding:4px 6px;box-shadow:var(--shadow);gap:2px;align-items:center}
+  .tools .vsep{width:1px;height:28px;margin:0 6px}
+  .tools .vsep.push{margin-left:auto}
+  .tbtn{width:58px;height:48px}
   .tbtn span{display:block}
-  .canvas-col{flex:1;justify-content:flex-start;--bw:min(100%,max(240px,calc(100dvh - 56px - 16px - 58px)))}
+  @container (max-width:660px){.tbtn{width:44px;height:44px}.tools .tbtn.lbl span,.tools .tbtn span{display:none}.tools .vsep{margin:0 3px}}
+  .canvas-col{flex:1;min-height:0;align-items:stretch;gap:8px}
+  .optbar{width:100%;flex-wrap:wrap;overflow:visible;row-gap:6px;padding:5px 12px}
+  .optbar .o{flex-wrap:wrap}
+  .optbar .srow{flex:1 1 220px;min-width:200px}
+  .work{flex:1;min-height:0;flex-direction:row;justify-content:center;gap:12px;container-type:size}
+  .board{width:min(calc(100cqw - var(--sw,0px)),calc(100cqh - var(--sh,0px)))}
+  .canvas-col.with-strip .work{--sw:172px}
+  .work .tablestrip{width:150px;flex:none;max-height:100cqh;overflow:auto;padding:12px 10px;justify-content:center;gap:10px}
+  .work .tablestrip .ts-row{flex-direction:column;align-items:center;justify-content:center;gap:14px}
   .inspector{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;border-radius:14px}
   .tabs{position:sticky;top:0;bottom:auto;z-index:5;border:0;border-radius:12px;padding:4px;background:var(--card);box-shadow:var(--shadow);backdrop-filter:none}
-  .tab{flex-direction:row;gap:7px;min-height:42px;font-size:13.5px}
-  .tab .n{width:20px;height:20px;font-size:11.5px}
+  .tabs{gap:0}
+  .tab{flex:1 1 auto;flex-direction:row;gap:5px;min-height:42px;font-size:12.5px;padding:0 5px}
+  .tab .n{width:18px;height:18px;font-size:10.5px}
   .panel{padding:10px 0 24px}
   .toast{bottom:28px}
+  @container (max-width:620px){
+    .canvas-col.with-strip .work{flex-direction:column;--sw:0px;--sh:150px;gap:8px}
+    .work .tablestrip{width:100%;max-height:none;padding:8px 10px;overflow:hidden}
+    .work .tablestrip .ts-row{flex-direction:row;align-items:flex-end;justify-content:space-around}}
+  @container (max-width:560px){#bZoomIn,#bZoomOut{display:none}.tools .tbtn{width:38px}.tools .vsep{display:none}.tools{gap:1px}}
+}
+@media (min-width:600px) and (max-width:859px) and (orientation:portrait){
+  .canvas-col{--bw:min(100%,44dvh)}
+  .canvas-col.with-strip .work{flex-direction:row;align-items:flex-start;justify-content:center;gap:10px}
+  .canvas-col.with-strip{--bw:min(calc(100% - 170px),44dvh)}
+  .work .tablestrip{width:150px}.work .tablestrip .ts-row{flex-direction:column;align-items:center;gap:12px}
 }
 @media (max-width:859px) and (not (orientation:landscape)),(max-width:639px){
   .mob-hide{display:none!important}
@@ -244,7 +269,9 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
   .optbar .srow label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .optbar .nv{display:none}
   .optbar{width:min(100%,430px)}
-  .optbar .srow{flex:1 1 90px;min-width:90px}
+  .optbar .srow{flex:1 1 60px;min-width:60px}
+  .optbar .chip{padding:0 10px}
+  .optbar .seg button{padding:0 10px}
   .optbar .o{gap:8px}
   .coach{padding:8px 8px 8px 12px}
   body.kb .stage,body.kb .tabs{display:none}
@@ -279,7 +306,6 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 
 /* table-size preview: the token at the sizes it will have in play */
 .canvas-col.with-strip{--bw:min(100%,max(200px,calc(36dvh - 110px)))}
-@media (min-width:860px),(min-width:640px) and (orientation:landscape){.canvas-col.with-strip{--bw:min(100%,max(240px,calc(100dvh - 56px - 16px - 58px - 190px)))}}
 .tablestrip{width:var(--bw);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px 6px;display:flex;flex-direction:column;gap:4px;
   background:conic-gradient(var(--chk1) 25%,var(--chk2) 0 50%,var(--chk1) 0 75%,var(--chk2) 0) 0 0/24px 24px}
 .tablestrip[hidden]{display:none}
@@ -291,3 +317,29 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 .tablestrip canvas{display:block}
 @media (max-width:859px) and (not (orientation:landscape)),(max-width:639px){.tablestrip{padding:6px 8px 4px}}
 .row>label[for=fname]{white-space:nowrap}
+
+/* the first-run hint would cover a small board */
+.board{container-type:inline-size}
+@container (max-width:330px){.coach{display:none}}
+/* collapsible ring sections */
+details.sec{border-top:1px solid var(--line,rgba(128,128,128,.2));margin-top:6px}
+details.sec:first-of-type{border-top:0}
+details.sec>summary{list-style:none;cursor:pointer;margin:0;padding:10px 16px;min-height:var(--tap,44px);font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);display:flex;align-items:center;gap:8px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;flex:none}
+details.sec[open]>summary::before{transform:rotate(45deg)}
+details.sec>summary.cap{margin:0}
+details.sec .adv{margin-top:0}
+
+/* the toolbar shows only what the current step needs */
+body[data-step=image] .tools [data-steps]:not([data-steps~=image]),
+body[data-step=popout] .tools [data-steps]:not([data-steps~=popout]),
+body[data-step=ring] .tools [data-steps],
+body[data-step=export] .tools [data-steps]{display:none}
+body[data-step=export] #optbar{display:none}
+body[data-step=bg] .tools [data-steps]:not([data-steps~=bg]){display:none}
+body[data-step=bg] #optbar .o[data-for=move]{display:none}
+.bgSeg{display:flex;flex-wrap:wrap}.bgSeg button{flex:1 1 auto}
+/* five steps: in a narrow side panel the step numbers give way to the labels */
+@media (min-width:900px){.inspector{container-type:inline-size}
+  @container (max-width:400px){.tab .n{display:none}.tab{padding:0 8px}}}

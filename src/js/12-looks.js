@@ -15,7 +15,7 @@ METALS.forEach(([name,hex])=>{const b=document.createElement('button');b.classNa
   b.onclick=()=>{st.gradOn=false;st.color=hex;st.colorKey=name;syncUI();thumbsSoon();draw();commit();};$('#gridMetal').appendChild(b);});
 function gradSwatch(name,a,b,deg){const bt=document.createElement('button');bt.className='sw';bt.dataset.key=name;bt.title=name+' gradient';
   bt.innerHTML='<i class="two"><b style="background:'+a+'"></b><b style="background:'+b+'"></b></i><span>'+name+'</span>';
-  bt.onclick=()=>{st.g1=a;st.g2=b;st.gAng=deg*Math.PI/180;st.gradOn=true;st.colorKey=name;syncUI();thumbsSoon();draw();commit();};return bt;}
+  bt.onclick=()=>{st.g1=a;st.g2=b;st.gAng=deg*Math.PI/180;st.gMid=.5;st.gradOn=true;st.colorKey=name;syncUI();thumbsSoon();draw();commit();};return bt;}
 function buildGradGrid(){const g=$('#gridGrad');g.innerHTML='';GRADS.forEach(([n,a,b,d])=>g.appendChild(gradSwatch(n,a,b,d)));
   const ig=imageGrad();if(ig)g.appendChild(gradSwatch('Image',ig[0],ig[1],45));updColorSel();}
 function updColorSel(){$$('#gridMetal .sw').forEach(b=>b.setAttribute('aria-pressed',String(!st.gradOn&&st.colorKey===b.dataset.key)));
@@ -24,7 +24,7 @@ function updColorSel(){$$('#gridMetal .sw').forEach(b=>b.setAttribute('aria-pres
 syncers.push(updColorSel);
 function updVis(){const P=PAT[st.formula];
   $('#rowCount').hidden=!P.cl;$('#rowLine').hidden=!P.xl;$('#rowDepth').hidden=!P.dl;$('#rowAccent').hidden=!P.acc;
-  $('#rowCustom').hidden=st.gradOn;['rowGradFrom','rowGradTo','rowGradAng'].forEach(i=>$('#'+i).hidden=!st.gradOn);
+  $('#rowCustom').hidden=st.gradOn;['rowGradFrom','rowGradTo','rowGradMid','rowGradAng'].forEach(i=>$('#'+i).hidden=!st.gradOn);
   const t=st.tex!=='none';$('#rowTexAmt').hidden=$('#rowTexRot').hidden=$('#rowShuffleTex').hidden=!t;$('#rowTexDens').hidden=!t||st.tex==='energy';$('#rowEAmt').hidden=$('#rowELen').hidden=st.tex!=='energy';$('#rowEnergy').hidden=st.tex!=='energy';
   $('#rowPad').hidden=st.autoFit;}
 syncers.push(updVis);
@@ -54,6 +54,7 @@ $('#bShuffleLook').onclick=()=>{const f=pick(PAT_ORDER),P=PAT[f],m=pick(METALS),
   applyLook({formula:f,color:m[1],colorKey:g?g[0]:m[0],gradOn:!!g,g1:g?g[1]:'#ff8a1f',g2:g?g[2]:'#7a0c10',gAng:g?g[3]*Math.PI/180:Math.PI/4,accent:pick(METALS)[1],width:+rnd(.09,.16).toFixed(2),
     count:Math.round(clamp(P.n*rnd(.75,1.3),P.min,P.max)),depth:+rnd(.35,.8).toFixed(2),tex:t,texAmt:TEX_AMT[t]||.6,eAmt:Math.round(rnd(3,9)),eLen:+rnd(.7,1.4).toFixed(2),texRot:Math.random()<.5?0:Math.PI/2,lAng:Math.random()*TAU,seed:1+Math.floor(Math.random()*9999),eCol:pick(['#5ec8ff','#c7b3ff','#ffd36b','#7dff9b'])});};
 $('#bTexShuffle').onclick=()=>{st.seed=1+Math.floor(Math.random()*9999);draw();thumbsSoon();commit();};
+['#bShuffleLook','#bSaveLook'].forEach(q=>$(q).addEventListener('click',e=>e.preventDefault()));
 $('#bSaveLook').onclick=()=>{$('#saveName').value='';$('#saveDlg').showModal();setTimeout(()=>$('#saveName').focus(),30);};
 $('#saveForm').addEventListener('submit',e=>{if(e.submitter&&e.submitter.value==='ok'){const name=$('#saveName').value.trim()||'My look',l={name};RING_KEYS.forEach(k=>l[k]=st[k]);
   saved.unshift(l);saved=saved.slice(0,24);store.set('tw_styles',JSON.stringify(saved));buildLooks();thumbsNow();toast('Saved “'+name+'”.');}});

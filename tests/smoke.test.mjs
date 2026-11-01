@@ -41,16 +41,21 @@ test('every built-in look applies and produces a ring', async () => {
   assert.deepEqual(page.errors, []);
 });
 
-test('toolbar zoom moves in 5% steps in Move and in the workspace in Select', async () => {
+test('toolbar zoom is the workspace everywhere; Picture buttons resize the picture in Move', async () => {
   const page = await openApp(browser);
   await page.evaluate(() => setTool('move'));
   const z0 = await page.evaluate(() => st.zoom);
+  await page.click('#bPicLarger');
+  assert.ok(await page.evaluate(z => st.zoom > z, z0));
+  await page.click('#bPicSmaller');
+  await page.click('#bPicSmaller');
+  assert.ok(await page.evaluate(z => st.zoom < z, z0));
+  const v0 = await page.evaluate(() => [st.vz, st.zoom]);
   await page.click('#bZoomIn');
-  const z1 = await page.evaluate(() => st.zoom);
-  assert.ok(Math.abs(z1 - z0 - 0.05) < 1e-9 || Math.abs(z1 - Math.round(z0 / 0.05 + 1) * 0.05) < 1e-9);
+  assert.ok(await page.evaluate(v => st.vz > v[0] && st.zoom === v[1], v0));
   await page.evaluate(() => setTool('select'));
-  await page.click('#bZoomIn');
-  assert.ok(await page.evaluate(() => st.vz > 1));
+  await page.click('#bZoomOut'); await page.click('#bZoomOut');
+  assert.ok(await page.evaluate(() => st.vz < 1 && st.vz >= .4));
 });
 
 test('live wand: sensitivity re-runs the selection and keeps a single undo step', async () => {

@@ -63,6 +63,7 @@ h1,h2,h3,p{margin:0}
 .tbtn span{display:none}
 .tbtn.lbl span{display:block}
 .canvas-col{--bw:min(100%,36dvh);display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.work{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;min-width:0}
 .board{width:var(--bw)}
 .optbar{width:max(var(--bw),min(100%,430px));min-height:46px;display:flex;align-items:center;gap:12px;padding:3px 10px;background:var(--card);border-radius:12px;box-shadow:var(--shadow);font-size:13px;overflow-x:auto;scrollbar-width:none}
 .optbar::-webkit-scrollbar{display:none}
@@ -76,7 +77,7 @@ h1,h2,h3,p{margin:0}
 .board::after{content:"";position:absolute;inset:0;border-radius:inherit;border:1.5px dashed rgba(128,128,128,.4);pointer-events:none}
 .board.drop::after{border:3px solid var(--accent);background:var(--accent-soft)}
 canvas#cv{display:block;width:100%;height:100%;touch-action:none;outline:none;cursor:grab}
-canvas#cv[data-tool=select]{cursor:crosshair}
+canvas#cv[data-tool=select],canvas#cv[data-tool=lasso]{cursor:crosshair}
 canvas#cv[data-tool=brush]{cursor:none}
 canvas#cv.grabbing{cursor:grabbing!important}
 .board:focus-within{box-shadow:0 0 0 3px var(--ring)}
@@ -227,21 +228,45 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 @media (max-height:520px){.coach{display:none!important}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01s!important}}
 
-/* ---------- desktop / tablet landscape: toolbar | canvas | tabbed inspector ---------- */
+/* ---------- desktop / tablet landscape: workbench (toolbar, options, board) | tabbed inspector ---------- */
 @media (min-width:860px),(min-width:640px) and (orientation:landscape){
-  .app{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:16px;padding:0 16px 16px;height:calc(100dvh - 56px)}
-  .stage{position:static;flex-direction:row;align-items:flex-start;gap:10px;padding:0;background:none;box-shadow:none;min-height:0;overflow:hidden}
-  .tools{flex-direction:column;overflow-x:hidden;overflow-y:auto;max-height:100%;background:var(--card);border-radius:14px;padding:6px;box-shadow:var(--shadow);gap:2px}
-  .tools .vsep{width:26px;height:1px;margin:3px 0}
-  .tbtn{width:56px;height:50px}
+  .top{max-width:none;padding:6px 16px;min-height:52px}
+  .app{max-width:none;display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,27vw,420px);gap:12px;padding:0 12px 12px;height:calc(100dvh - 52px)}
+  .stage{position:static;display:flex;flex-direction:column;gap:8px;padding:8px;min-height:0;min-width:0;overflow:hidden;box-shadow:none;
+    background:color-mix(in srgb,var(--fg) 4%,var(--bg));border-radius:18px;container-type:inline-size}
+  .tools{flex-direction:row;flex-wrap:wrap;overflow:visible;max-height:none;background:var(--card);border-radius:14px;padding:4px 6px;box-shadow:var(--shadow);gap:2px;align-items:center}
+  .tools .vsep{width:1px;height:28px;margin:0 6px}
+  .tools .vsep.push{margin-left:auto}
+  .tbtn{width:58px;height:48px}
   .tbtn span{display:block}
-  .canvas-col{flex:1;justify-content:flex-start;--bw:min(100%,max(240px,calc(100dvh - 56px - 16px - 58px)))}
+  @container (max-width:660px){.tbtn{width:44px;height:44px}.tools .tbtn.lbl span,.tools .tbtn span{display:none}.tools .vsep{margin:0 3px}}
+  .canvas-col{flex:1;min-height:0;align-items:stretch;gap:8px}
+  .optbar{width:100%;flex-wrap:wrap;overflow:visible;row-gap:6px;padding:5px 12px}
+  .optbar .o{flex-wrap:wrap}
+  .optbar .srow{flex:1 1 220px;min-width:200px}
+  .work{flex:1;min-height:0;flex-direction:row;justify-content:center;gap:12px;container-type:size}
+  .board{width:min(calc(100cqw - var(--sw,0px)),calc(100cqh - var(--sh,0px)))}
+  .canvas-col.with-strip .work{--sw:172px}
+  .work .tablestrip{width:150px;flex:none;max-height:100cqh;overflow:auto;padding:12px 10px;justify-content:center;gap:10px}
+  .work .tablestrip .ts-row{flex-direction:column;align-items:center;justify-content:center;gap:14px}
   .inspector{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;border-radius:14px}
   .tabs{position:sticky;top:0;bottom:auto;z-index:5;border:0;border-radius:12px;padding:4px;background:var(--card);box-shadow:var(--shadow);backdrop-filter:none}
-  .tab{flex-direction:row;gap:7px;min-height:42px;font-size:13.5px}
-  .tab .n{width:20px;height:20px;font-size:11.5px}
+  .tabs{gap:0}
+  .tab{flex:1 1 auto;flex-direction:row;gap:5px;min-height:42px;font-size:12.5px;padding:0 5px}
+  .tab .n{width:18px;height:18px;font-size:10.5px}
   .panel{padding:10px 0 24px}
   .toast{bottom:28px}
+  @container (max-width:620px){
+    .canvas-col.with-strip .work{flex-direction:column;--sw:0px;--sh:150px;gap:8px}
+    .work .tablestrip{width:100%;max-height:none;padding:8px 10px;overflow:hidden}
+    .work .tablestrip .ts-row{flex-direction:row;align-items:flex-end;justify-content:space-around}}
+  @container (max-width:560px){#bZoomIn,#bZoomOut{display:none}.tools .tbtn{width:38px}.tools .vsep{display:none}.tools{gap:1px}}
+}
+@media (min-width:600px) and (max-width:859px) and (orientation:portrait){
+  .canvas-col{--bw:min(100%,44dvh)}
+  .canvas-col.with-strip .work{flex-direction:row;align-items:flex-start;justify-content:center;gap:10px}
+  .canvas-col.with-strip{--bw:min(calc(100% - 170px),44dvh)}
+  .work .tablestrip{width:150px}.work .tablestrip .ts-row{flex-direction:column;align-items:center;gap:12px}
 }
 @media (max-width:859px) and (not (orientation:landscape)),(max-width:639px){
   .mob-hide{display:none!important}
@@ -251,7 +276,9 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
   .optbar .srow label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .optbar .nv{display:none}
   .optbar{width:min(100%,430px)}
-  .optbar .srow{flex:1 1 90px;min-width:90px}
+  .optbar .srow{flex:1 1 60px;min-width:60px}
+  .optbar .chip{padding:0 10px}
+  .optbar .seg button{padding:0 10px}
   .optbar .o{gap:8px}
   .coach{padding:8px 8px 8px 12px}
   body.kb .stage,body.kb .tabs{display:none}
@@ -286,7 +313,6 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 
 /* table-size preview: the token at the sizes it will have in play */
 .canvas-col.with-strip{--bw:min(100%,max(200px,calc(36dvh - 110px)))}
-@media (min-width:860px),(min-width:640px) and (orientation:landscape){.canvas-col.with-strip{--bw:min(100%,max(240px,calc(100dvh - 56px - 16px - 58px - 190px)))}}
 .tablestrip{width:var(--bw);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px 6px;display:flex;flex-direction:column;gap:4px;
   background:conic-gradient(var(--chk1) 25%,var(--chk2) 0 50%,var(--chk1) 0 75%,var(--chk2) 0) 0 0/24px 24px}
 .tablestrip[hidden]{display:none}
@@ -298,6 +324,32 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 .tablestrip canvas{display:block}
 @media (max-width:859px) and (not (orientation:landscape)),(max-width:639px){.tablestrip{padding:6px 8px 4px}}
 .row>label[for=fname]{white-space:nowrap}
+
+/* the first-run hint would cover a small board */
+.board{container-type:inline-size}
+@container (max-width:330px){.coach{display:none}}
+/* collapsible ring sections */
+details.sec{border-top:1px solid var(--line,rgba(128,128,128,.2));margin-top:6px}
+details.sec:first-of-type{border-top:0}
+details.sec>summary{list-style:none;cursor:pointer;margin:0;padding:10px 16px;min-height:var(--tap,44px);font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);display:flex;align-items:center;gap:8px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;flex:none}
+details.sec[open]>summary::before{transform:rotate(45deg)}
+details.sec>summary.cap{margin:0}
+details.sec .adv{margin-top:0}
+
+/* the toolbar shows only what the current step needs */
+body[data-step=image] .tools [data-steps]:not([data-steps~=image]),
+body[data-step=popout] .tools [data-steps]:not([data-steps~=popout]),
+body[data-step=ring] .tools [data-steps],
+body[data-step=export] .tools [data-steps]{display:none}
+body[data-step=export] #optbar{display:none}
+body[data-step=bg] .tools [data-steps]:not([data-steps~=bg]){display:none}
+body[data-step=bg] #optbar .o[data-for=move]{display:none}
+.bgSeg{display:flex;flex-wrap:wrap}.bgSeg button{flex:1 1 auto}
+/* five steps: in a narrow side panel the step numbers give way to the labels */
+@media (min-width:900px){.inspector{container-type:inline-size}
+  @container (max-width:400px){.tab .n{display:none}.tab{padding:0 8px}}}
 
 </style>
 </head>
@@ -316,30 +368,35 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
   <!-- ======== STAGE ======== -->
   <section class="stage" aria-label="Token preview and tools">
     <div class="tools" role="toolbar" aria-label="Tools">
-      <button class="tbtn lbl" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
-      <button class="tbtn lbl" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
-      <button class="tbtn lbl" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
-      <span class="vsep"></span>
-      <button class="tbtn lbl" id="bAuto" title="Auto-select the main subject" aria-label="Auto-select subject"><i data-ic="spark"></i><span>Auto</span></button>
-      <button class="tbtn lbl" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
-      <button class="tbtn lbl" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
+      <button class="tbtn lbl" data-steps="image" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
+      <button class="tbtn lbl" data-steps="popout bg" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
+      <button class="tbtn lbl" data-steps="popout bg" data-tool="lasso" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
+      <button class="tbtn lbl" data-steps="popout bg" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
+      <span class="vsep" data-steps="popout bg"></span>
+      <button class="tbtn lbl" data-steps="popout bg" id="bAuto" title="Auto-select the main subject" aria-label="Auto-select subject"><i data-ic="spark"></i><span>Auto</span></button>
+      <button class="tbtn lbl" data-steps="popout bg" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
+      <button class="tbtn lbl" data-steps="popout" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
       <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
-      <button class="tbtn" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
-      <span class="vsep"></span>
+      <button class="tbtn" data-steps="popout bg" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
+      <span class="vsep push"></span>
       <button class="tbtn mob-hide" id="bUndo" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" disabled><i data-ic="undo"></i><span>Undo</span></button>
       <button class="tbtn mob-hide" id="bRedo" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" disabled><i data-ic="redo"></i><span>Redo</span></button>
       <span class="vsep mob-hide"></span>
-      <button class="tbtn mob-hide" id="bZoomIn" title="Zoom in (hold to repeat). Move: resizes the picture. Select and Brush: magnifies the workspace." aria-label="Zoom in"><i data-ic="zin"></i><span>Zoom +</span></button>
-      <button class="tbtn mob-hide" id="bZoomOut" title="Zoom out (hold to repeat). Move: resizes the picture. Select and Brush: magnifies the workspace." aria-label="Zoom out"><i data-ic="zout"></i><span>Zoom −</span></button>
+      <button class="tbtn mob-hide" id="bZoomIn" title="Zoom the workspace in (hold to repeat). Only changes what you see, never the token." aria-label="Zoom in"><i data-ic="zin"></i><span>Zoom +</span></button>
+      <button class="tbtn mob-hide" id="bZoomOut" title="Zoom the workspace out (hold to repeat). Zoom out past 100% to see the picture around the token." aria-label="Zoom out"><i data-ic="zout"></i><span>Zoom −</span></button>
     </div>
 
     <div class="canvas-col">
       <div class="optbar" id="optbar" aria-label="Tool options">
-        <div class="o" data-for="move"><span class="hintline">Drag to move · pinch to resize the picture</span></div>
+        <div class="o" data-for="move"><span class="hintline">Drag to move the picture</span><button class="chip" id="bPicSmaller" title="Make the picture smaller in the ring (hold to repeat)">Picture −</button><button class="chip" id="bPicLarger" title="Make the picture larger in the ring (hold to repeat)">Picture +</button></div>
         <div class="o" data-for="select">
           <div class="seg modeSeg" role="group" aria-label="Selection mode"><button data-v="add" aria-pressed="true" title="Clicks add to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="Clicks remove from the pop-out (hold Alt/Option)">Remove</button></div>
           <div data-sl="tol"></div>
           <button class="chip" id="contig" aria-pressed="true" title="On: only the area touching your click. Off: every matching colour in the picture.">Touching only</button>
+        </div>
+        <div class="o" data-for="lasso">
+          <div class="seg modeSeg" role="group" aria-label="Lasso mode"><button data-v="add" aria-pressed="true" title="The area you draw is added to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="The area you draw is removed from the pop-out (or hold Shift/Alt)">Remove</button></div>
+          <span class="hintline">Hold and draw around the area, release to select it</span>
         </div>
         <div class="o" data-for="brush">
           <div class="seg modeSeg" role="group" aria-label="Brush mode"><button data-v="add" aria-pressed="true" title="Paint to add to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="Paint to remove from the pop-out (hold Alt/Option)">Remove</button></div>
@@ -347,6 +404,7 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
           <button class="chip" id="strandChip" aria-pressed="false" title="Hair-aware: Add paints in only what differs from the background. Remove erases only background-like pixels.">Hair-aware</button>
         </div>
       </div>
+      <div class="work">
       <div class="board" id="board" data-bg="checker">
         <canvas id="cv" tabindex="0" role="application" aria-label="Token preview. In Move, arrow keys move the picture. In Select and Brush, arrow keys move a cursor and Enter applies it; Shift plus Enter removes. Plus and minus zoom. Press question mark for all shortcuts."></canvas>
         <div class="badge" id="badge" aria-hidden="true"><i></i><span></span></div>
@@ -354,7 +412,7 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
         <div class="hud" id="hud" aria-hidden="true"></div>
         <button class="vreset" id="viewReset" hidden title="Return the workspace to full view">Reset view</button>
         <div class="coach" id="coach" hidden>
-          <p><b>Click the part that should pop out of the ring,</b> or tap <b>Auto</b> in the toolbar.</p>
+          <p><b>Drag to place your picture.</b> Auto has already found the pop-out. Fine-tune it in step 2, then change the backdrop, ring and export.</p>
           <button class="btn primary" id="coachOk">Got it</button>
         </div>
         <div class="dropov">Drop image to open</div>
@@ -363,16 +421,18 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
         <span class="ts-h">Table size</span>
         <div class="ts-row"><figure><canvas data-px="40"></canvas><figcaption>40 px</figcaption></figure><figure><canvas data-px="80"></canvas><figcaption>80 px</figcaption></figure><figure><canvas data-px="120"></canvas><figcaption>120 px</figcaption></figure></div>
       </div>
+      </div>
     </div>
   </section>
 
   <!-- ======== INSPECTOR ======== -->
   <aside class="inspector" aria-label="Token settings">
     <div class="tabs" role="tablist" aria-label="Steps">
-      <button class="tab" role="tab" id="t-image" aria-controls="p-image" aria-selected="true" data-tab="image"><span class="n">1</span><span>Image</span></button>
+      <button class="tab" role="tab" id="t-image" aria-controls="p-image" aria-selected="true" data-tab="image"><span class="n">1</span><span>Place</span></button>
       <button class="tab" role="tab" id="t-popout" aria-controls="p-popout" aria-selected="false" data-tab="popout" tabindex="-1"><span class="n">2</span><span>Pop-out</span></button>
-      <button class="tab" role="tab" id="t-ring" aria-controls="p-ring" aria-selected="false" data-tab="ring" tabindex="-1"><span class="n">3</span><span>Ring</span></button>
-      <button class="tab" role="tab" id="t-export" aria-controls="p-export" aria-selected="false" data-tab="export" tabindex="-1"><span class="n">4</span><span>Export</span></button>
+      <button class="tab" role="tab" id="t-bg" aria-controls="p-bg" aria-selected="false" data-tab="bg" tabindex="-1"><span class="n">3</span><span>Backdrop</span></button>
+      <button class="tab" role="tab" id="t-ring" aria-controls="p-ring" aria-selected="false" data-tab="ring" tabindex="-1"><span class="n">4</span><span>Ring</span></button>
+      <button class="tab" role="tab" id="t-export" aria-controls="p-export" aria-selected="false" data-tab="export" tabindex="-1"><span class="n">5</span><span>Export</span></button>
     </div>
 
     <!-- 1 IMAGE -->
@@ -383,16 +443,6 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
       <div class="group">
         <div data-sl="zoom"></div><div data-sl="rot"></div>
         <div class="acts"><button class="btn" id="bFlip">Flip</button><button class="btn" id="bReset" title="Reset position, zoom and rotation (0)">Reset view</button></div>
-      </div>
-      <h2 class="cap">Adjust picture <span class="sp"></span><button class="link" id="bAdjReset" title="Back to the original colours">Reset</button></h2>
-      <div class="group">
-        <div data-sl="bri"></div><div data-sl="con"></div><div data-sl="sat"></div>
-        <div class="acts"><button class="btn" id="bMatch" title="Nudge brightness and colour so the picture sits well against the current ring"><i data-ic="spark"></i>Match to ring</button></div>
-      </div>
-      <h2 class="cap">Background</h2>
-      <div class="group">
-        <div class="row"><label for="bgOn">Fill behind picture<span class="sub">Helps with transparent art</span></label>
-          <div class="grow"><input id="bg" type="color" aria-label="Background colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
       </div>
       <button class="next" data-next="popout">Next: choose the pop-out <span aria-hidden="true">→</span></button>
     </section>
@@ -414,6 +464,11 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
           <div class="acts"><button class="btn" id="bClean" title="Remove tiny stray bits and fill tiny holes">Remove specks &amp; holes</button></div>
         </details>
       </div>
+      <h2 class="cap">Character colour <span class="sp"></span><button class="link" id="bAdjReset" title="Back to the original colours">Reset</button></h2>
+      <div class="group">
+        <div data-sl="bri"></div><div data-sl="con"></div><div data-sl="sat"></div>
+        <div class="acts"><button class="btn" id="bMatch" title="Match the picture colour to the current ring. Brightness stays as it is."><i data-ic="spark"></i>Match colour to ring</button></div>
+      </div>
       <h2 class="cap">Look</h2>
       <div class="group">
         <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
@@ -424,48 +479,91 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
         <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Never crops pop-out art</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
         <div data-sl="pad" id="rowPad"></div>
       </div>
+      <button class="next" data-next="bg">Next: backdrop <span aria-hidden="true">→</span></button>
+    </section>
+
+    <!-- 3 BACKDROP -->
+    <section class="panel" id="p-bg" role="tabpanel" aria-labelledby="t-bg" tabindex="-1" hidden>
+      <h2 class="cap">Backdrop area</h2>
+      <div class="group">
+        <p class="note" style="padding-bottom:4px"><b id="bgStat">No background marked yet</b></p>
+        <p class="note" style="padding-top:0">Mark what is <i>behind</i> the character with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b>. The pop-out (purple) is protected and is never touched.</p>
+        <div class="acts"><button class="btn" id="bBgAuto"><i data-ic="spark"></i>Auto backdrop</button><button class="btn" id="bBgRest" title="Mark everything except the pop-out as backdrop">All but pop-out</button></div>
+      </div>
+      <h2 class="cap">Backdrop look <span class="sp"></span><output id="bgName"></output></h2>
+      <div class="group">
+        <div class="seg bgSeg" id="bgModeSeg" role="group" aria-label="Backdrop look" style="margin:8px 16px">
+          <button data-v="keep">Keep</button><button data-v="colour">Colour</button><button data-v="gradient">Gradient</button><button data-v="blur">Blur</button><button data-v="clear">Clear</button></div>
+        <div class="row" id="rowBgCol" hidden><label for="bgCol">Colour</label><div class="grow"><span class="pal" data-for="bgCol"></span><input id="bgCol" type="color"></div></div>
+        <div class="row" id="rowBgG1" hidden><label for="bgG1">From</label><div class="grow"><span class="pal" data-for="bgG1"></span><input id="bgG1" type="color"></div></div>
+        <div class="row" id="rowBgG2" hidden><label for="bgG2">To</label><div class="grow"><span class="pal" data-for="bgG2"></span><input id="bgG2" type="color"></div></div>
+        <div data-sl="bgGMid" id="rowBgMid" hidden></div><div data-sl="bgGAng" id="rowBgAng" hidden></div>
+        <div data-sl="bgBlur" id="rowBgBlur" hidden></div>
+        <div class="acts" id="rowBgRing" hidden><button class="btn" id="bBgRing" title="Use a dark shade of the ring colour as backdrop">Match ring colour</button></div>
+        <div data-sl="bgBri" id="rowBgBri"></div><div data-sl="bgSat" id="rowBgSat"></div>
+        <div data-sl="bgEdge" id="rowBgEdge"></div>
+        <p class="note" id="bgClearNote" hidden>Clear removes the backdrop, so only the character and the ring fill remain. Use Fill behind picture below to colour it.</p>
+      </div>
+      <h2 class="cap">Fill behind picture</h2>
+      <div class="group">
+        <div class="row"><label for="bgOn">Fill<span class="sub">Shows through transparent areas</span></label>
+          <div class="grow"><input id="bg" type="color" aria-label="Fill colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
+      </div>
       <button class="next" data-next="ring">Next: style the ring <span aria-hidden="true">→</span></button>
     </section>
 
-    <!-- 3 RING -->
+    <!-- 4 RING -->
     <section class="panel" id="p-ring" role="tabpanel" aria-labelledby="t-ring" tabindex="-1" hidden>
-      <h2 class="cap">Looks <span class="sp"></span>
-        <button class="link" id="bShuffleLook" title="Try a random look"><i data-ic="shuffle"></i>Shuffle</button>
-        <button class="link" id="bSaveLook" title="Save the current ring style"><i data-ic="plus"></i>Save</button></h2>
-      <div class="group"><div class="looks" id="looks" role="list" aria-label="Ring looks"></div></div>
+      <details class="sec" id="secColour" open>
+        <summary class="cap">Colour <span class="sp"></span><output id="colorName"></output></summary>
+        <div class="group">
+          <div class="row" id="rowCustom"><label for="color">Colour<span class="sub">Tap a swatch to use a colour from your picture</span></label><div class="grow"><span class="pal" data-for="color"></span><input id="color" type="color"></div></div>
+          <div class="row" id="rowGradFrom" hidden><label for="g1">From</label><div class="grow"><span class="pal" data-for="g1"></span><input id="g1" type="color"></div></div>
+          <div class="row" id="rowGradTo" hidden><label for="g2">To</label><div class="grow"><span class="pal" data-for="g2"></span><input id="g2" type="color"></div></div>
+          <div data-sl="gMid" id="rowGradMid" hidden></div>
+          <div data-sl="gAng" id="rowGradAng" hidden></div>
+          <div class="row" id="rowAccent"><label for="accent">Accent colour<span class="sub">Second colour used by this shape</span></label><div class="grow"><span class="pal" data-for="accent"></span><input id="accent" type="color"></div></div>
+          <details class="adv" id="presetsAdv"><summary>Preset metals &amp; gradients</summary>
+            <p class="sub-h">Metals, gems &amp; stone</p>
+            <div class="grid sw-grid" id="gridMetal" role="group" aria-label="Metals, gems and stone"></div>
+            <p class="sub-h">Gradients</p>
+            <div class="grid sw-grid" id="gridGrad" role="group" aria-label="Gradients"></div>
+          </details>
+        </div>
+      </details>
 
-      <h2 class="cap">Shape</h2>
-      <div class="group">
-        <div class="grid pat-grid" id="patGrid" role="group" aria-label="Ring shape"></div>
-        <div data-sl="width"></div><div data-sl="count" id="rowCount"></div><div data-sl="depth" id="rowDepth"></div><div data-sl="lineW" id="rowLine"></div>
-      </div>
+      <details class="sec" id="secShape">
+        <summary class="cap">Shape</summary>
+        <div class="group">
+          <div class="grid pat-grid" id="patGrid" role="group" aria-label="Ring shape"></div>
+          <div data-sl="width"></div><div data-sl="count" id="rowCount"></div><div data-sl="depth" id="rowDepth"></div><div data-sl="lineW" id="rowLine"></div>
+        </div>
+      </details>
 
-      <h2 class="cap">Colour <span class="sp"></span><output id="colorName"></output></h2>
-      <div class="group">
-        <p class="sub-h">Metals, gems &amp; stone</p>
-        <div class="grid sw-grid" id="gridMetal" role="group" aria-label="Metals, gems and stone"></div>
-        <p class="sub-h">Gradients</p>
-        <div class="grid sw-grid" id="gridGrad" role="group" aria-label="Gradients"></div>
-        <div class="row" id="rowGradFrom" hidden><label for="g1">From</label><div class="grow"><span class="pal" data-for="g1"></span><input id="g1" type="color"></div></div>
-        <div class="row" id="rowGradTo" hidden><label for="g2">To</label><div class="grow"><span class="pal" data-for="g2"></span><input id="g2" type="color"></div></div>
-        <div data-sl="gAng" id="rowGradAng" hidden></div>
-        <div class="row" id="rowCustom"><label for="color">Custom colour</label><div class="grow"><span class="pal" data-for="color"></span><input id="color" type="color"></div></div>
-        <div class="row" id="rowAccent"><label for="accent">Accent colour<span class="sub">Second colour used by this shape</span></label><div class="grow"><span class="pal" data-for="accent"></span><input id="accent" type="color"></div></div>
-      </div>
+      <details class="sec" id="secLooks">
+        <summary class="cap">Looks <span class="sp"></span>
+          <button class="link" id="bShuffleLook" title="Try a random look"><i data-ic="shuffle"></i>Shuffle</button>
+          <button class="link" id="bSaveLook" title="Save the current ring style"><i data-ic="plus"></i>Save</button></summary>
+        <div class="group"><div class="looks" id="looks" role="list" aria-label="Ring looks"></div></div>
+      </details>
 
-      <h2 class="cap">Lighting</h2>
-      <div class="group"><div data-sl="lAng"></div><div data-sl="lInt"></div></div>
+      <details class="sec" id="secLight">
+        <summary class="cap">Lighting</summary>
+        <div class="group"><div data-sl="lAng"></div><div data-sl="lInt"></div></div>
+      </details>
 
-      <h2 class="cap">Texture</h2>
-      <div class="group">
-        <div class="chips" id="texGrid" role="group" aria-label="Texture"></div>
-        <div data-sl="texAmt" id="rowTexAmt" hidden></div>
-        <div data-sl="texDens" id="rowTexDens" hidden></div>
-        <div data-sl="eAmt" id="rowEAmt" hidden></div><div data-sl="eLen" id="rowELen" hidden></div>
-        <div data-sl="texRot" id="rowTexRot" hidden></div>
-        <div class="row" id="rowEnergy" hidden><label for="eCol">Energy colour</label><div class="grow"><span class="pal" data-for="eCol"></span><input id="eCol" type="color"></div></div>
-        <div class="row" id="rowShuffleTex" hidden><label>Pattern</label><div class="grow"><button class="btn" id="bTexShuffle" title="Generate a different random pattern"><i data-ic="shuffle"></i>New pattern</button></div></div>
-      </div>
+      <details class="sec" id="secTex">
+        <summary class="cap">Texture</summary>
+        <div class="group">
+          <div class="chips" id="texGrid" role="group" aria-label="Texture"></div>
+          <div data-sl="texAmt" id="rowTexAmt" hidden></div>
+          <div data-sl="texDens" id="rowTexDens" hidden></div>
+          <div data-sl="eAmt" id="rowEAmt" hidden></div><div data-sl="eLen" id="rowELen" hidden></div>
+          <div data-sl="texRot" id="rowTexRot" hidden></div>
+          <div class="row" id="rowEnergy" hidden><label for="eCol">Energy colour</label><div class="grow"><span class="pal" data-for="eCol"></span><input id="eCol" type="color"></div></div>
+          <div class="row" id="rowShuffleTex" hidden><label>Pattern</label><div class="grow"><button class="btn" id="bTexShuffle" title="Generate a different random pattern"><i data-ic="shuffle"></i>New pattern</button></div></div>
+        </div>
+      </details>
       <button class="next" data-next="export">Next: export <span aria-hidden="true">→</span></button>
     </section>
 
@@ -524,15 +622,15 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
 <dialog id="helpDlg" aria-labelledby="helpH"><div class="dlg">
   <h2 id="helpH">How it works</h2>
   <ol>
-    <li><b>Image</b>: open a photo (or paste / drop one) and position it inside the ring.</li>
-    <li><b>Hair and edges</b>: tap <i>Fix edges automatically</i> in the Pop-out tab. Use <i>Auto sensitivity</i> and <i>Shrink / grow</i> to tune the cut-out, or the <i>Hair-aware</i> brush for stray hair.</li>
-    <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Brush</i> or <i>Auto</i>.</li>
+    <li><b>Place</b>: open a photo (or paste / drop one) and drag it into position. The pop-out is already found by Auto.</li>
+    <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Lasso</i>, <i>Brush</i> or <i>Auto</i>. Tap <i>Fix edges automatically</i> for hair, and tune with <i>Auto detail</i> and <i>Shrink / grow</i>.</li>
+    <li><b>Backdrop</b>: mark what is behind the character and recolour it, give it a gradient, blur it or remove it. The pop-out is never touched.</li>
     <li><b>Ring</b>: pick a Look, or build your own shape, colour and texture.</li>
     <li><b>Export</b>: choose a size and download a transparent PNG. Tokens keep their editable project inside, so you can reopen them with <i>Open</i>.</li>
   </ol>
   <h3>Shortcuts</h3>
   <dl>
-    <dt><kbd>V</kbd> <kbd>W</kbd> <kbd>B</kbd></dt><dd>Move · Select · Brush</dd>
+    <dt><kbd>V</kbd> <kbd>W</kbd> <kbd>L</kbd> <kbd>B</kbd></dt><dd>Move · Select · Lasso · Brush (each jumps to the step that uses it)</dd>
     <dt><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Select, Brush: move the cursor, Enter applies it (Shift+Enter removes). Move: arrows move the picture</dd>
     <dt><kbd>M</kbd></dt><dd>Show the selection as a black and white mask</dd>
     <dt><kbd>P</kbd></dt><dd>Preview: see the finished token without outlines</dd>
@@ -589,6 +687,7 @@ const IC={
  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
  move:'<path d="M12 3v18M3 12h18M12 3 9 6M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
  wand:'<path d="M5 19 15 9"/><path d="m17 3 .9 2.1L20 6l-2.1.9L17 9l-.9-2.1L14 6l2.1-.9z"/><path d="m19 13 .5 1.2L20.7 15l-1.2.5L19 17l-.5-1.5-1.2-.5 1.2-.8z"/>',
+ lasso:'<path d="M7 20c-2-1-3.5-2.7-3.5-4.7C3.5 10.6 8 6 13 6c4.4 0 7.5 2.2 7.5 5s-3.3 5-7.8 5c-2 0-3.700-.4-5-1.300"/><path d="M7 20c1.500.5 2.500-.3 2.500-1.500S8.500 16.500 7 17"/>',
  brush:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
  spark:'<path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="m19 16 .7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>',
  x:'<path d="M18 6 6 18M6 6l12 12"/>',
@@ -818,7 +917,7 @@ function drawRing(ctx,c,R,p){
   if(!T&&!p.gradOn)return drawRingBase(ctx,c,R,p);
   const ri=R*(1-p.width),S=ctx.canvas.width,O=off(0,S),L=off(1,S),o=O.getContext('2d'),l=L.getContext('2d');
   o.clearRect(0,0,S,S);drawRingBase(o,c,R,p.gradOn?{...p,color:'#808080'}:p);
-  if(p.gradOn){const a=p.gAng,dx=Math.cos(a)*R,dy=Math.sin(a)*R,g=l.createLinearGradient(c-dx,c-dy,c+dx,c+dy);g.addColorStop(0,p.g1);g.addColorStop(1,p.g2);
+  if(p.gradOn){const a=p.gAng,dx=Math.cos(a)*R,dy=Math.sin(a)*R,g=l.createLinearGradient(c-dx,c-dy,c+dx,c+dy);const gm=clamp(p.gMid==null?.5:p.gMid,.05,.95);g.addColorStop(0,p.g1);g.addColorStop(gm,mix(p.g1,p.g2,.5));g.addColorStop(1,p.g2);
     l.clearRect(0,0,S,S);l.fillStyle=g;l.fillRect(0,0,S,S);l.globalCompositeOperation='destination-in';l.drawImage(O,0,0);l.globalCompositeOperation='destination-out';l.beginPath();l.arc(c,c,ri,0,TAU);l.fill();l.globalCompositeOperation='source-over';
     o.globalCompositeOperation='overlay';o.drawImage(L,0,0);o.globalCompositeOperation='source-over';}
   if(T){
@@ -849,18 +948,18 @@ const METALS=[['Gold','#d9a521'],['Silver','#b5bcc6'],['Bronze','#b8733a'],['Cop
   ['Iron','#5a6068'],['Ruby','#b3202e'],['Sapphire','#2457b8'],['Emerald','#1e8a4c'],['Amethyst','#7b3fb0'],['Ice','#8fd3f0'],
   ['Bone','#d9cdb0'],['Wood','#7a5230'],['Onyx','#2b2d33'],['Granite','#7d7f84'],['Slate','#4a5560'],['Sandstone','#b89d78']];
 const GRADS=[['Enemy','#ff8a1f','#7a0c10',45],['Ally','#3ddc84','#0b4f3a',45],['Arcane','#b36cff','#1a2a8c',45],['Lava','#ffd23f','#b3111a',90],['Toxic','#d4ff3d','#1b5e20',45],['Frost','#e6f8ff','#2a6fb0',90]];
-const RING_KEYS=['formula','color','accent','width','count','depth','tex','texAmt','texDens','seed','eCol','gradOn','g1','g2','gAng','colorKey','lAng','lInt','texRot','lineW','eAmt','eLen'];
-const SETTINGS=['ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
-const st={maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,bx:null,by:null,embed:null,
+const RING_KEYS=['formula','color','accent','width','count','depth','tex','texAmt','texDens','seed','eCol','gradOn','g1','g2','gAng','gMid','colorKey','lAng','lInt','texRot','lineW','eAmt','eLen'];
+const SETTINGS=['bgMode','bgCol','bgG1','bgG2','bgGAng','bgGMid','bgBlur','bgBri','bgSat','bgEdge','ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
+const st={act:'pop',bgM:null,popM:null,popN:0,bgV:0,popV:0,popFrozen:mk(),popTint:mk(),...{bgMode:'keep',bgCol:'#24345f',bgG1:'#1f3a7a',bgG2:'#0a0f24',bgGAng:Math.PI/2,bgGMid:.5,bgBlur:40,bgBri:0,bgSat:0,bgEdge:20},maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,bx:null,by:null,embed:null,
   popCv:mk(),softCv:mk(),selCv:mk(),softDirty:true,popDirty:true,selDirty:true,selCount:0,painting:false,
   ix:0,iy:.05,zoom:1.3,rot:0,flip:1,bgOn:true,bg:'#2b2f3a',
   autoFit:true,pad:.08,padCur:.08,padT:.08,fitDirty:true,lockPad:false,snapPad:true,
   formula:'ridge',color:'#d9a521',accent:'#2b2f3a',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',
-  gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1,vz:1,vx:0,vy:0,
+  gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1,vz:1,vx:0,vy:0,
   popOn:true,feather:.5,shadow:0,showSel:true,iso:false,prev:false,kc:null,embedOn:true,
   bri:0,con:0,sat:0,defr:0,bgC:'#808080',bgAuto:true,eReach:4,eTol:14,eSoft:70,eShift:0,speck:30,gap:0,autoSens:50,autoShrink:0,bsoft:0,strand:false,maskView:false,
   tool:'select',mode:'add',alt:false,space:false,tol:30,contig:true,brush:10,exportSize:512,exportWhat:'token',exportFmt:'png',pal:[],hover:null};
-const RING_DEFAULT={formula:'ridge',color:'#d9a521',accent:'#2b2d33',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1};
+const RING_DEFAULT={formula:'ridge',color:'#d9a521',accent:'#2b2d33',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1};
 
 /* ---------- busy pill, toast, zoom hud ---------- */
 let busyN=0;
@@ -877,7 +976,7 @@ function applyT(ctx,g){ctx.translate(g.tx,g.ty);ctx.rotate(st.rot);ctx.scale(g.s
 
 /* Auto-fit: smallest canvas margin that keeps ring + pop-out art fully inside */
 function recomputeFit(){let d=1;
-  if(st.popOn&&st.selCount&&st.bx){const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by;
+  if(st.popOn&&popCount()&&st.bx){const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by;
     for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k;const r=Math.hypot(x*co-y*si+st.ix,x*si+y*co+st.iy);if(r>d)d=r;}
     d=d*1.005+(st.feather>0?st.feather*k:0)+(st.shadow>0?.01+.05*st.shadow:0);}
   st.padT=clamp(.5-.5/d,0,.45);st.fitDirty=false;}
@@ -898,10 +997,12 @@ function maskChanged(){const m=st.mask,d=st.sdata,w=st.sw,h=st.sh,xs=[],ys=[];le
   const eff=i=>m[i]>=16&&d[i*4+3]>8;   /* the mask holds opacity 0-255; edge and fit maths use pixels that are visibly in */
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!m[i])continue;n++;if(m[i]<255)part++;if(m[i]<16||d[i*4+3]<=8)continue;
     if(x===0||y===0||x===w-1||y===h-1||!eff(i-1)||!eff(i+1)||!eff(i-w)||!eff(i+w)){xs.push(x+.5-w/2);ys.push(y+.5-h/2);}}
-  st.selCount=n;st.partial=part;st.maskVer++;st.bx=Float32Array.from(xs);st.by=Float32Array.from(ys);
+  st.selCount=n;st.partial=part;st.maskVer++;
+  if(st.act==='bg'){st.bgV++;st.softDirty=st.selDirty=true;selStat();return;}   /* the background mask never moves the canvas fit or the pop-out */
+  st.popV++;st.bx=Float32Array.from(xs);st.by=Float32Array.from(ys);
   st.softDirty=st.popDirty=st.selDirty=st.fitDirty=true;selStat();}
-function selStat(){const p=st.selCount/(st.sw*st.sh)*100;
-  $('#selStat').textContent=st.selCount?'Selected: '+(p<1?'under 1':Math.round(p))+'% of the picture':'Nothing selected yet';}
+function selStat(){const p=st.selCount/(st.sw*st.sh)*100,bg=st.act==='bg';
+  $(bg?'#bgStat':'#selStat').textContent=st.selCount?(bg?'Background: ':'Selected: ')+(p<1?'under 1':Math.round(p))+'% of the picture':(bg?'No background marked yet':'Nothing selected yet');}
 function sizeTo(cv,w,h){if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}return cv.getContext('2d');}
 /* feather inward only: hard-edged areas fade at their outline, while already soft (hair) pixels and their neighbours are left alone */
 function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.length);
@@ -910,7 +1011,7 @@ function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.le
     out[i]=soft?v:Math.round(Math.min(v,bl[i]));}
   return out;}
 function refreshSoft(){if(!st.softDirty)return;const{sw,sh}=st,ctx=sizeTo(st.softCv,sw,sh);
-  const m=st.feather>0?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
+  const m=st.feather>0&&st.act!=='bg'?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
   for(let i=0,n=sw*sh;i<n;i++){const j=i*4;d[j]=d[j+1]=d[j+2]=255;d[j+3]=m[i];}
   ctx.putImageData(id,0,0);st.softDirty=false;st.popDirty=true;}
 function refreshPop(){refreshSoft();if(!st.popDirty)return;const x=sizeTo(st.popCv,st.sw,st.sh);
@@ -976,8 +1077,8 @@ function subjectFromBg(bg,w,h,keepFrac,minAbs){const W=st.sw,H=st.sh,N=w*h,stack
    Every pixel gets an opacity from how far its colour is from the (locally estimated) background, so strands, glows and gaps
    between curls resolve per pixel. Enclosed whites inside thick shapes (eyes) are kept, specks of paper dirt are dropped.
    Returns an opacity mask (0-255) and the background colour, or null when the background is not plain. */
-function autoUniform(quick){
-  const W=st.sw,H=st.sh,k=Math.min(1,(quick?560:1200)/Math.max(W,H)),w=Math.max(8,Math.round(W*k)),h=Math.max(8,Math.round(H*k)),N=w*h;
+function autoUniform(){
+  const W=st.sw,H=st.sh,k=Math.min(1,1200/Math.max(W,H)),w=Math.max(8,Math.round(W*k)),h=Math.max(8,Math.round(H*k)),N=w*h;
   const sc=mk();sc.width=w;sc.height=h;const sx=sc.getContext('2d',{willReadFrequently:true});sx.imageSmoothingQuality='high';sx.drawImage(st.src,0,0,w,h);
   const d=sx.getImageData(0,0,w,h).data;let tr=0;for(let i=0;i<N;i++)if(d[i*4+3]<16)tr++;if(tr>N*.03)return null;
   const bp=[];for(let t=0;t<3;t++){for(let x=0;x<w;x++){bp.push(t*w+x,(h-1-t)*w+x);}for(let y=3;y<h-3;y++){bp.push(y*w+t,y*w+w-1-t);}}
@@ -1117,21 +1218,25 @@ function autoSubject(){
   }
   return subjectFromBg(bg,w,h,.12,0);}
 /* Auto sensitivity and Shrink/grow sliders: run Auto again with the new values (this replaces the current selection) */
-let autoRaf=0,autoHi=-1;
-function autoLive(final){if(!st.src)return;let soft=null;try{soft=autoUniform(!final);}catch(e){}
+let autoHi=-1;
+function autoLive(){if(!st.src)return;let soft=null;try{soft=autoUniform();}catch(e){}
   if(!soft){toast('These sliders work when the picture has a fairly plain background.');return;}
   const m=soft.mask;if(!autoFixOn())for(let i=0;i<m.length;i++)m[i]=m[i]>=128?255:0;
   st.mask=m;if(autoFixOn()){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;}eSess=null;maskChanged();st.popDirty=true;syncUI();draw();}
-function autoRetune(){if(autoRaf)return;autoRaf=requestAnimationFrame(()=>{autoRaf=0;autoLive();});}
-function autoCommit(){autoLive(true);if(H.i===autoHi){H.a[H.i]=snap();updHist();}else{commit();autoHi=H.i;}}
+/* always the full-quality result, so what you see is what you get: it runs shortly after you stop moving the slider, with a progress indicator */
+let autoTimer=0;
+function autoRetune(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>{autoTimer=0;busy(1,'Updating…');setTimeout(()=>{try{autoLive();}finally{busy(-1);}},20);},260);}
+function autoCommit(){if(autoTimer){clearTimeout(autoTimer);autoTimer=0;busy(1,'Updating…');try{autoLive();}finally{busy(-1);}}
+  if(H.i===autoHi){H.a[H.i]=snap();updHist();}else{commit();autoHi=H.i;}}
 function runAuto(){
   if(!st.src)return;busy(1,'Finding subject…');
   setTimeout(()=>{let m=null,soft=null;try{soft=autoUniform();if(soft&&!autoFixOn()){const b=soft.mask;for(let i=0;i<b.length;i++)b[i]=b[i]>=128?255:0;m=b;soft=null;}else m=soft?soft.mask:autoSubject();}catch(e){}
     busy(-1);
-    if(!m){toast('No clear subject found. Use Select and click the part that should pop out.');setTool('select');return;}
-    st.mask=m;maskChanged();let note='Subject selected. Adjust it with Select or Brush, or Undo.';
-    if(soft){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;eSess=null;note='Subject selected with soft edges. Use the sliders in the Pop-out tab, or the Brush, for anything missed. Undo reverts.';}
-    else if(autoFixOn()){try{const r=fixEdges(true);if(r&&r.matte)note='Subject selected and edges softened. Use the sliders in the Pop-out tab or the Brush for stray hair, or Undo.';}catch(e){}}
+    if(!m){toast('No clear subject found. Open the Pop-out step and click the part that should pop out.');setTab('popout');setTool('select');return;}
+    if(st.act==='bg'){autoBackground();return;}
+    st.mask=m;maskChanged();st.bgM=invMask(m);let note='Subject selected. Fine-tune it in the Pop-out step, or Undo.';
+    if(soft){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;eSess=null;note='Subject selected with soft edges. Fine-tune it in the Pop-out step. Undo reverts.';}
+    else if(autoFixOn()){try{const r=fixEdges(true);if(r&&r.matte)note='Subject selected and edges softened. Fine-tune it in the Pop-out step, or Undo.';}catch(e){}}
     st.popOn=true;syncUI();draw();commit();toast(note);},30);}
 
 /* ===== 05a-bounds.js ===== */
@@ -1264,7 +1369,7 @@ function fixEdges(quiet){if(!st.src||!st.selCount){if(!quiet)toast('Choose the p
   const r=edgePipeline(st.mask,B,{matte:true,clean:true,shift:true},Math.round(reach));
   if(quiet)st.eReach=Math.round(reach);
   eSess={base:st.mask,B,steps:{matte:true,clean:true,shift:true},hi:-1,out:null};applyEdge(r);eSess.out=st.mask;
-  if(!quiet){edgeCommit();toast(r.matte?'Edges softened'+(r.specks+r.filled?' and cleaned up':'')+'. Fine-tune below, or Undo.':r.busy?'The background is busy, so only specks and holes were cleaned. Try Refine and the hair-aware brush for strands.':r.low?'The edge is too similar to the background to soften automatically. Specks were cleaned.':'Specks and holes cleaned up.');}
+  if(!quiet){edgeCommit();toast(r.matte?'Edges softened'+(r.specks+r.filled?' and cleaned up':'')+'. Fine-tune below, or Undo.':r.busy?'The background is busy, so only specks and holes were cleaned. Try the hair-aware brush for strands.':r.low?'The edge is too similar to the background to soften automatically. Specks were cleaned.':'Specks and holes cleaned up.');}
   return r;}
 /* ---------- hair-aware and soft brush: per-pixel dabs, then a rectangle refresh of the preview canvases ---------- */
 let sbg=null,dirtyR=null;
@@ -1329,18 +1434,119 @@ function lumSat(cv){const t=mk();t.width=t.height=48;const x=t.getContext('2d',{
   for(let i=0;i<d.length;i+=4){if(d[i+3]<200)continue;const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);l+=.299*r+.587*g+.114*b;s+=mx?(mx-mn)/mx:0;n++;}
   return n?{l:l/n,s:s/n}:{l:128,s:.3};}
 function matchToRing(){if(!st.src)return;const S=128,g=geom(S,effPad()),ring=lumSat(ringLayer(S,g.R,g.c)),pic=lumSat(st.src);
-  st.bri=Math.round(clamp((ring.l/Math.max(20,pic.l)-1)*60,-40,40));
+  /* colour only: brightness is never touched, so a dark ring does not darken the picture */
   st.sat=Math.round(clamp((ring.s/Math.max(.05,pic.s)-1)*40,-30,30));
-  st.popDirty=true;syncUI();draw();commit();toast('Picture matched to the ring. Fine-tune with the sliders, or Reset.');}
+  st.popDirty=true;syncUI();draw();commit();toast('Picture colour matched to the ring. Brightness is unchanged.');}
+
+/* ===== 05d-background.js ===== */
+/* ---------- Background layer ----------
+   Three layers: Background (bottom, recolourable) - the picture behind the ring - the pop-out (top).
+   The background has its own mask. It may only use pixels the pop-out does not: the effective background is
+   backgroundMask x (1 - popOutMask), worked out at render time, so nothing the user painted is ever lost.
+   While the Background step is open, st.mask is the BACKGROUND mask (so Wand, Brush, Lasso and Auto work unchanged)
+   and the pop-out mask waits in st.popM; the pop-out is drawn from a frozen copy (st.popFrozen). */
+const BG_DEFAULT={bgMode:'keep',bgCol:'#24345f',bgG1:'#1f3a7a',bgG2:'#0a0f24',bgGAng:Math.PI/2,bgGMid:.5,bgBlur:40,bgBri:0,bgSat:0,bgEdge:20};
+const bgActive=()=>st.bgMode!=='keep'||st.bgBri!==0||st.bgSat!==0;
+const popMask=()=>st.act==='bg'?st.popM:st.mask;
+const bgMaskArr=()=>st.act==='bg'?st.mask:st.bgM;
+const popCount=()=>st.act==='bg'?st.popN:st.selCount;
+const invMask=m=>{const o=new Uint8Array(m.length);for(let i=0;i<m.length;i++)o[i]=255-m[i];return o;};
+
+/* a copy of the pop-out as it is drawn, so the Background step can show it while editing the other mask */
+function snapPop(){refreshPop();const x=sizeTo(st.popFrozen,st.sw,st.sh);x.clearRect(0,0,st.sw,st.sh);x.drawImage(st.popCv,0,0);st.popN=st.selCount;
+  const t=sizeTo(st.popTint,st.sw,st.sh);t.globalCompositeOperation='source-over';t.clearRect(0,0,st.sw,st.sh);t.drawImage(st.popCv,0,0);
+  t.globalCompositeOperation='source-in';t.fillStyle='#8a5cff';t.fillRect(0,0,st.sw,st.sh);t.globalCompositeOperation='source-over';}
+function freezePop(){
+  if(st.act!=='bg'){snapPop();return;}
+  const cur=st.mask;st.mask=st.popM;st.act='pop';maskChanged();st.popDirty=true;
+  try{snapPop();}finally{st.mask=cur;st.act='bg';maskChanged();}}
+function setAct(which){if(!st.src||st.act===which)return;wand=null;eSess=null;
+  if(which==='bg'){freezePop();st.popM=st.mask;st.mask=st.bgM;st.act='bg';}
+  else{st.bgM=st.mask;st.mask=st.popM;st.popM=null;st.act='pop';}
+  maskChanged();}
+/* run something with the pop-out mask active (exports, saving), whatever step is open */
+function withPop(fn){if(st.act!=='bg')return fn();
+  const b=st.mask;st.bgM=b;st.mask=st.popM;st.act='pop';maskChanged();
+  try{return fn();}finally{st.popM=st.mask;st.mask=b;st.act='bg';maskChanged();}}
+
+/* how much of each pixel is replaced (0..1), at mask resolution */
+let bgA={key:'',a:null};
+function bgAlpha(){const pm=popMask(),bm=bgMaskArr(),w=st.sw,h=st.sh,key=st.bgV+'|'+st.popV+'|'+st.bgEdge+'|'+w+'x'+h;
+  if(bgA.key===key&&bgA.a)return bgA.a;
+  /* a = how much is replaced on screen (edge-blended); a.raw = the marked coverage itself, used to take the old background out of edge pixels */
+  const r=st.bgEdge/100*Math.max(w,h)*.012,src=r>=.5?blurMask(bm,w,h,r):bm,a=new Float32Array(w*h),raw=new Float32Array(w*h);let any=false;
+  for(let i=0;i<a.length;i++){const q=1-pm[i]/255,r0=bm[i]/255*q,v=Math.max(src[i]/255*q,r0);raw[i]=r0;a[i]=v;if(v>.002)any=true;}
+  a.any=any;a.raw=raw;bgA={key,a};return a;}
+
+function blurCanvas(base,amount){const W=base.width,H=base.height,r=Math.max(1,amount/100*.06*Math.max(W,H)),
+    k=Math.max(2,Math.round(Math.sqrt(r*2))),o=mk();o.width=W;o.height=H;
+  let cur=base;for(let pass=0;pass<2;pass++){const s=mk();s.width=Math.max(2,Math.ceil(W/(k*(pass?1:2))));s.height=Math.max(2,Math.ceil(H/(k*(pass?1:2))));
+    const x=s.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cur,0,0,s.width,s.height);cur=s;}
+  const x=o.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cur,0,0,W,H);return o;}
+
+function bgComposite(base){const A=bgAlpha();if(!A.any)return base;const R0=A.raw;
+  const W=base.width,H=base.height,out=mk();out.width=W;out.height=H;const x=out.getContext('2d',{willReadFrequently:true});x.drawImage(base,0,0);
+  const id=x.getImageData(0,0,W,H),d=id.data,sw=st.sw,sh=st.sh,sx=sw/W,sy=sh/H,mode=st.bgMode,bf=1+st.bgBri/100,sf=1+st.bgSat/100,T=[0,0,0],
+    tone=(r,g,b)=>{r*=bf;g*=bf;b*=bf;const l=.299*r+.587*g+.114*b;r=l+(r-l)*sf;g=l+(g-l)*sf;b=l+(b-l)*sf;
+      T[0]=r<0?0:r>255?255:r;T[1]=g<0?0:g>255?255:g;T[2]=b<0?0:b>255?255:b;return T;};
+  /* the colour of the old background, from pixels that are surely background (used to take it out of soft hair edges) */
+  let B=null;{const rs=[],gs=[],bs=[],step=Math.max(1,Math.floor(sw*sh/4000));
+    for(let i=0;i<A.length;i+=step)if(A[i]>.97){const px=Math.min(W-1,Math.round(((i%sw)+.5)/sx-.5)),py=Math.min(H-1,Math.round((((i/sw)|0)+.5)/sy-.5)),j=(py*W+px)*4;if(d[j+3]>250){rs.push(d[j]);gs.push(d[j+1]);bs.push(d[j+2]);}}
+    if(rs.length>=20)B=[median(rs),median(gs),median(bs)];}
+  let C=null,LUT=null,FB=null;
+  if(mode==='colour')C=tone(...hexToRgb(st.bgCol)).slice();
+  else if(mode==='gradient'){const c1=hexToRgb(st.bgG1),c2=hexToRgb(st.bgG2),m=clamp(st.bgGMid,.05,.95);LUT=[];
+    for(let i=0;i<256;i++){const t=i/255,k=t<m?.5*t/m:.5+.5*(t-m)/(1-m),c=[0,1,2].map(ch=>c1[ch]+(c2[ch]-c1[ch])*k);LUT.push(tone(c[0],c[1],c[2]).slice());}}
+  else if(mode==='blur'){const bl=blurCanvas(base,st.bgBlur);FB=bl.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data;}
+  const ca=Math.cos(st.bgGAng),sa=Math.sin(st.bgGAng),norm=Math.abs(ca)+Math.abs(sa)||1;
+  for(let y=0;y<H;y++){const fy=Math.min(sh-1.001,Math.max(0,(y+.5)*sy-.5)),y0=fy|0,ty=fy-y0;
+    for(let xx=0;xx<W;xx++){const fx=Math.min(sw-1.001,Math.max(0,(xx+.5)*sx-.5)),x0=fx|0,tx=fx-x0,i=y0*sw+x0,
+      a=(A[i]*(1-tx)+A[i+1]*tx)*(1-ty)+(A[i+sw]*(1-tx)+A[i+sw+1]*tx)*ty,
+      a0=Math.min(a,(R0[i]*(1-tx)+R0[i+1]*tx)*(1-ty)+(R0[i+sw]*(1-tx)+R0[i+sw+1]*tx)*ty);
+      if(a<.002)continue;
+      const j=(y*W+xx)*4,pa=d[j+3],pr=d[j],pg=d[j+1],pb=d[j+2];
+      if(mode==='clear'){let r=pr,g=pg,b=pb;
+        if(B&&pa>250&&a<.95){const w=Math.min(1,(.95-a)/.3);r+=(clamp((pr-a*B[0])/(1-a),0,255)-pr)*w;g+=(clamp((pg-a*B[1])/(1-a),0,255)-pg)*w;b+=(clamp((pb-a*B[2])/(1-a),0,255)-pb)*w;}
+        d[j]=r;d[j+1]=g;d[j+2]=b;d[j+3]=pa*(1-a);continue;}
+      let F;
+      if(mode==='colour')F=C;else if(mode==='gradient'){const t=.5+(((xx+.5)/W-.5)*ca+((y+.5)/H-.5)*sa)/norm;F=LUT[Math.round(clamp(t,0,1)*255)];}
+      else if(mode==='blur')F=tone(FB[j],FB[j+1],FB[j+2]);else F=tone(pr,pg,pb);
+      let r,g,b;
+      if(mode==='keep'){r=pr+(F[0]-pr)*a;g=pg+(F[1]-pg)*a;b=pb+(F[2]-pb)*a;d[j]=r;d[j+1]=g;d[j+2]=b;continue;}
+      /* old background colour is taken out of soft edge pixels first, then the new one takes over as coverage grows */
+      /* subject colour = (pixel - old background x raw coverage) / (1 - raw coverage), then mixed with the new backdrop at the on-screen coverage */
+      let tr=pr,tg=pg,tb=pb;if(B&&pa>250&&a0>.003){const s=a0>=.98?0:(1-a)/(1-a0);
+        tr=clamp((pr-a0*B[0])*s,0,255)+F[0]*a;tg=clamp((pg-a0*B[1])*s,0,255)+F[1]*a;tb=clamp((pb-a0*B[2])*s,0,255)+F[2]*a;
+        if(a0>=.98){tr=F[0];tg=F[1];tb=F[2];}}
+      else{tr=pr*(1-a)+F[0]*a;tg=pg*(1-a)+F[1]*a;tb=pb*(1-a)+F[2]*a;}
+      const k=a<=.8?0:a>=1?1:(a-.8)/.2,k2=k*k*(3-2*k);r=tr+(F[0]-tr)*k2;g=tg+(F[1]-tg)*k2;b=tb+(F[2]-tb)*k2;
+      if(pa<255){const al=pa+(255-pa)*a;r=(r*pa+F[0]*(255-pa)*a)/al;g=(g*pa+F[1]*(255-pa)*a)/al;b=(b*pa+F[2]*(255-pa)*a)/al;d[j+3]=al;}
+      d[j]=r<0?0:r>255?255:r;d[j+1]=g<0?0:g>255?255:g;d[j+2]=b<0?0:b>255?255:b;}}
+  x.putImageData(id,0,0);return out;}
+
+/* the picture as drawn behind the ring, with the background layer applied */
+function artSrc(hi){const base=picSrc(hi);if(!bgActive()||!st.bgM&&st.act!=='bg')return base;
+  const key=[st.bgMode,st.bgCol,st.bgG1,st.bgG2,st.bgGAng,st.bgGMid,st.bgBlur,st.bgBri,st.bgSat,st.bgEdge,st.bgV,st.popV].join('|');
+  return cached(hi?'artF':'artW',key,base,()=>bgComposite(base));}
+
+/* Auto in the Background step: everything that is not the subject */
+function autoBackground(){if(!st.src)return;busy(1,'Finding background…');
+  setTimeout(()=>{let m=null;try{const s=autoUniform();if(s)m=invMask(s.mask);}catch(e){}
+    busy(-1);if(!m){m=invMask(popMask());toast('No plain backdrop found, so everything except the pop-out was marked as background.');}
+    else toast('Background marked. Fix anything wrong with Select, Lasso or Brush, or Undo.');
+    st.mask=m;maskChanged();st.bgMode=st.bgMode==='keep'?'colour':st.bgMode;syncUI();draw();commit();},30);}
+function bgFromPopout(){if(!st.src)return;st.mask=invMask(popMask());maskChanged();draw();commit();toast('Everything except the pop-out is now background.');}
 
 /* ===== 06-history.js ===== */
 /* ---------- history: one stack for selection, view and ring changes ---------- */
 const H={a:[],i:-1};
-function snap(){return{m:st.mask,s:JSON.stringify(SETTINGS.map(k=>st[k]))};}
-function commit(keep){if(!st.src)return;if(!keep)wand=null;const s=snap(),cur=H.a[H.i];if(cur&&cur.m===s.m&&cur.s===s.s)return;
+function snap(){return{m:popMask(),b:bgMaskArr(),s:JSON.stringify(SETTINGS.map(k=>st[k]))};}
+function commit(keep){if(!st.src)return;if(!keep)wand=null;const s=snap(),cur=H.a[H.i];if(cur&&cur.m===s.m&&cur.b===s.b&&cur.s===s.s)return;
   H.a.length=H.i+1;H.a.push(s);if(H.a.length>40)H.a.shift();H.i=H.a.length-1;updHist();autosaveSoon();}
-function restore(sn){wand=null;st.mask=sn.m;const v=JSON.parse(sn.s);SETTINGS.forEach((k,i)=>st[k]=v[i]);
-  maskChanged();syncUI();thumbsSoon();draw();}
+function restore(sn){wand=null;const bgm=sn.b||new Uint8Array(sn.m.length);
+  if(st.act==='bg'){st.popM=sn.m;st.mask=bgm;}else{st.mask=sn.m;st.bgM=bgm;}
+  const v=JSON.parse(sn.s);SETTINGS.forEach((k,i)=>st[k]=v[i]);
+  if(st.act==='bg')freezePop();maskChanged();st.popV++;st.bgV++;syncUI();thumbsSoon();draw();}
 function undo(){if(H.i<=0)return toast('Nothing to undo.');H.i--;restore(H.a[H.i]);updHist();}
 function redo(){if(H.i>=H.a.length-1)return toast('Nothing to redo.');H.i++;restore(H.a[H.i]);updHist();}
 function updHist(){$('#bUndo2').disabled=H.i<=0;$('#bRedo2').disabled=H.i>=H.a.length-1;$('#bUndo').disabled=H.i<=0;$('#bRedo').disabled=H.i>=H.a.length-1;}
@@ -1350,30 +1556,35 @@ let commitT=0;const commitSoon=()=>{clearTimeout(commitT);commitT=setTimeout(com
 /* ---------- compositing ---------- */
 function render(ctx,S,o={}){
   ctx.clearRect(0,0,S,S);if(!st.src)return;
-  const pad=o.pad??effPad(),g=geom(S,pad),R=g.R,c=g.c,w=R*st.width,ri=R-w,clipR=ri+w*.3,img=picSrc(!!o.hi);
+  const pad=o.pad??effPad(),g=geom(S,pad),R=g.R,c=g.c,w=R*st.width,ri=R-w,clipR=ri+w*.3,img=artSrc(!!o.hi);
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   /* on-screen only: Isolate shows just the pop-out; in Move the pop-out turns see-through so the ring beneath is visible */
-  const prev=!o.clean&&st.prev,iso=!o.clean&&st.iso&&!prev,ghost=!o.clean&&!iso&&!prev&&st.tool==='move',L=o.layer,RC=iso||L==='art'||L==='pop'?null:ringLayer(S,R,c);
+  const prev=!o.clean&&st.prev,iso=!o.clean&&st.iso&&!prev,ghost=!o.clean&&!iso&&!prev&&st.tool==='move'&&tab==='image',L=o.layer,RC=iso||L==='art'||L==='pop'?null:ringLayer(S,R,c);
   if(!iso&&L!=='pop'){
     if(st.bgOn&&L!=='ring'){ctx.beginPath();ctx.arc(c,c,clipR,0,TAU);ctx.fillStyle=st.bg;ctx.fill();}
+    if(L!=='ring'&&!o.clean&&!prev&&st.vz<1&&!L){ctx.save();ctx.globalAlpha=.3;applyT(ctx,g);ctx.drawImage(img,0,0,st.sw,st.sh);ctx.restore();}
     if(L!=='ring'){ctx.save();ctx.beginPath();ctx.arc(c,c,clipR,0,TAU);ctx.clip();ctx.save();applyT(ctx,g);ctx.drawImage(img,0,0,st.sw,st.sh);ctx.restore();ctx.restore();}
     if(RC)ctx.drawImage(RC,0,0);}
-  if(L!=='ring'&&L!=='art'&&(st.popOn||iso||L==='pop')&&st.selCount>0){
-    const P=o.hi?hiPop():(refreshPop(),st.popCv);
+  if(L!=='ring'&&L!=='art'&&(st.popOn||iso||L==='pop')&&popCount()>0){
+    const P=st.act==='bg'?st.popFrozen:o.hi?hiPop():(refreshPop(),st.popCv);
     if(st.shadow>0&&!iso&&!ghost&&!L){/* the shadow is clipped to the ring: it never darkens the picture or the empty canvas */
       const SH=off(4,S),sx=SH.getContext('2d');sx.globalCompositeOperation='source-over';sx.clearRect(0,0,S,S);
       sx.save();sx.shadowColor='rgba(0,0,0,'+(.6*st.shadow)+')';sx.shadowBlur=R*.05*(.4+st.shadow);sx.shadowOffsetY=R*.02;applyT(sx,g);sx.drawImage(P,0,0,st.sw,st.sh);sx.restore();
       sx.globalCompositeOperation='destination-out';sx.save();applyT(sx,g);sx.drawImage(P,0,0,st.sw,st.sh);sx.restore();
       sx.globalCompositeOperation='destination-in';sx.drawImage(RC,0,0);sx.globalCompositeOperation='source-over';ctx.drawImage(SH,0,0);}
     ctx.save();if(ghost)ctx.globalAlpha=.4;applyT(ctx,g);ctx.drawImage(P,0,0,st.sw,st.sh);ctx.restore();}
-  if(!o.clean&&!prev){
-    if(st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
+  if(!o.clean){
+    if(!prev&&(tab==='popout'||tab==='bg')&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
     if(st.tool==='brush'&&st.hover&&!st.space){const r=brushR()*g.sc,sub=curMode()==='sub';ctx.save();ctx.beginPath();ctx.arc(st.hover.x,st.hover.y,r,0,TAU);
       ctx.fillStyle=sub?'rgba(255,69,58,.22)':'rgba(48,209,88,.22)';ctx.fill();ctx.lineWidth=2.5/st.vz;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.stroke();ctx.lineWidth=1.2/st.vz;ctx.strokeStyle='#fff';ctx.stroke();ctx.restore();}
-    if(st.maskView&&st.selCount>=0){refreshSoft();ctx.save();ctx.fillStyle='#000';ctx.fillRect(-1e5,-1e5,2e5,2e5);applyT(ctx,g);ctx.drawImage(st.softCv,0,0,st.sw,st.sh);ctx.restore();}
-    if(st.kc&&st.tool!=='brush'&&st.tool!=='move'&&document.activeElement===cv){const r=S/45/st.vz;ctx.save();ctx.lineCap='round';
+    if(!prev&&tab==='bg'&&popCount()>0&&!iso){ctx.save();ctx.globalAlpha=.4;applyT(ctx,g);ctx.drawImage(st.popTint,0,0,st.sw,st.sh);ctx.restore();}
+    if(st.lasso&&st.lasso.pts.length>1){const sub=st.lasso.mode==='sub';ctx.save();applyT(ctx,g);ctx.beginPath();st.lasso.pts.forEach((p,i)=>i?ctx.lineTo(p.u,p.v):ctx.moveTo(p.u,p.v));ctx.closePath();
+      ctx.fillStyle=sub?'rgba(255,69,58,.18)':'rgba(48,209,88,.18)';ctx.fill();ctx.lineJoin='round';
+      for(const[w,col]of[[3,'rgba(0,0,0,.65)'],[1.4,'#fff']]){ctx.lineWidth=w/(g.sc*st.vz);ctx.strokeStyle=col;ctx.stroke();}ctx.restore();}
+    if(!prev&&st.maskView&&st.selCount>=0){refreshSoft();ctx.save();ctx.fillStyle='#000';ctx.fillRect(-1e5,-1e5,2e5,2e5);applyT(ctx,g);ctx.drawImage(st.softCv,0,0,st.sw,st.sh);ctx.restore();}
+    if(!prev&&st.kc&&st.tool!=='brush'&&st.tool!=='move'&&document.activeElement===cv){const r=S/45/st.vz;ctx.save();ctx.lineCap='round';
       for(const[w,c]of[[3.2,'rgba(0,0,0,.7)'],[1.5,'#fff']]){ctx.lineWidth=w/st.vz;ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(st.kc.x-r,st.kc.y);ctx.lineTo(st.kc.x+r,st.kc.y);ctx.moveTo(st.kc.x,st.kc.y-r);ctx.lineTo(st.kc.x,st.kc.y+r);ctx.stroke();}ctx.restore();}
-    if(wand&&st.tool==='select'){ctx.save();applyT(ctx,g);const r=S/70/(g.sc*st.vz);ctx.beginPath();ctx.arc(wand.u,wand.v,r,0,TAU);ctx.lineWidth=r*.5;ctx.strokeStyle='rgba(0,0,0,.65)';ctx.stroke();ctx.lineWidth=r*.25;ctx.strokeStyle='#fff';ctx.stroke();
+    if(!prev&&wand&&st.tool==='select'){ctx.save();applyT(ctx,g);const r=S/70/(g.sc*st.vz);ctx.beginPath();ctx.arc(wand.u,wand.v,r,0,TAU);ctx.lineWidth=r*.5;ctx.strokeStyle='rgba(0,0,0,.65)';ctx.stroke();ctx.lineWidth=r*.25;ctx.strokeStyle='#fff';ctx.stroke();
       ctx.beginPath();ctx.arc(wand.u,wand.v,r*.3,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.restore();}}
 }
 let stripe=null;
@@ -1383,7 +1594,7 @@ function stripePat(ctx){if(!stripe){const p=mk();p.width=p.height=16;const x=p.g
 function selOverlay(ctx,g,S){refreshSel();const T=off(2,S),t=T.getContext('2d'),tool=st.tool!=='move';
   if(tool){t.globalCompositeOperation='source-over';t.clearRect(0,0,S,S);t.save();applyT(t,g);t.drawImage(st.selCv,0,0,st.sw,st.sh);t.restore();
     t.globalCompositeOperation='source-in';t.fillStyle='#ff2d55';t.fillRect(0,0,S,S);t.globalCompositeOperation='source-over';
-    ctx.save();ctx.globalAlpha=wand?.38:.2;ctx.drawImage(T,0,0);ctx.restore();}
+    ctx.save();ctx.globalAlpha=wand?.38:tab==='bg'?.1:.2;ctx.drawImage(T,0,0);ctx.restore();}
   t.globalCompositeOperation='source-over';t.clearRect(0,0,S,S);
   const lw=Math.max(1.6,S/420)/(g.sc*st.vz);t.save();applyT(t,g);
   for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1],[.7,.7],[-.7,.7],[.7,-.7],[-.7,-.7]])t.drawImage(st.selCv,dx*lw,dy*lw,st.sw,st.sh);t.restore();
@@ -1410,10 +1621,11 @@ function setZoom(z){st.zoom=clamp(z,.1,8);SLI.zoom.sync();hud('Picture '+Math.ro
 /* workspace zoom (Select / Brush): magnifies the screen only, never the exported token */
 const viewTool=()=>st.tool!=='move';
 function toTok(p){const S=cv.width;return{x:(p.x-st.vx*S)/st.vz,y:(p.y-st.vy*S)/st.vz};}
-function clampView(){st.vz=clamp(st.vz,1,8);st.vx=clamp(st.vx,1-st.vz,0);st.vy=clamp(st.vy,1-st.vz,0);$('#viewReset').hidden=st.vz<=1.001;}
-function zoomAt(z,px,py){const S=cv.width,t=toTok({x:px,y:py});st.vz=clamp(z,1,8);st.vx=(px-t.x*st.vz)/S;st.vy=(py-t.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
-function zoomStep(dir){if(viewTool())zoomAt(st.vz*(dir>0?1.25:.8),cv.width/2,cv.height/2);else stepZoom(dir);}
-function zoomKey(dir,big){if(viewTool())zoomAt(st.vz*(1+dir*(big?.4:.15)),cv.width/2,cv.height/2);else setZoom(st.zoom+dir*(big?.1:.02));}
+/* workspace zoom 40% to 800%; zoomed out, the view stays centred and shows the rest of the picture around the token */
+function clampView(){st.vz=clamp(st.vz,.4,8);if(st.vz<1){st.vx=st.vy=(1-st.vz)/2;}else{st.vx=clamp(st.vx,1-st.vz,0);st.vy=clamp(st.vy,1-st.vz,0);}$('#viewReset').hidden=Math.abs(st.vz-1)<.001;}
+function zoomAt(z,px,py){const S=cv.width,t=toTok({x:px,y:py});st.vz=clamp(z,.4,8);st.vx=(px-t.x*st.vz)/S;st.vy=(py-t.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
+function zoomStep(dir){zoomAt(st.vz*(dir>0?1.25:.8),cv.width/2,cv.height/2);}
+function zoomKey(dir,big){zoomAt(st.vz*(1+dir*(big?.4:.15)),cv.width/2,cv.height/2);}
 function resetWorkspace(){st.vz=1;st.vx=st.vy=0;clampView();draw();}
 function stepZoom(dir){setZoom(Math.round(st.zoom/.05+dir)*.05);}
 function resetView(){st.vz=1;st.vx=st.vy=0;clampView();st.ix=0;st.iy=0;st.zoom=1;st.rot=0;st.flip=1;SLI.zoom.sync();SLI.rot.sync();viewChanged();}
@@ -1426,7 +1638,7 @@ const ptrs=new Map();let drag=null,gest=null,lastPt=null,wheelT=0,selCtx=null,so
 function cpt(x,y){const r=cv.getBoundingClientRect(),k=cv.width/r.width;return{x:(x-r.left)*k,y:(y-r.top)*k,k};}
 function pt(e){return cpt(e.clientX,e.clientY);}
 function imgPt(e){const q=toTok(pt(e));return toImg(geom(cv.width,effPad()),q.x,q.y);}
-const curMode=e=>((e&&e.altKey)||st.alt)?'sub':st.mode;
+const curMode=e=>((e&&(e.altKey||(st.tool==='lasso'&&e.shiftKey)))||st.alt)?'sub':st.mode;
 function startPaint(){refreshSoft();refreshSel();st.mask=st.mask.slice();st.painting=true;lastPt=null;selCtx=st.selCv.getContext('2d');softCtx=st.softCv.getContext('2d');
   if(st.strand)strandSetup();
 }
@@ -1435,22 +1647,34 @@ function paintTo(e){const q=imgPt(e),val=curMode(e)==='sub'?0:255,r=brushR();
   if(lastPt){const dx=q.u-lastPt.u,dy=q.v-lastPt.v,n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/(r/3)));for(let i=1;i<=n;i++)dab(lastPt.u+dx*i/n,lastPt.v+dy*i/n,r,val);}
   else dab(q.u,q.v,r,val);
   flushDirty();lastPt=q;if(val&&!st.selCount)st.selCount=1;st.popDirty=true;draw();}
+/* lasso: the drawn outline is closed and filled into the selection when the pointer is released */
+function lassoApply(){const L=st.lasso;st.lasso=null;if(!L||L.pts.length<3){draw();return;}
+  const P=L.pts;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of P){x0=Math.min(x0,p.u);y0=Math.min(y0,p.v);x1=Math.max(x1,p.u);y1=Math.max(y1,p.v);}
+  const B=bounds();x0=Math.max(B.x0,Math.floor(x0));y0=Math.max(B.y0,Math.floor(y0));x1=Math.min(B.x1,Math.ceil(x1)+1);y1=Math.min(B.y1,Math.ceil(y1)+1);
+  const w=x1-x0,h=y1-y0;if(w<2||h<2){draw();return;}
+  const c=mk();c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.beginPath();P.forEach((p,i)=>i?x.lineTo(p.u-x0,p.v-y0):x.moveTo(p.u-x0,p.v-y0));x.closePath();x.fill();
+  const d=x.getImageData(0,0,w,h).data,m=st.mask.slice(),val=L.mode==='sub'?0:255,W=st.sw;let any=false;
+  for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){if(d[(yy*w+xx)*4+3]>=128){m[(y0+yy)*W+x0+xx]=val;any=true;}}
+  if(!any){draw();return;}
+  st.mask=m;maskChanged();st.popDirty=true;draw();commit();}
 function endPaint(){flushDirty();st.painting=false;maskChanged();commit();draw();}
 cv.addEventListener('pointerdown',e=>{if(!st.src)return;if(e.pointerType==='mouse'&&e.button!==0)return;
   cv.focus({preventScroll:true});st.kc=null;
   dismissCoach(true);cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(!viewTool())st.lockPad=true;
+  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso){st.lasso=null;draw();}if(!viewTool())st.lockPad=true;
     if(st.painting)endPaint();return;}
   if(st.tool==='move'||st.space){const vw=st.space&&viewTool()&&st.vz>1;drag={x:e.clientX,y:e.clientY,view:vw};if(!vw)st.lockPad=true;cv.classList.add('grabbing');}
   else if(st.tool==='select'){const q=imgPt(e);wandStart(q.u,q.v,curMode(e));}
+  else if(st.tool==='lasso'){const q=imgPt(e);st.lasso={pts:[q],mode:curMode(e)};draw();}
   else{startPaint();paintTo(e);}});
 cv.addEventListener('pointermove',e=>{
   if(st.tool==='brush'){st.hover=toTok(pt(e));if(!ptrs.has(e.pointerId))draw();}
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2&&gest){const[a,b]=[...ptrs.values()],ratio=Math.hypot(a.x-b.x,a.y-b.y)/gest.d;
-    if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,1,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
+    if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
     else{st.zoom=clamp(gest.z*ratio,.1,8);SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
     return;}
+  if(st.lasso){const q=imgPt(e),l=st.lasso.pts[st.lasso.pts.length-1];if(Math.hypot(q.u-l.u,q.v-l.v)>=Math.max(1,st.sw/600)){st.lasso.pts.push(q);draw();}return;}
   if(st.painting)paintTo(e);
   else if(drag){const p=pt(e),S=cv.width;
     if(drag.view){st.vx+=(e.clientX-drag.x)*p.k/S;st.vy+=(e.clientY-drag.y)*p.k/S;clampView();draw();}
@@ -1458,6 +1682,7 @@ cv.addEventListener('pointermove',e=>{
     drag={x:e.clientX,y:e.clientY,view:drag.view};}});
 const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest;ptrs.delete(e.pointerId);if(ptrs.size<2)gest=null;drag=null;cv.classList.remove('grabbing');
   if(st.painting)endPaint();
+  if(st.lasso)lassoApply();
   if(!ptrs.size){st.lockPad=false;st.fitDirty=true;draw();if(moved)commit();}};
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('pointerleave',()=>{st.hover=null;draw();});
@@ -1483,9 +1708,9 @@ function loadCanvas(full,info){
   if(k<1){s.width=Math.max(1,Math.round(full.width*k));s.height=Math.max(1,Math.round(full.height*k));const x=s.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(full,0,0,s.width,s.height);}
   st.full=full;st.src=s;st.sw=s.width;st.sh=s.height;st.embed=null;
   st.sdata=s.getContext('2d',{willReadFrequently:true}).getImageData(0,0,s.width,s.height).data;
-  st.mask=new Uint8Array(s.width*s.height);maskChanged();
+  st.act='pop';st.popM=null;st.bgM=new Uint8Array(s.width*s.height);st.mask=new Uint8Array(s.width*s.height);maskChanged();
   st.pal=extractPalette(s);renderPalette();
-  Object.assign(st,ADJ_DEFAULT,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
+  Object.assign(st,ADJ_DEFAULT,BG_DEFAULT,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
   $('#srcInfo').textContent=info;
   H.a=[];H.i=-1;updHist();}
 function loadFile(f){
@@ -1496,8 +1721,9 @@ function loadFile(f){
     c.width=Math.max(1,Math.round(im.naturalWidth*k));c.height=Math.max(1,Math.round(im.naturalHeight*k));
     const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);
     loadCanvas(c,f.name+' · '+im.naturalWidth+'×'+im.naturalHeight+' px'+(k<1?' (kept at '+c.width+'×'+c.height+' for export)':'')+'.');
-    st.popOn=true;syncUI();commit();draw();busy(-1);dismissCoach(true);setTool('select');
-    if(tab==='image')setTab('popout');
+    {const base=(f.name||'').replace(/\.[^.]*$/,'').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,70);
+     if(base&&!/^(image|blob|unnamed)$/i.test(base))$('#fname').value=base+'-token';}
+    st.popOn=true;syncUI();commit();draw();busy(-1);dismissCoach(true);setTab('image');
     runAuto();};
   im.onerror=()=>{busy(-1);toast('Could not read that image.');};im.src=url;}
 function sampleArt(){
@@ -1511,6 +1737,12 @@ function sampleArt(){
   x.fillStyle='#f2efe9';x.beginPath();x.moveTo(300,478);x.quadraticCurveTo(300,700,410,775);x.quadraticCurveTo(515,700,520,478);x.quadraticCurveTo(410,540,300,478);x.fill();
   x.fillStyle='#2f4aa8';x.beginPath();x.moveTo(228,338);x.quadraticCurveTo(370,160,432,10);x.quadraticCurveTo(472,170,585,338);x.closePath();x.fill();
   x.beginPath();x.ellipse(406,338,252,42,0,0,TAU);x.fill();
+  /* where the character is, so the sample starts with a sensible backdrop mask */
+  const m=mk();m.width=m.height=800;const y=m.getContext('2d');y.fillStyle='#fff';
+  y.beginPath();y.ellipse(400,830,340,210,0,0,TAU);y.fill();y.beginPath();y.arc(405,440,105,0,TAU);y.fill();
+  y.beginPath();y.moveTo(300,478);y.quadraticCurveTo(300,700,410,775);y.quadraticCurveTo(515,700,520,478);y.quadraticCurveTo(410,540,300,478);y.fill();
+  y.beginPath();y.moveTo(228,338);y.quadraticCurveTo(370,160,432,10);y.quadraticCurveTo(472,170,585,338);y.closePath();y.fill();y.beginPath();y.ellipse(406,338,252,42,0,0,TAU);y.fill();
+  sampleArt.subject=m;
   return c;}
 
 /* ===== 10-project-file.js ===== */
@@ -1547,7 +1779,7 @@ const STR=n=>v=>typeof v==='string'?v.slice(0,n):undefined;
 const SCHEMA={ix:NUM(-3,3),iy:NUM(-3,3),zoom:NUM(.1,8),rot:NUM(-12.6,12.6),flip:v=>v===-1||v===1?v:undefined,bgOn:BOOL,bg:COLOR,autoFit:BOOL,pad:NUM(0,.45),popOn:BOOL,
   feather:NUM(0,12),shadow:NUM(0,1),formula:v=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(PAT,v)?v:undefined,color:COLOR,accent:COLOR,width:NUM(.04,.3),count:NUM(0,90),depth:NUM(0,1),
   tex:v=>typeof v==='string'?fixTex(v):undefined,texAmt:NUM(0,1),texDens:NUM(.4,5),seed:v=>Number.isInteger(v)?clamp(v,0,1e9):undefined,eCol:COLOR,gradOn:BOOL,g1:COLOR,g2:COLOR,
-  gAng:NUM(-12.6,12.6),colorKey:STR(40),lAng:NUM(-12.6,12.6),lInt:NUM(0,1.5),texRot:NUM(-12.6,12.6),lineW:NUM(.01,.4),eAmt:NUM(1,24),eLen:NUM(.2,2),
+  gAng:NUM(-12.6,12.6),gMid:NUM(.05,.95),bgMode:v=>['keep','colour','gradient','blur','clear'].includes(v)?v:undefined,bgCol:COLOR,bgG1:COLOR,bgG2:COLOR,bgGAng:NUM(-12.6,12.6),bgGMid:NUM(.05,.95),bgBlur:NUM(0,100),bgBri:NUM(-100,100),bgSat:NUM(-100,100),bgEdge:NUM(0,100),colorKey:STR(40),lAng:NUM(-12.6,12.6),lInt:NUM(0,1.5),texRot:NUM(-12.6,12.6),lineW:NUM(.01,.4),eAmt:NUM(1,24),eLen:NUM(.2,2),
   bri:NUM(-100,100),con:NUM(-100,100),sat:NUM(-100,100),defr:NUM(0,1),bgC:COLOR,bgAuto:BOOL};
 function sanitizeSettings(o){const out={};if(!o||typeof o!=='object')return out;
   for(const k of SETTINGS){if(!Object.prototype.hasOwnProperty.call(o,k))continue;const v=SCHEMA[k]?SCHEMA[k](o[k]):undefined;if(v!==undefined)out[k]=v;}return out;}
@@ -1584,7 +1816,9 @@ async function restoreProject({meta,img},msg){busy(1,'Opening project…');
     Object.assign(st,RING_DEFAULT,sanitizeSettings(meta.settings));
     if(!PAT[st.formula])st.formula='plain';
     const M=meta.mask,m=typeof M.rle8==='string'?rle8Dec(b64dec(M.rle8),M.w*M.h):rleDec(b64dec(M.rle),M.w*M.h);st.mask=(M.w===st.sw&&M.h===st.sh)?m:resampleMask(m,M.w,M.h);maskChanged();
-    st.padCur=st.pad;st.snapPad=true;syncUI();commit();thumbsSoon();draw();setTool('select');dismissCoach(true);toast(msg||'Project restored. Everything is editable again.');
+    {const BM=meta.bgMask;let bm=null;try{if(BM&&typeof BM.rle8==='string'&&BM.w*BM.h<=LIMITS.maskPixels){bm=rle8Dec(b64dec(BM.rle8),BM.w*BM.h);if(BM.w!==st.sw||BM.h!==st.sh)bm=resampleMask(bm,BM.w,BM.h);}}catch(e){bm=null;}
+     st.bgM=bm||invMask(st.mask);}
+    st.padCur=st.pad;st.snapPad=true;syncUI();commit();thumbsSoon();draw();setTab('image');dismissCoach(true);toast(msg||'Project restored. Everything is editable again.');
   }catch(e){toast('Could not read the project data in that file.');}finally{busy(-1);}}
 let pendingOpen=null;
 async function openFile(f){if(!f)return;if(!f.type.startsWith('image/'))return toast('That file is not an image.');
@@ -1619,7 +1853,7 @@ const SL={
  rot:{label:'Rotate',min:-180,max:180,step:1,unit:'°',k:Math.PI/180,def:0,fx:'view',tip:'Rotate the picture'},
  pad:{label:'Margin',min:0,max:45,step:.1,unit:'%',k:.01,def:8,fx:'draw',tip:'Empty space around the ring so pop-out art can extend past it'},
  feather:{label:'Feather',min:0,max:12,step:.5,unit:'px',k:1,def:.5,fx:'soft',tip:'Fades the outer edge of the cut-out inward. Soft hair edges are left alone. Try Show mask to see it.'},
- autoSens:{label:'Auto sensitivity',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
+ autoSens:{label:'Auto detail',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
  autoShrink:{label:'Shrink / grow',min:-10,max:10,step:1,unit:'px',k:1,def:0,fx:'auto',tip:'Moves the whole Auto outline in (positive) or out (negative), like shrinking a wand selection. Runs Auto again.'},
  gap:{label:'Close small gaps',min:0,max:40,step:1,unit:'px',k:1,def:0,fx:'gap',tip:'Removes background-coloured gaps between curls up to this width. Larger gaps: use the Brush set to Remove.'},
  shadow:{label:'Drop shadow',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'fit',tip:'Shadow the pop-out casts onto the ring'},
@@ -1628,6 +1862,7 @@ const SL={
  width:{label:'Ring width',min:4,max:30,step:1,unit:'%',k:.01,def:11,fx:'ring',tip:'How thick the ring is'},
  count:{label:'Count',min:6,max:60,step:1,unit:'',k:1,def:()=>PAT[st.formula].n,fx:'ring',tip:'How many teeth, beads, segments or ticks'},
  depth:{label:'Depth',min:0,max:100,step:1,unit:'%',k:.01,def:()=>Math.round(PAT[st.formula].d*100),fx:'ring',tip:'How pronounced the shape detail is'},
+ gMid:{label:'Colour balance',min:10,max:90,step:1,unit:'%',k:.01,def:50,fx:'ring',tip:'Where the two colours meet. Lower = more of the second colour, higher = more of the first'},
  gAng:{label:'Angle',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:45,fx:'ring',tip:'0° is left to right, 90° is top to bottom'},
  texAmt:{label:'Intensity',min:5,max:100,step:1,unit:'%',k:.01,def:60,fx:'draw',tip:'How strongly the texture shows on the ring'},
  texDens:{label:'Scale',min:15,max:150,step:1,unit:'%',k:.03,def:100,fx:'draw',tip:'Higher values repeat the texture more often, which makes the grain finer'},
@@ -1636,6 +1871,12 @@ const SL={
  lAng:{label:'Light from',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:135,fx:'ring',tip:'Direction the light comes from: 0° right, 90° bottom, 180° left, 270° top'},
  eAmt:{label:'Amount',min:1,max:24,step:1,unit:'',k:1,def:5,fx:'draw',tip:'How many lightning bolts'},
  eLen:{label:'Length',min:20,max:200,step:1,unit:'%',k:.01,def:100,fx:'draw',tip:'How far each bolt travels around the ring'},
+ bgGMid:{label:'Colour balance',min:10,max:90,step:1,unit:'%',k:.01,def:50,fx:'draw',tip:'Where the two colours meet'},
+ bgGAng:{label:'Angle',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:90,fx:'draw',tip:'0° is left to right, 90° is top to bottom'},
+ bgBlur:{label:'Blur',min:0,max:100,step:1,unit:'',k:1,def:40,fx:'draw',tip:'How soft the blurred backdrop is'},
+ bgBri:{label:'Backdrop brightness',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'draw',tip:'Lighten or darken only the backdrop'},
+ bgSat:{label:'Backdrop saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'draw',tip:'How vivid the backdrop colours are'},
+ bgEdge:{label:'Edge blend',min:0,max:100,step:1,unit:'%',k:1,def:20,fx:'draw',tip:'Softens the border between backdrop and character'},
  bri:{label:'Brightness',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'Make the picture lighter or darker'},
  con:{label:'Contrast',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'Difference between light and dark areas'},
  sat:{label:'Saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'How vivid the colours are. -100 is black and white.'},
@@ -1677,7 +1918,15 @@ function bindSeg(root,get,set){const bs=[...root.querySelectorAll('button')];con
   bs.forEach(b=>b.addEventListener('click',()=>{set(b.dataset.v);sync();}));syncers.push(sync);return bs;}
 bindSwitch('bgOn','bgOn');bindSwitch('popOn','popOn',()=>{st.fitDirty=true;});bindSwitch('embedOn','embedOn');
 bindSwitch('autoFit','autoFit',()=>{if(!st.autoFit)st.pad=st.padCur;else st.fitDirty=true;updVis();SLI.pad.sync();});
-bindColor('bg','bg');bindColor('accent','accent',()=>thumbsSoon());bindColor('eCol','eCol',()=>thumbsSoon());
+bindColor('bg','bg');bindColor('bgCol','bgCol');bindColor('bgG1','bgG1');bindColor('bgG2','bgG2');
+bindSeg($('#bgModeSeg'),()=>st.bgMode,v=>{st.bgMode=v;updBgVis();draw();commit();});
+function updBgVis(){const m=st.bgMode,sh=(id,on)=>$('#'+id).hidden=!on;
+  sh('rowBgCol',m==='colour');sh('rowBgG1',m==='gradient');sh('rowBgG2',m==='gradient');sh('rowBgMid',m==='gradient');sh('rowBgAng',m==='gradient');sh('rowBgBlur',m==='blur');sh('rowBgRing',m==='colour');
+  sh('rowBgBri',m!=='clear');sh('rowBgSat',m!=='clear');sh('bgClearNote',m==='clear');
+  $('#bgName').textContent={keep:'Original',colour:'Colour',gradient:'Gradient',blur:'Blurred',clear:'Removed'}[m];}
+syncers.push(updBgVis);
+$('#bBgAuto').onclick=autoBackground;$('#bBgRest').onclick=bgFromPopout;
+$('#bBgRing').onclick=()=>{st.bgMode='colour';st.bgCol=mix(st.gradOn?st.g1:st.color,'#000000',.55);syncUI();draw();commit();};bindColor('accent','accent',()=>thumbsSoon());bindColor('eCol','eCol',()=>thumbsSoon());
 bindColor('g1','g1',()=>{st.colorKey='Custom gradient';updColorSel();thumbsSoon();});bindColor('g2','g2',()=>{st.colorKey='Custom gradient';updColorSel();thumbsSoon();});
 bindColor('color','color',()=>{st.gradOn=false;st.colorKey='Custom';updColorSel();updVis();thumbsSoon();});
 $('#contig').onclick=()=>{st.contig=!st.contig;syncUI();wandDone();};
@@ -1694,10 +1943,14 @@ TEX.forEach(([id,name])=>{const b=document.createElement('button');b.className='
 bindSeg($('#texGrid'),()=>st.tex,v=>{st.tex=v;if(v!=='none'){st.texAmt=TEX_AMT[v];SLI.texAmt.sync();}updVis();draw();thumbsSoon();commit();});
 
 /* ---------- tools & badge ---------- */
-function setTool(v){wand=null;st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
+let popTool='select';
+/* each step has its own tool set: Place, Ring and Export drag the picture (Move); Pop-out uses the selection tools */
+function stepTool(){setTool(tab==='popout'||tab==='bg'?(st.tool==='move'?popTool:st.tool):'move');}
+function goTool(v){if(v==='move'){if(tab!=='image')setTab('image');}else if(tab!=='popout'&&tab!=='bg')setTab('popout');setTool(v);}
+function setTool(v){if(v!=='move')popTool=v;wand=null;st.lasso=null;st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
   $$('#optbar .o').forEach(o=>o.hidden=o.dataset.for!==v);cv.dataset.tool=v;updBadge();draw();}
 $$('.tbtn[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',brush:'Brush'}[st.tool];
+function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',lasso:'Lasso',brush:'Brush'}[st.tool];
   b.className='badge'+(st.tool==='move'||st.space?'':' '+m);b.lastChild.textContent=st.space?'Pan (Space held)':st.tool==='move'?T:T+' · '+(m==='sub'?'Remove':'Add');}
 
 /* ---------- selection actions: toolbar buttons + "More" menu ---------- */
@@ -1750,6 +2003,7 @@ function holdBtn(btn,fn){let t=0,iv=0,held=false;
   btn.addEventListener('pointerdown',e=>{if(e.button)return;held=true;fn();t=setTimeout(()=>{iv=setInterval(fn,80);},420);});
   ['pointerup','pointerleave','pointercancel'].forEach(n=>btn.addEventListener(n,stop));
   btn.addEventListener('click',e=>{if(e.detail===0){fn();commit();}});}
+holdBtn($('#bPicSmaller'),()=>stepZoom(-1));holdBtn($('#bPicLarger'),()=>stepZoom(1));
 holdBtn($('#bZoomIn'),()=>zoomStep(1));holdBtn($('#bZoomOut'),()=>zoomStep(-1));
 $('#bReset').onclick=()=>{resetView();commit();};
 $('#viewReset').onclick=resetWorkspace;
@@ -1778,7 +2032,7 @@ METALS.forEach(([name,hex])=>{const b=document.createElement('button');b.classNa
   b.onclick=()=>{st.gradOn=false;st.color=hex;st.colorKey=name;syncUI();thumbsSoon();draw();commit();};$('#gridMetal').appendChild(b);});
 function gradSwatch(name,a,b,deg){const bt=document.createElement('button');bt.className='sw';bt.dataset.key=name;bt.title=name+' gradient';
   bt.innerHTML='<i class="two"><b style="background:'+a+'"></b><b style="background:'+b+'"></b></i><span>'+name+'</span>';
-  bt.onclick=()=>{st.g1=a;st.g2=b;st.gAng=deg*Math.PI/180;st.gradOn=true;st.colorKey=name;syncUI();thumbsSoon();draw();commit();};return bt;}
+  bt.onclick=()=>{st.g1=a;st.g2=b;st.gAng=deg*Math.PI/180;st.gMid=.5;st.gradOn=true;st.colorKey=name;syncUI();thumbsSoon();draw();commit();};return bt;}
 function buildGradGrid(){const g=$('#gridGrad');g.innerHTML='';GRADS.forEach(([n,a,b,d])=>g.appendChild(gradSwatch(n,a,b,d)));
   const ig=imageGrad();if(ig)g.appendChild(gradSwatch('Image',ig[0],ig[1],45));updColorSel();}
 function updColorSel(){$$('#gridMetal .sw').forEach(b=>b.setAttribute('aria-pressed',String(!st.gradOn&&st.colorKey===b.dataset.key)));
@@ -1787,7 +2041,7 @@ function updColorSel(){$$('#gridMetal .sw').forEach(b=>b.setAttribute('aria-pres
 syncers.push(updColorSel);
 function updVis(){const P=PAT[st.formula];
   $('#rowCount').hidden=!P.cl;$('#rowLine').hidden=!P.xl;$('#rowDepth').hidden=!P.dl;$('#rowAccent').hidden=!P.acc;
-  $('#rowCustom').hidden=st.gradOn;['rowGradFrom','rowGradTo','rowGradAng'].forEach(i=>$('#'+i).hidden=!st.gradOn);
+  $('#rowCustom').hidden=st.gradOn;['rowGradFrom','rowGradTo','rowGradMid','rowGradAng'].forEach(i=>$('#'+i).hidden=!st.gradOn);
   const t=st.tex!=='none';$('#rowTexAmt').hidden=$('#rowTexRot').hidden=$('#rowShuffleTex').hidden=!t;$('#rowTexDens').hidden=!t||st.tex==='energy';$('#rowEAmt').hidden=$('#rowELen').hidden=st.tex!=='energy';$('#rowEnergy').hidden=st.tex!=='energy';
   $('#rowPad').hidden=st.autoFit;}
 syncers.push(updVis);
@@ -1817,6 +2071,7 @@ $('#bShuffleLook').onclick=()=>{const f=pick(PAT_ORDER),P=PAT[f],m=pick(METALS),
   applyLook({formula:f,color:m[1],colorKey:g?g[0]:m[0],gradOn:!!g,g1:g?g[1]:'#ff8a1f',g2:g?g[2]:'#7a0c10',gAng:g?g[3]*Math.PI/180:Math.PI/4,accent:pick(METALS)[1],width:+rnd(.09,.16).toFixed(2),
     count:Math.round(clamp(P.n*rnd(.75,1.3),P.min,P.max)),depth:+rnd(.35,.8).toFixed(2),tex:t,texAmt:TEX_AMT[t]||.6,eAmt:Math.round(rnd(3,9)),eLen:+rnd(.7,1.4).toFixed(2),texRot:Math.random()<.5?0:Math.PI/2,lAng:Math.random()*TAU,seed:1+Math.floor(Math.random()*9999),eCol:pick(['#5ec8ff','#c7b3ff','#ffd36b','#7dff9b'])});};
 $('#bTexShuffle').onclick=()=>{st.seed=1+Math.floor(Math.random()*9999);draw();thumbsSoon();commit();};
+['#bShuffleLook','#bSaveLook'].forEach(q=>$(q).addEventListener('click',e=>e.preventDefault()));
 $('#bSaveLook').onclick=()=>{$('#saveName').value='';$('#saveDlg').showModal();setTimeout(()=>$('#saveName').focus(),30);};
 $('#saveForm').addEventListener('submit',e=>{if(e.submitter&&e.submitter.value==='ok'){const name=$('#saveName').value.trim()||'My look',l={name};RING_KEYS.forEach(k=>l[k]=st[k]);
   saved.unshift(l);saved=saved.slice(0,24);store.set('tw_styles',JSON.stringify(saved));buildLooks();thumbsNow();toast('Saved “'+name+'”.');}});
@@ -1832,14 +2087,15 @@ function thumbsNow(){if(tab!=='ring')return;thumbsStale=false;
 
 /* ===== 13-tabs-export.js ===== */
 /* ---------- tabs ---------- */
-const TABS=['image','popout','ring','export'];let tab='image';
-function setTab(name,focus){tab=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
+const TABS=['image','popout','bg','ring','export'];let tab='image';
+function setTab(name,focus){tab=name;setAct(name==='bg'?'bg':'pop');document.body.dataset.step=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
+  stepTool();rove();
   if(focus)$('#t-'+name).focus();
   if(name==='ring'&&thumbsStale)thumbsNow();if(name==='export'){updExport();miniSoon(true);}
   if(!DESKTOP.matches)scrollTo({top:0});else $('.inspector').scrollTop=0;}
 $$('.tab').forEach(b=>{b.onclick=()=>setTab(b.dataset.tab);
   b.addEventListener('keydown',e=>{const i=TABS.indexOf(b.dataset.tab);let n=-1;
-    if(e.key==='ArrowRight')n=(i+1)%4;else if(e.key==='ArrowLeft')n=(i+3)%4;else if(e.key==='Home')n=0;else if(e.key==='End')n=3;
+    if(e.key==='ArrowRight')n=(i+1)%TABS.length;else if(e.key==='ArrowLeft')n=(i+TABS.length-1)%TABS.length;else if(e.key==='Home')n=0;else if(e.key==='End')n=TABS.length-1;
     if(n>=0){e.preventDefault();setTab(TABS[n],true);}});});
 $$('[data-next]').forEach(b=>b.onclick=()=>setTab(b.dataset.next));
 
@@ -1859,7 +2115,7 @@ function zipStore(files){const enc=new TextEncoder(),d=new Date(),dt=((d.getFull
   return new Blob([...parts,...cd,new Uint8Array(end.buffer)],{type:'application/zip'});}
 /* one rendered image: the whole token or a single layer, as PNG or WebP (falls back to PNG where WebP is unavailable) */
 async function renderImage(layer,fmt,embed){const S=st.exportSize,c=mk();c.width=c.height=S;
-  render(c.getContext('2d'),S,{clean:true,hi:true,pad:exportPad(),layer});
+  withPop(()=>render(c.getContext('2d'),S,{clean:true,hi:true,pad:exportPad(),layer}));
   let ext=fmt,blob=await new Promise(r=>c.toBlob(r,FMT[fmt].type,.95));
   if(!blob||blob.type!==FMT[fmt].type){ext='png';blob=await new Promise(r=>c.toBlob(r,'image/png'));if(fmt==='webp')toast('This browser cannot save WebP, so PNG was used.');}
   if(!blob||!embed||layer)return{blob,ext};
@@ -1882,7 +2138,7 @@ async function exportFile(){const what=st.exportWhat,base=exportBase(),fmt=st.ex
 async function exportPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const r=await exportFile();if(!r.blob)return toast('Export failed.');await saveBlob(r.blob,r.name);}finally{busy(-1);}}
 function projectMeta(e){return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type},
-  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(st.mask))}};}
+  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(popMask()))},bgMask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(bgMaskArr()))}};}
 async function makeBlob(embed){return(await renderImage(undefined,'png',embed)).blob;}
 async function copyPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const blob=await makeBlob(false);await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('Copied to clipboard.');}
@@ -1948,7 +2204,7 @@ addEventListener('keydown',e=>{
   if(k===' '&&free){e.preventDefault();if(!st.space){st.space=true;cv.style.cursor='grab';updBadge();}return;}
   if((k==='Delete'||k==='Backspace')&&free){e.preventDefault();clearSel();return;}
   const low=k.toLowerCase();
-  if(low==='v')setTool('move');else if(low==='w')setTool('select');else if(low==='b')setTool('brush');else if(low==='i')toggleIso();else if(low==='m')toggleMask();else if(low==='p')togglePrev();
+  if(low==='v')goTool('move');else if(low==='w')goTool('select');else if(low==='b')goTool('brush');else if(low==='l')goTool('lasso');else if(low==='i'&&tab==='popout')toggleIso();else if(low==='m'&&tab==='popout')toggleMask();else if(low==='p')togglePrev();
   else if(onCanvas&&st.tool!=='move'&&(k.startsWith('Arrow')||k==='Enter'))kbCursor(e);
   else if(k==='['){st.brush=clamp(st.brush-2,2,40);SLI.brush.sync();draw();}else if(k===']'){st.brush=clamp(st.brush+2,2,40);SLI.brush.sync();draw();}
   else if(k==='?'){$('#helpDlg').showModal();}
@@ -1998,8 +2254,9 @@ function syncUI(){syncers.forEach(f=>f());updExport();}
 applyTheme();buildLooks();
 loadCanvas(sampleArt(),'Sample art. Use Open, drop an image on the preview, or paste one with Ctrl/⌘+V.');
 Object.assign(st,{zoom:1.3,iy:.05});
-{const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();}   // pre-select the hat so the pop-out shows on first view
-setTool('select');syncUI();commit();draw();
+{const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();
+ {const t=mk();t.width=st.sw;t.height=st.sh;const q=t.getContext('2d');q.drawImage(sampleArt.subject,0,0,st.sw,st.sh);const d=q.getImageData(0,0,st.sw,st.sh).data,bm=new Uint8Array(st.sw*st.sh);for(let i=0;i<bm.length;i++)bm[i]=255-d[i*4+3];st.bgM=bm;}}
+setTab('image');syncUI();commit();draw();
 if(!store.get('tw_coach'))$('#coach').hidden=false;
 rove();{const t=store.get('tw_table');setStrip(t===null?DESKTOP.matches:t==='1');}autoRestore();
 

@@ -123,7 +123,7 @@ function fixEdges(quiet){if(!st.src||!st.selCount){if(!quiet)toast('Choose the p
   const r=edgePipeline(st.mask,B,{matte:true,clean:true,shift:true},Math.round(reach));
   if(quiet)st.eReach=Math.round(reach);
   eSess={base:st.mask,B,steps:{matte:true,clean:true,shift:true},hi:-1,out:null};applyEdge(r);eSess.out=st.mask;
-  if(!quiet){edgeCommit();toast(r.matte?'Edges softened'+(r.specks+r.filled?' and cleaned up':'')+'. Fine-tune below, or Undo.':r.busy?'The background is busy, so only specks and holes were cleaned. Try Refine and the hair-aware brush for strands.':r.low?'The edge is too similar to the background to soften automatically. Specks were cleaned.':'Specks and holes cleaned up.');}
+  if(!quiet){edgeCommit();toast(r.matte?'Edges softened'+(r.specks+r.filled?' and cleaned up':'')+'. Fine-tune below, or Undo.':r.busy?'The background is busy, so only specks and holes were cleaned. Try the hair-aware brush for strands.':r.low?'The edge is too similar to the background to soften automatically. Specks were cleaned.':'Specks and holes cleaned up.');}
   return r;}
 /* ---------- hair-aware and soft brush: per-pixel dabs, then a rectangle refresh of the preview canvases ---------- */
 let sbg=null,dirtyR=null;

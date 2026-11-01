@@ -67,7 +67,7 @@ function drawRing(ctx,c,R,p){
   if(!T&&!p.gradOn)return drawRingBase(ctx,c,R,p);
   const ri=R*(1-p.width),S=ctx.canvas.width,O=off(0,S),L=off(1,S),o=O.getContext('2d'),l=L.getContext('2d');
   o.clearRect(0,0,S,S);drawRingBase(o,c,R,p.gradOn?{...p,color:'#808080'}:p);
-  if(p.gradOn){const a=p.gAng,dx=Math.cos(a)*R,dy=Math.sin(a)*R,g=l.createLinearGradient(c-dx,c-dy,c+dx,c+dy);g.addColorStop(0,p.g1);g.addColorStop(1,p.g2);
+  if(p.gradOn){const a=p.gAng,dx=Math.cos(a)*R,dy=Math.sin(a)*R,g=l.createLinearGradient(c-dx,c-dy,c+dx,c+dy);const gm=clamp(p.gMid==null?.5:p.gMid,.05,.95);g.addColorStop(0,p.g1);g.addColorStop(gm,mix(p.g1,p.g2,.5));g.addColorStop(1,p.g2);
     l.clearRect(0,0,S,S);l.fillStyle=g;l.fillRect(0,0,S,S);l.globalCompositeOperation='destination-in';l.drawImage(O,0,0);l.globalCompositeOperation='destination-out';l.beginPath();l.arc(c,c,ri,0,TAU);l.fill();l.globalCompositeOperation='source-over';
     o.globalCompositeOperation='overlay';o.drawImage(L,0,0);o.globalCompositeOperation='source-over';}
   if(T){

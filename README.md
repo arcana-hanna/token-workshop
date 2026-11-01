@@ -75,10 +75,33 @@ Two extra steps in Auto: isolated weak patches (paper stains, wood highlights) t
 
 ## Tweaking Auto
 
-The Edges panel has **Auto sensitivity** and **Shrink / grow**. They run Auto again with your values (and replace the current selection): low sensitivity needs a clear difference from the background, high keeps even faint or same-coloured parts such as black hair on a dark backdrop. Shrink / grow moves the whole outline in or out in whole pixels, like shrinking a wand selection. They work when the picture has a fairly plain background.
+The Edges panel has **Auto detail** and **Shrink / grow**. They run Auto again with your values (and replace the current selection): low sensitivity needs a clear difference from the background, high keeps even faint or same-coloured parts such as black hair on a dark backdrop. Shrink / grow moves the whole outline in or out in whole pixels, like shrinking a wand selection. They work when the picture has a fairly plain background.
 
 ## Simplified controls
 
-Pop-out tab: Fix edges automatically, Auto sensitivity, Shrink / grow and Feather are always visible; Halo removal, Close small gaps and Remove specks & holes sit under More. Refine, the wand's region size and the fine-tune edge sliders were removed. Brush softness lives in the Brush options. Preview (P) shows the finished token without outlines. Wand Sensitivity now maps non-linearly so the whole slider is useful.
+Pop-out tab: Fix edges automatically, Auto detail, Shrink / grow and Feather are always visible; Halo removal, Close small gaps and Remove specks & holes sit under More. Refine, the wand's region size and the fine-tune edge sliders were removed. Brush softness lives in the Brush options. Preview (P) shows the finished token without outlines. Wand Sensitivity now maps non-linearly so the whole slider is useful.
 
 Auto is a little more sensitive by default on dark backdrops, where dark hair and shadows are close to the background colour. Wet black hair on a dark shelf now comes out whole; shrink the outline a few pixels to trim leftover backdrop.
+
+## Layout
+
+Desktop and landscape tablets use a workbench: one horizontal toolbar, a wrapping options bar and a board that takes all remaining space (container-query units), with the table-size strip beside it (below it on narrow screens), and the tabbed inspector on the right. Portrait tablets put the strip beside the board; phones keep the sticky stage with the tab bar at the bottom, and the first-run hint is hidden on small boards. Grid cells in the preview backgrounds are measured in pixels so they stay square.
+
+## Latest changes
+- **Lasso** (key `L`): hold and draw, release to select the enclosed area. Shift or Alt (or the Remove switch) subtracts.
+- **Preview** keeps the brush circle.
+- **Zoom**: the toolbar zoom always moves the workspace (down to 40%, the picture is dimmed outside the ring). In Move, *Picture −/+* resize the picture.
+- **Auto detail / Shrink** sliders always compute at full quality (short debounce, "Updating…" indicator).
+- **Match colour to ring** only matches colour strength, never brightness or contrast.
+- **Ring tab**: collapsible sections; Colour comes first and is open, picture colours are one tap away, presets are tucked into "Preset metals & gradients".
+- **Gradient**: *Colour balance* slider moves the split towards the first or second colour (`gMid`, saved in projects).
+- **Export name** is taken from the dropped picture (`<name>-token`).
+
+## Step flow (Place → Pop-out → Ring → Export)
+The toolbar shows only what the current step needs. **Place** has Move (the pop-out is see-through); **Pop-out** has Select, Lasso, Brush, Auto, Clear, Isolate and More; **Ring** and **Export** keep Undo/Redo, Zoom and Preview, and dragging the canvas still moves the picture. Shortcut keys (V, W, B, L) jump to the step that owns the tool. A loaded picture stays on Place; Auto has already run. Next planned: a Background step with its own mask (it may only use pixels outside the pop-out).
+
+## Backdrop step (Place → Pop-out → Backdrop → Ring → Export)
+Three layers, bottom to top: **backdrop**, the **picture** behind the ring, the **pop-out**. The backdrop has its own mask (`bgMask` in project files). The pop-out always wins: the effective backdrop is `backdropMask × (1 − popOutMask)`, computed at render time, so nothing you painted is lost when the pop-out changes. Looks: Keep, Colour, Gradient (with balance and angle), Blur, Clear, plus backdrop brightness/saturation and an Edge blend slider. Old background colour is taken out of soft hair edges before the new one is blended in. While the step is open `st.mask` is the backdrop mask (all selection tools work unchanged) and the pop-out is drawn from a frozen copy; `withPop()` swaps it back for exports. Character colour (brightness, contrast, saturation, Match colour to ring) now lives in the Pop-out step.
+
+### Backdrop quality (`npm run backdrop`)
+Replaces the backdrop of the synthetic scenes (known truth) and measures the edges. With the *true* coverage the compositing is almost exact (mean error 1–3 of 255 on clean scenes, about 10 on JPEG); in practice the result is limited by how well the backdrop mask captures fine strands, the same limit Auto has. The old background colour is removed from edge pixels using the marked coverage, then the new backdrop is blended at the on-screen (edge-blended) coverage, which avoids dark outlines around strands.

@@ -12,7 +12,7 @@ export async function launch() {
 }
 
 /** Opens the built app in a fresh page. Collects console errors in page.errors. */
-export async function openApp(browser, { width = 1280, height = 800, touch = false, keepCoach = false, storageState } = {}) {
+export async function openApp(browser, { width = 1280, height = 800, touch = false, keepCoach = false, storageState, step = 'popout' } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, storageState, acceptDownloads: true });
   const page = await ctx.newPage();
   page.errors = [];
@@ -21,6 +21,7 @@ export async function openApp(browser, { width = 1280, height = 800, touch = fal
   await page.goto(pageUrl);
   await page.waitForFunction(() => typeof st !== 'undefined' && st.src);
   if (!keepCoach) await page.evaluate(() => dismissCoach(true));
+  await page.evaluate((s) => setTab(s), step);   // most tests exercise the pop-out tools
   return page;
 }
 

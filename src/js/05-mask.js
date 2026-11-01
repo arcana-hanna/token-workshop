@@ -12,10 +12,12 @@ function maskChanged(){const m=st.mask,d=st.sdata,w=st.sw,h=st.sh,xs=[],ys=[];le
   const eff=i=>m[i]>=16&&d[i*4+3]>8;   /* the mask holds opacity 0-255; edge and fit maths use pixels that are visibly in */
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!m[i])continue;n++;if(m[i]<255)part++;if(m[i]<16||d[i*4+3]<=8)continue;
     if(x===0||y===0||x===w-1||y===h-1||!eff(i-1)||!eff(i+1)||!eff(i-w)||!eff(i+w)){xs.push(x+.5-w/2);ys.push(y+.5-h/2);}}
-  st.selCount=n;st.partial=part;st.maskVer++;st.bx=Float32Array.from(xs);st.by=Float32Array.from(ys);
+  st.selCount=n;st.partial=part;st.maskVer++;
+  if(st.act==='bg'){st.bgV++;st.softDirty=st.selDirty=true;selStat();return;}   /* the background mask never moves the canvas fit or the pop-out */
+  st.popV++;st.bx=Float32Array.from(xs);st.by=Float32Array.from(ys);
   st.softDirty=st.popDirty=st.selDirty=st.fitDirty=true;selStat();}
-function selStat(){const p=st.selCount/(st.sw*st.sh)*100;
-  $('#selStat').textContent=st.selCount?'Selected: '+(p<1?'under 1':Math.round(p))+'% of the picture':'Nothing selected yet';}
+function selStat(){const p=st.selCount/(st.sw*st.sh)*100,bg=st.act==='bg';
+  $(bg?'#bgStat':'#selStat').textContent=st.selCount?(bg?'Background: ':'Selected: ')+(p<1?'under 1':Math.round(p))+'% of the picture':(bg?'No background marked yet':'Nothing selected yet');}
 function sizeTo(cv,w,h){if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}return cv.getContext('2d');}
 /* feather inward only: hard-edged areas fade at their outline, while already soft (hair) pixels and their neighbours are left alone */
 function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.length);
@@ -24,7 +26,7 @@ function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.le
     out[i]=soft?v:Math.round(Math.min(v,bl[i]));}
   return out;}
 function refreshSoft(){if(!st.softDirty)return;const{sw,sh}=st,ctx=sizeTo(st.softCv,sw,sh);
-  const m=st.feather>0?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
+  const m=st.feather>0&&st.act!=='bg'?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
   for(let i=0,n=sw*sh;i<n;i++){const j=i*4;d[j]=d[j+1]=d[j+2]=255;d[j+3]=m[i];}
   ctx.putImageData(id,0,0);st.softDirty=false;st.popDirty=true;}
 function refreshPop(){refreshSoft();if(!st.popDirty)return;const x=sizeTo(st.popCv,st.sw,st.sh);
@@ -90,8 +92,8 @@ function subjectFromBg(bg,w,h,keepFrac,minAbs){const W=st.sw,H=st.sh,N=w*h,stack
    Every pixel gets an opacity from how far its colour is from the (locally estimated) background, so strands, glows and gaps
    between curls resolve per pixel. Enclosed whites inside thick shapes (eyes) are kept, specks of paper dirt are dropped.
    Returns an opacity mask (0-255) and the background colour, or null when the background is not plain. */
-function autoUniform(quick){
-  const W=st.sw,H=st.sh,k=Math.min(1,(quick?560:1200)/Math.max(W,H)),w=Math.max(8,Math.round(W*k)),h=Math.max(8,Math.round(H*k)),N=w*h;
+function autoUniform(){
+  const W=st.sw,H=st.sh,k=Math.min(1,1200/Math.max(W,H)),w=Math.max(8,Math.round(W*k)),h=Math.max(8,Math.round(H*k)),N=w*h;
   const sc=mk();sc.width=w;sc.height=h;const sx=sc.getContext('2d',{willReadFrequently:true});sx.imageSmoothingQuality='high';sx.drawImage(st.src,0,0,w,h);
   const d=sx.getImageData(0,0,w,h).data;let tr=0;for(let i=0;i<N;i++)if(d[i*4+3]<16)tr++;if(tr>N*.03)return null;
   const bp=[];for(let t=0;t<3;t++){for(let x=0;x<w;x++){bp.push(t*w+x,(h-1-t)*w+x);}for(let y=3;y<h-3;y++){bp.push(y*w+t,y*w+w-1-t);}}
@@ -231,19 +233,23 @@ function autoSubject(){
   }
   return subjectFromBg(bg,w,h,.12,0);}
 /* Auto sensitivity and Shrink/grow sliders: run Auto again with the new values (this replaces the current selection) */
-let autoRaf=0,autoHi=-1;
-function autoLive(final){if(!st.src)return;let soft=null;try{soft=autoUniform(!final);}catch(e){}
+let autoHi=-1;
+function autoLive(){if(!st.src)return;let soft=null;try{soft=autoUniform();}catch(e){}
   if(!soft){toast('These sliders work when the picture has a fairly plain background.');return;}
   const m=soft.mask;if(!autoFixOn())for(let i=0;i<m.length;i++)m[i]=m[i]>=128?255:0;
   st.mask=m;if(autoFixOn()){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;}eSess=null;maskChanged();st.popDirty=true;syncUI();draw();}
-function autoRetune(){if(autoRaf)return;autoRaf=requestAnimationFrame(()=>{autoRaf=0;autoLive();});}
-function autoCommit(){autoLive(true);if(H.i===autoHi){H.a[H.i]=snap();updHist();}else{commit();autoHi=H.i;}}
+/* always the full-quality result, so what you see is what you get: it runs shortly after you stop moving the slider, with a progress indicator */
+let autoTimer=0;
+function autoRetune(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>{autoTimer=0;busy(1,'Updating…');setTimeout(()=>{try{autoLive();}finally{busy(-1);}},20);},260);}
+function autoCommit(){if(autoTimer){clearTimeout(autoTimer);autoTimer=0;busy(1,'Updating…');try{autoLive();}finally{busy(-1);}}
+  if(H.i===autoHi){H.a[H.i]=snap();updHist();}else{commit();autoHi=H.i;}}
 function runAuto(){
   if(!st.src)return;busy(1,'Finding subject…');
   setTimeout(()=>{let m=null,soft=null;try{soft=autoUniform();if(soft&&!autoFixOn()){const b=soft.mask;for(let i=0;i<b.length;i++)b[i]=b[i]>=128?255:0;m=b;soft=null;}else m=soft?soft.mask:autoSubject();}catch(e){}
     busy(-1);
-    if(!m){toast('No clear subject found. Use Select and click the part that should pop out.');setTool('select');return;}
-    st.mask=m;maskChanged();let note='Subject selected. Adjust it with Select or Brush, or Undo.';
-    if(soft){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;eSess=null;note='Subject selected with soft edges. Use the sliders in the Pop-out tab, or the Brush, for anything missed. Undo reverts.';}
-    else if(autoFixOn()){try{const r=fixEdges(true);if(r&&r.matte)note='Subject selected and edges softened. Use the sliders in the Pop-out tab or the Brush for stray hair, or Undo.';}catch(e){}}
+    if(!m){toast('No clear subject found. Open the Pop-out step and click the part that should pop out.');setTab('popout');setTool('select');return;}
+    if(st.act==='bg'){autoBackground();return;}
+    st.mask=m;maskChanged();st.bgM=invMask(m);let note='Subject selected. Fine-tune it in the Pop-out step, or Undo.';
+    if(soft){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;eSess=null;note='Subject selected with soft edges. Fine-tune it in the Pop-out step. Undo reverts.';}
+    else if(autoFixOn()){try{const r=fixEdges(true);if(r&&r.matte)note='Subject selected and edges softened. Fine-tune it in the Pop-out step, or Undo.';}catch(e){}}
     st.popOn=true;syncUI();draw();commit();toast(note);},30);}

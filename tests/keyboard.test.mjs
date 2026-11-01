@@ -12,9 +12,11 @@ test('toolbar is one tab stop and arrow keys move between buttons', async () => 
   assert.equal(stops, 1);
   await page.focus('.tools [data-tool=select]');
   await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'lasso');
+  await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'brush');
   await page.keyboard.press('Home');
-  assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'move');
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'select');   // Move belongs to the Place step
   assert.equal(await page.evaluate(() => document.activeElement.tabIndex), 0);
 });
 

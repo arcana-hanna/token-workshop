@@ -10,7 +10,7 @@ addEventListener('keydown',e=>{
   if(k===' '&&free){e.preventDefault();if(!st.space){st.space=true;cv.style.cursor='grab';updBadge();}return;}
   if((k==='Delete'||k==='Backspace')&&free){e.preventDefault();clearSel();return;}
   const low=k.toLowerCase();
-  if(low==='v')setTool('move');else if(low==='w')setTool('select');else if(low==='b')setTool('brush');else if(low==='i')toggleIso();else if(low==='m')toggleMask();else if(low==='p')togglePrev();
+  if(low==='v')goTool('move');else if(low==='w')goTool('select');else if(low==='b')goTool('brush');else if(low==='l')goTool('lasso');else if(low==='i'&&tab==='popout')toggleIso();else if(low==='m'&&tab==='popout')toggleMask();else if(low==='p')togglePrev();
   else if(onCanvas&&st.tool!=='move'&&(k.startsWith('Arrow')||k==='Enter'))kbCursor(e);
   else if(k==='['){st.brush=clamp(st.brush-2,2,40);SLI.brush.sync();draw();}else if(k===']'){st.brush=clamp(st.brush+2,2,40);SLI.brush.sync();draw();}
   else if(k==='?'){$('#helpDlg').showModal();}
@@ -60,7 +60,8 @@ function syncUI(){syncers.forEach(f=>f());updExport();}
 applyTheme();buildLooks();
 loadCanvas(sampleArt(),'Sample art. Use Open, drop an image on the preview, or paste one with Ctrl/⌘+V.');
 Object.assign(st,{zoom:1.3,iy:.05});
-{const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();}   // pre-select the hat so the pop-out shows on first view
-setTool('select');syncUI();commit();draw();
+{const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();
+ {const t=mk();t.width=st.sw;t.height=st.sh;const q=t.getContext('2d');q.drawImage(sampleArt.subject,0,0,st.sw,st.sh);const d=q.getImageData(0,0,st.sw,st.sh).data,bm=new Uint8Array(st.sw*st.sh);for(let i=0;i<bm.length;i++)bm[i]=255-d[i*4+3];st.bgM=bm;}}
+setTab('image');syncUI();commit();draw();
 if(!store.get('tw_coach'))$('#coach').hidden=false;
 rove();{const t=store.get('tw_table');setStrip(t===null?DESKTOP.matches:t==='1');}autoRestore();

@@ -1,12 +1,13 @@
 /* ---------- tabs ---------- */
-const TABS=['image','popout','ring','export'];let tab='image';
-function setTab(name,focus){tab=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
+const TABS=['image','popout','bg','ring','export'];let tab='image';
+function setTab(name,focus){tab=name;setAct(name==='bg'?'bg':'pop');document.body.dataset.step=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
+  stepTool();rove();
   if(focus)$('#t-'+name).focus();
   if(name==='ring'&&thumbsStale)thumbsNow();if(name==='export'){updExport();miniSoon(true);}
   if(!DESKTOP.matches)scrollTo({top:0});else $('.inspector').scrollTop=0;}
 $$('.tab').forEach(b=>{b.onclick=()=>setTab(b.dataset.tab);
   b.addEventListener('keydown',e=>{const i=TABS.indexOf(b.dataset.tab);let n=-1;
-    if(e.key==='ArrowRight')n=(i+1)%4;else if(e.key==='ArrowLeft')n=(i+3)%4;else if(e.key==='Home')n=0;else if(e.key==='End')n=3;
+    if(e.key==='ArrowRight')n=(i+1)%TABS.length;else if(e.key==='ArrowLeft')n=(i+TABS.length-1)%TABS.length;else if(e.key==='Home')n=0;else if(e.key==='End')n=TABS.length-1;
     if(n>=0){e.preventDefault();setTab(TABS[n],true);}});});
 $$('[data-next]').forEach(b=>b.onclick=()=>setTab(b.dataset.next));
 
@@ -26,7 +27,7 @@ function zipStore(files){const enc=new TextEncoder(),d=new Date(),dt=((d.getFull
   return new Blob([...parts,...cd,new Uint8Array(end.buffer)],{type:'application/zip'});}
 /* one rendered image: the whole token or a single layer, as PNG or WebP (falls back to PNG where WebP is unavailable) */
 async function renderImage(layer,fmt,embed){const S=st.exportSize,c=mk();c.width=c.height=S;
-  render(c.getContext('2d'),S,{clean:true,hi:true,pad:exportPad(),layer});
+  withPop(()=>render(c.getContext('2d'),S,{clean:true,hi:true,pad:exportPad(),layer}));
   let ext=fmt,blob=await new Promise(r=>c.toBlob(r,FMT[fmt].type,.95));
   if(!blob||blob.type!==FMT[fmt].type){ext='png';blob=await new Promise(r=>c.toBlob(r,'image/png'));if(fmt==='webp')toast('This browser cannot save WebP, so PNG was used.');}
   if(!blob||!embed||layer)return{blob,ext};
@@ -49,7 +50,7 @@ async function exportFile(){const what=st.exportWhat,base=exportBase(),fmt=st.ex
 async function exportPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const r=await exportFile();if(!r.blob)return toast('Export failed.');await saveBlob(r.blob,r.name);}finally{busy(-1);}}
 function projectMeta(e){return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type},
-  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(st.mask))}};}
+  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(popMask()))},bgMask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(bgMaskArr()))}};}
 async function makeBlob(embed){return(await renderImage(undefined,'png',embed)).blob;}
 async function copyPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const blob=await makeBlob(false);await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('Copied to clipboard.');}
