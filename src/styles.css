@@ -244,9 +244,8 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
   .work .tablestrip .ts-row{flex-direction:column;align-items:center;justify-content:center;gap:14px}
   .inspector{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;border-radius:14px}
   .tabs{position:sticky;top:0;bottom:auto;z-index:5;border:0;border-radius:12px;padding:4px;background:var(--card);box-shadow:var(--shadow);backdrop-filter:none}
-  .tabs{gap:0}
-  .tab{flex:1 1 auto;flex-direction:row;gap:5px;min-height:42px;font-size:12.5px;padding:0 5px}
-  .tab .n{width:18px;height:18px;font-size:10.5px}
+  .tab{flex-direction:row;gap:7px;min-height:42px;font-size:13.5px}
+  .tab .n{width:20px;height:20px;font-size:11.5px}
   .panel{padding:10px 0 24px}
   .toast{bottom:28px}
   @container (max-width:620px){
@@ -337,9 +336,4 @@ body[data-step=popout] .tools [data-steps]:not([data-steps~=popout]),
 body[data-step=ring] .tools [data-steps],
 body[data-step=export] .tools [data-steps]{display:none}
 body[data-step=export] #optbar{display:none}
-body[data-step=bg] .tools [data-steps]:not([data-steps~=bg]){display:none}
-body[data-step=bg] #optbar .o[data-for=move]{display:none}
-.bgSeg{display:flex;flex-wrap:wrap}.bgSeg button{flex:1 1 auto}
-/* five steps: in a narrow side panel the step numbers give way to the labels */
-@media (min-width:900px){.inspector{container-type:inline-size}
-  @container (max-width:400px){.tab .n{display:none}.tab{padding:0 8px}}}
+body[data-step=ring] #badge,body[data-step=export] #badge{display:none}

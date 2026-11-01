@@ -43,4 +43,5 @@ function lumSat(cv){const t=mk();t.width=t.height=48;const x=t.getContext('2d',{
 function matchToRing(){if(!st.src)return;const S=128,g=geom(S,effPad()),ring=lumSat(ringLayer(S,g.R,g.c)),pic=lumSat(st.src);
   /* colour only: brightness is never touched, so a dark ring does not darken the picture */
   st.sat=Math.round(clamp((ring.s/Math.max(.05,pic.s)-1)*40,-30,30));
-  st.popDirty=true;syncUI();draw();commit();toast('Picture colour matched to the ring. Brightness is unchanged.');}
+  st.popDirty=true;syncUI();draw();commit();
+  setTab('image');toast('Picture colour matched to the ring. Fine-tune it under Picture colour. Brightness is unchanged.');}

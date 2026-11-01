@@ -31,7 +31,7 @@ const STR=n=>v=>typeof v==='string'?v.slice(0,n):undefined;
 const SCHEMA={ix:NUM(-3,3),iy:NUM(-3,3),zoom:NUM(.1,8),rot:NUM(-12.6,12.6),flip:v=>v===-1||v===1?v:undefined,bgOn:BOOL,bg:COLOR,autoFit:BOOL,pad:NUM(0,.45),popOn:BOOL,
   feather:NUM(0,12),shadow:NUM(0,1),formula:v=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(PAT,v)?v:undefined,color:COLOR,accent:COLOR,width:NUM(.04,.3),count:NUM(0,90),depth:NUM(0,1),
   tex:v=>typeof v==='string'?fixTex(v):undefined,texAmt:NUM(0,1),texDens:NUM(.4,5),seed:v=>Number.isInteger(v)?clamp(v,0,1e9):undefined,eCol:COLOR,gradOn:BOOL,g1:COLOR,g2:COLOR,
-  gAng:NUM(-12.6,12.6),gMid:NUM(.05,.95),bgMode:v=>['keep','colour','gradient','blur','clear'].includes(v)?v:undefined,bgCol:COLOR,bgG1:COLOR,bgG2:COLOR,bgGAng:NUM(-12.6,12.6),bgGMid:NUM(.05,.95),bgBlur:NUM(0,100),bgBri:NUM(-100,100),bgSat:NUM(-100,100),bgEdge:NUM(0,100),colorKey:STR(40),lAng:NUM(-12.6,12.6),lInt:NUM(0,1.5),texRot:NUM(-12.6,12.6),lineW:NUM(.01,.4),eAmt:NUM(1,24),eLen:NUM(.2,2),
+  gAng:NUM(-12.6,12.6),gMid:NUM(.05,.95),colorKey:STR(40),lAng:NUM(-12.6,12.6),lInt:NUM(0,1.5),texRot:NUM(-12.6,12.6),lineW:NUM(.01,.4),eAmt:NUM(1,24),eLen:NUM(.2,2),
   bri:NUM(-100,100),con:NUM(-100,100),sat:NUM(-100,100),defr:NUM(0,1),bgC:COLOR,bgAuto:BOOL};
 function sanitizeSettings(o){const out={};if(!o||typeof o!=='object')return out;
   for(const k of SETTINGS){if(!Object.prototype.hasOwnProperty.call(o,k))continue;const v=SCHEMA[k]?SCHEMA[k](o[k]):undefined;if(v!==undefined)out[k]=v;}return out;}
@@ -68,8 +68,6 @@ async function restoreProject({meta,img},msg){busy(1,'Opening project…');
     Object.assign(st,RING_DEFAULT,sanitizeSettings(meta.settings));
     if(!PAT[st.formula])st.formula='plain';
     const M=meta.mask,m=typeof M.rle8==='string'?rle8Dec(b64dec(M.rle8),M.w*M.h):rleDec(b64dec(M.rle),M.w*M.h);st.mask=(M.w===st.sw&&M.h===st.sh)?m:resampleMask(m,M.w,M.h);maskChanged();
-    {const BM=meta.bgMask;let bm=null;try{if(BM&&typeof BM.rle8==='string'&&BM.w*BM.h<=LIMITS.maskPixels){bm=rle8Dec(b64dec(BM.rle8),BM.w*BM.h);if(BM.w!==st.sw||BM.h!==st.sh)bm=resampleMask(bm,BM.w,BM.h);}}catch(e){bm=null;}
-     st.bgM=bm||invMask(st.mask);}
     st.padCur=st.pad;st.snapPad=true;syncUI();commit();thumbsSoon();draw();setTab('image');dismissCoach(true);toast(msg||'Project restored. Everything is editable again.');
   }catch(e){toast('Could not read the project data in that file.');}finally{busy(-1);}}
 let pendingOpen=null;

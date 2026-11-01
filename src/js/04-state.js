@@ -4,8 +4,8 @@ const METALS=[['Gold','#d9a521'],['Silver','#b5bcc6'],['Bronze','#b8733a'],['Cop
   ['Bone','#d9cdb0'],['Wood','#7a5230'],['Onyx','#2b2d33'],['Granite','#7d7f84'],['Slate','#4a5560'],['Sandstone','#b89d78']];
 const GRADS=[['Enemy','#ff8a1f','#7a0c10',45],['Ally','#3ddc84','#0b4f3a',45],['Arcane','#b36cff','#1a2a8c',45],['Lava','#ffd23f','#b3111a',90],['Toxic','#d4ff3d','#1b5e20',45],['Frost','#e6f8ff','#2a6fb0',90]];
 const RING_KEYS=['formula','color','accent','width','count','depth','tex','texAmt','texDens','seed','eCol','gradOn','g1','g2','gAng','gMid','colorKey','lAng','lInt','texRot','lineW','eAmt','eLen'];
-const SETTINGS=['bgMode','bgCol','bgG1','bgG2','bgGAng','bgGMid','bgBlur','bgBri','bgSat','bgEdge','ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
-const st={act:'pop',bgM:null,popM:null,popN:0,bgV:0,popV:0,popFrozen:mk(),popTint:mk(),...{bgMode:'keep',bgCol:'#24345f',bgG1:'#1f3a7a',bgG2:'#0a0f24',bgGAng:Math.PI/2,bgGMid:.5,bgBlur:40,bgBri:0,bgSat:0,bgEdge:20},maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,bx:null,by:null,embed:null,
+const SETTINGS=['ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
+const st={maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,bx:null,by:null,embed:null,
   popCv:mk(),softCv:mk(),selCv:mk(),softDirty:true,popDirty:true,selDirty:true,selCount:0,painting:false,
   ix:0,iy:.05,zoom:1.3,rot:0,flip:1,bgOn:true,bg:'#2b2f3a',
   autoFit:true,pad:.08,padCur:.08,padT:.08,fitDirty:true,lockPad:false,snapPad:true,
@@ -31,7 +31,7 @@ function applyT(ctx,g){ctx.translate(g.tx,g.ty);ctx.rotate(st.rot);ctx.scale(g.s
 
 /* Auto-fit: smallest canvas margin that keeps ring + pop-out art fully inside */
 function recomputeFit(){let d=1;
-  if(st.popOn&&popCount()&&st.bx){const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by;
+  if(st.popOn&&st.selCount&&st.bx){const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by;
     for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k;const r=Math.hypot(x*co-y*si+st.ix,x*si+y*co+st.iy);if(r>d)d=r;}
     d=d*1.005+(st.feather>0?st.feather*k:0)+(st.shadow>0?.01+.05*st.shadow:0);}
   st.padT=clamp(.5-.5/d,0,.45);st.fitDirty=false;}

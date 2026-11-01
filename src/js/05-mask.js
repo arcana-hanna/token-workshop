@@ -13,11 +13,10 @@ function maskChanged(){const m=st.mask,d=st.sdata,w=st.sw,h=st.sh,xs=[],ys=[];le
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!m[i])continue;n++;if(m[i]<255)part++;if(m[i]<16||d[i*4+3]<=8)continue;
     if(x===0||y===0||x===w-1||y===h-1||!eff(i-1)||!eff(i+1)||!eff(i-w)||!eff(i+w)){xs.push(x+.5-w/2);ys.push(y+.5-h/2);}}
   st.selCount=n;st.partial=part;st.maskVer++;
-  if(st.act==='bg'){st.bgV++;st.softDirty=st.selDirty=true;selStat();return;}   /* the background mask never moves the canvas fit or the pop-out */
-  st.popV++;st.bx=Float32Array.from(xs);st.by=Float32Array.from(ys);
+  st.bx=Float32Array.from(xs);st.by=Float32Array.from(ys);
   st.softDirty=st.popDirty=st.selDirty=st.fitDirty=true;selStat();}
-function selStat(){const p=st.selCount/(st.sw*st.sh)*100,bg=st.act==='bg';
-  $(bg?'#bgStat':'#selStat').textContent=st.selCount?(bg?'Background: ':'Selected: ')+(p<1?'under 1':Math.round(p))+'% of the picture':(bg?'No background marked yet':'Nothing selected yet');}
+function selStat(){const p=st.selCount/(st.sw*st.sh)*100;
+  $('#selStat').textContent=st.selCount?'Selected: '+(p<1?'under 1':Math.round(p))+'% of the picture':'Nothing selected yet';}
 function sizeTo(cv,w,h){if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}return cv.getContext('2d');}
 /* feather inward only: hard-edged areas fade at their outline, while already soft (hair) pixels and their neighbours are left alone */
 function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.length);
@@ -26,7 +25,7 @@ function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.le
     out[i]=soft?v:Math.round(Math.min(v,bl[i]));}
   return out;}
 function refreshSoft(){if(!st.softDirty)return;const{sw,sh}=st,ctx=sizeTo(st.softCv,sw,sh);
-  const m=st.feather>0&&st.act!=='bg'?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
+  const m=st.feather>0?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
   for(let i=0,n=sw*sh;i<n;i++){const j=i*4;d[j]=d[j+1]=d[j+2]=255;d[j+3]=m[i];}
   ctx.putImageData(id,0,0);st.softDirty=false;st.popDirty=true;}
 function refreshPop(){refreshSoft();if(!st.popDirty)return;const x=sizeTo(st.popCv,st.sw,st.sh);
@@ -248,8 +247,7 @@ function runAuto(){
   setTimeout(()=>{let m=null,soft=null;try{soft=autoUniform();if(soft&&!autoFixOn()){const b=soft.mask;for(let i=0;i<b.length;i++)b[i]=b[i]>=128?255:0;m=b;soft=null;}else m=soft?soft.mask:autoSubject();}catch(e){}
     busy(-1);
     if(!m){toast('No clear subject found. Open the Pop-out step and click the part that should pop out.');setTab('popout');setTool('select');return;}
-    if(st.act==='bg'){autoBackground();return;}
-    st.mask=m;maskChanged();st.bgM=invMask(m);let note='Subject selected. Fine-tune it in the Pop-out step, or Undo.';
+    st.mask=m;maskChanged();let note='Subject selected. Fine-tune it in the Pop-out step, or Undo.';
     if(soft){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;eSess=null;note='Subject selected with soft edges. Fine-tune it in the Pop-out step. Undo reverts.';}
     else if(autoFixOn()){try{const r=fixEdges(true);if(r&&r.matte)note='Subject selected and edges softened. Fine-tune it in the Pop-out step, or Undo.';}catch(e){}}
     st.popOn=true;syncUI();draw();commit();toast(note);},30);}

@@ -97,11 +97,9 @@ Desktop and landscape tablets use a workbench: one horizontal toolbar, a wrappin
 - **Gradient**: *Colour balance* slider moves the split towards the first or second colour (`gMid`, saved in projects).
 - **Export name** is taken from the dropped picture (`<name>-token`).
 
-## Step flow (Place → Pop-out → Ring → Export)
-The toolbar shows only what the current step needs. **Place** has Move (the pop-out is see-through); **Pop-out** has Select, Lasso, Brush, Auto, Clear, Isolate and More; **Ring** and **Export** keep Undo/Redo, Zoom and Preview, and dragging the canvas still moves the picture. Shortcut keys (V, W, B, L) jump to the step that owns the tool. A loaded picture stays on Place; Auto has already run. Next planned: a Background step with its own mask (it may only use pixels outside the pop-out).
-
-## Backdrop step (Place → Pop-out → Backdrop → Ring → Export)
-Three layers, bottom to top: **backdrop**, the **picture** behind the ring, the **pop-out**. The backdrop has its own mask (`bgMask` in project files). The pop-out always wins: the effective backdrop is `backdropMask × (1 − popOutMask)`, computed at render time, so nothing you painted is lost when the pop-out changes. Looks: Keep, Colour, Gradient (with balance and angle), Blur, Clear, plus backdrop brightness/saturation and an Edge blend slider. Old background colour is taken out of soft hair edges before the new one is blended in. While the step is open `st.mask` is the backdrop mask (all selection tools work unchanged) and the pop-out is drawn from a frozen copy; `withPop()` swaps it back for exports. Character colour (brightness, contrast, saturation, Match colour to ring) now lives in the Pop-out step.
-
-### Backdrop quality (`npm run backdrop`)
-Replaces the backdrop of the synthetic scenes (known truth) and measures the edges. With the *true* coverage the compositing is almost exact (mean error 1–3 of 255 on clean scenes, about 10 on JPEG); in practice the result is limited by how well the backdrop mask captures fine strands, the same limit Auto has. The old background colour is removed from edge pixels using the marked coverage, then the new backdrop is blended at the on-screen (edge-blended) coverage, which avoids dark outlines around strands.
+## Four steps (Image → Pop-out → Ring → Export)
+- **Image**: Move (pop-out see-through), Picture −/+, zoom, rotate, flip, Picture colour (brightness, contrast, saturation) and Fill behind picture.
+- **Pop-out**: Select, Lasso, Brush, Auto, Clear, Isolate; Edges (Fix edges, Auto detail, Shrink / grow, Feather, More); *Look & canvas* (Show pop-out, Shadow, Auto-fit) is collapsed.
+- **Ring**: collapsible sections, Colour first. *Match picture colour to ring* sits next to the colours and jumps back to the Image step, where you can fine-tune the sliders. The toolbar Auto jumps to the Pop-out step.
+- **Export**: size, what to export, file name (taken from the dropped picture), download.
+Changing the backdrop of a picture was deliberately left out: this is a token maker, not an image editor.

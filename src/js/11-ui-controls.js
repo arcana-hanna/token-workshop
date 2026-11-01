@@ -38,12 +38,6 @@ const SL={
  lAng:{label:'Light from',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:135,fx:'ring',tip:'Direction the light comes from: 0° right, 90° bottom, 180° left, 270° top'},
  eAmt:{label:'Amount',min:1,max:24,step:1,unit:'',k:1,def:5,fx:'draw',tip:'How many lightning bolts'},
  eLen:{label:'Length',min:20,max:200,step:1,unit:'%',k:.01,def:100,fx:'draw',tip:'How far each bolt travels around the ring'},
- bgGMid:{label:'Colour balance',min:10,max:90,step:1,unit:'%',k:.01,def:50,fx:'draw',tip:'Where the two colours meet'},
- bgGAng:{label:'Angle',min:0,max:360,step:1,unit:'°',k:Math.PI/180,def:90,fx:'draw',tip:'0° is left to right, 90° is top to bottom'},
- bgBlur:{label:'Blur',min:0,max:100,step:1,unit:'',k:1,def:40,fx:'draw',tip:'How soft the blurred backdrop is'},
- bgBri:{label:'Backdrop brightness',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'draw',tip:'Lighten or darken only the backdrop'},
- bgSat:{label:'Backdrop saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'draw',tip:'How vivid the backdrop colours are'},
- bgEdge:{label:'Edge blend',min:0,max:100,step:1,unit:'%',k:1,def:20,fx:'draw',tip:'Softens the border between backdrop and character'},
  bri:{label:'Brightness',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'Make the picture lighter or darker'},
  con:{label:'Contrast',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'Difference between light and dark areas'},
  sat:{label:'Saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'How vivid the colours are. -100 is black and white.'},
@@ -85,15 +79,7 @@ function bindSeg(root,get,set){const bs=[...root.querySelectorAll('button')];con
   bs.forEach(b=>b.addEventListener('click',()=>{set(b.dataset.v);sync();}));syncers.push(sync);return bs;}
 bindSwitch('bgOn','bgOn');bindSwitch('popOn','popOn',()=>{st.fitDirty=true;});bindSwitch('embedOn','embedOn');
 bindSwitch('autoFit','autoFit',()=>{if(!st.autoFit)st.pad=st.padCur;else st.fitDirty=true;updVis();SLI.pad.sync();});
-bindColor('bg','bg');bindColor('bgCol','bgCol');bindColor('bgG1','bgG1');bindColor('bgG2','bgG2');
-bindSeg($('#bgModeSeg'),()=>st.bgMode,v=>{st.bgMode=v;updBgVis();draw();commit();});
-function updBgVis(){const m=st.bgMode,sh=(id,on)=>$('#'+id).hidden=!on;
-  sh('rowBgCol',m==='colour');sh('rowBgG1',m==='gradient');sh('rowBgG2',m==='gradient');sh('rowBgMid',m==='gradient');sh('rowBgAng',m==='gradient');sh('rowBgBlur',m==='blur');sh('rowBgRing',m==='colour');
-  sh('rowBgBri',m!=='clear');sh('rowBgSat',m!=='clear');sh('bgClearNote',m==='clear');
-  $('#bgName').textContent={keep:'Original',colour:'Colour',gradient:'Gradient',blur:'Blurred',clear:'Removed'}[m];}
-syncers.push(updBgVis);
-$('#bBgAuto').onclick=autoBackground;$('#bBgRest').onclick=bgFromPopout;
-$('#bBgRing').onclick=()=>{st.bgMode='colour';st.bgCol=mix(st.gradOn?st.g1:st.color,'#000000',.55);syncUI();draw();commit();};bindColor('accent','accent',()=>thumbsSoon());bindColor('eCol','eCol',()=>thumbsSoon());
+bindColor('bg','bg');bindColor('accent','accent',()=>thumbsSoon());bindColor('eCol','eCol',()=>thumbsSoon());
 bindColor('g1','g1',()=>{st.colorKey='Custom gradient';updColorSel();thumbsSoon();});bindColor('g2','g2',()=>{st.colorKey='Custom gradient';updColorSel();thumbsSoon();});
 bindColor('color','color',()=>{st.gradOn=false;st.colorKey='Custom';updColorSel();updVis();thumbsSoon();});
 $('#contig').onclick=()=>{st.contig=!st.contig;syncUI();wandDone();};
@@ -111,9 +97,9 @@ bindSeg($('#texGrid'),()=>st.tex,v=>{st.tex=v;if(v!=='none'){st.texAmt=TEX_AMT[v
 
 /* ---------- tools & badge ---------- */
 let popTool='select';
-/* each step has its own tool set: Place, Ring and Export drag the picture (Move); Pop-out uses the selection tools */
-function stepTool(){setTool(tab==='popout'||tab==='bg'?(st.tool==='move'?popTool:st.tool):'move');}
-function goTool(v){if(v==='move'){if(tab!=='image')setTab('image');}else if(tab!=='popout'&&tab!=='bg')setTab('popout');setTool(v);}
+/* each step has its own tool set: Image, Ring and Export drag the picture (Move); Pop-out uses the selection tools */
+function stepTool(){setTool(tab==='popout'?(st.tool==='move'?popTool:st.tool):'move');}
+function goTool(v){if(v==='move'){if(tab!=='image')setTab('image');}else if(tab!=='popout')setTab('popout');setTool(v);}
 function setTool(v){if(v!=='move')popTool=v;wand=null;st.lasso=null;st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
   $$('#optbar .o').forEach(o=>o.hidden=o.dataset.for!==v);cv.dataset.tool=v;updBadge();draw();}
 $$('.tbtn[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
@@ -124,7 +110,7 @@ function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Selec
 function clearSel(){if(!st.src||!st.selCount)return;st.mask=new Uint8Array(st.mask.length);maskChanged();draw();commit();toast('Selection cleared. Undo brings it back.');}
 function invertSel(){if(!st.src)return;const m=new Uint8Array(st.mask.length),d=st.sdata;for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>8?255-st.mask[i]:0;st.mask=m;maskChanged();draw();commit();}
 function morphSel(grow){if(!st.src)return;busy(1,grow?'Growing…':'Shrinking…');setTimeout(()=>{morph(grow);busy(-1);draw();commit();},10);}
-$('#bAuto').onclick=runAuto;$('#bClear').onclick=clearSel;
+$('#bAuto').onclick=()=>{if(tab!=='popout')setTab('popout');runAuto();};$('#bClear').onclick=clearSel;
 const menu=$('#moreMenu'),bMore=$('#bMore');
 function closeMenu(){menu.hidden=true;bMore.setAttribute('aria-expanded','false');}
 function openMenu(){menu.hidden=false;const r=bMore.getBoundingClientRect(),mw=menu.offsetWidth,mh=menu.offsetHeight;

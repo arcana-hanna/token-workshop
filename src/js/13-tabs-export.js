@@ -1,6 +1,6 @@
 /* ---------- tabs ---------- */
-const TABS=['image','popout','bg','ring','export'];let tab='image';
-function setTab(name,focus){tab=name;setAct(name==='bg'?'bg':'pop');document.body.dataset.step=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
+const TABS=['image','popout','ring','export'];let tab='image';
+function setTab(name,focus){tab=name;$('#toast').classList.remove('on');document.body.dataset.step=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
   stepTool();rove();
   if(focus)$('#t-'+name).focus();
   if(name==='ring'&&thumbsStale)thumbsNow();if(name==='export'){updExport();miniSoon(true);}
@@ -27,7 +27,7 @@ function zipStore(files){const enc=new TextEncoder(),d=new Date(),dt=((d.getFull
   return new Blob([...parts,...cd,new Uint8Array(end.buffer)],{type:'application/zip'});}
 /* one rendered image: the whole token or a single layer, as PNG or WebP (falls back to PNG where WebP is unavailable) */
 async function renderImage(layer,fmt,embed){const S=st.exportSize,c=mk();c.width=c.height=S;
-  withPop(()=>render(c.getContext('2d'),S,{clean:true,hi:true,pad:exportPad(),layer}));
+  render(c.getContext('2d'),S,{clean:true,hi:true,pad:exportPad(),layer});
   let ext=fmt,blob=await new Promise(r=>c.toBlob(r,FMT[fmt].type,.95));
   if(!blob||blob.type!==FMT[fmt].type){ext='png';blob=await new Promise(r=>c.toBlob(r,'image/png'));if(fmt==='webp')toast('This browser cannot save WebP, so PNG was used.');}
   if(!blob||!embed||layer)return{blob,ext};
@@ -50,7 +50,7 @@ async function exportFile(){const what=st.exportWhat,base=exportBase(),fmt=st.ex
 async function exportPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const r=await exportFile();if(!r.blob)return toast('Export failed.');await saveBlob(r.blob,r.name);}finally{busy(-1);}}
 function projectMeta(e){return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type},
-  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(popMask()))},bgMask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(bgMaskArr()))}};}
+  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(st.mask))}};}
 async function makeBlob(embed){return(await renderImage(undefined,'png',embed)).blob;}
 async function copyPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const blob=await makeBlob(false);await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('Copied to clipboard.');}

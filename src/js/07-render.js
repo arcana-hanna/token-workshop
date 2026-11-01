@@ -1,7 +1,7 @@
 /* ---------- compositing ---------- */
 function render(ctx,S,o={}){
   ctx.clearRect(0,0,S,S);if(!st.src)return;
-  const pad=o.pad??effPad(),g=geom(S,pad),R=g.R,c=g.c,w=R*st.width,ri=R-w,clipR=ri+w*.3,img=artSrc(!!o.hi);
+  const pad=o.pad??effPad(),g=geom(S,pad),R=g.R,c=g.c,w=R*st.width,ri=R-w,clipR=ri+w*.3,img=picSrc(!!o.hi);
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   /* on-screen only: Isolate shows just the pop-out; in Move the pop-out turns see-through so the ring beneath is visible */
   const prev=!o.clean&&st.prev,iso=!o.clean&&st.iso&&!prev,ghost=!o.clean&&!iso&&!prev&&st.tool==='move'&&tab==='image',L=o.layer,RC=iso||L==='art'||L==='pop'?null:ringLayer(S,R,c);
@@ -10,8 +10,8 @@ function render(ctx,S,o={}){
     if(L!=='ring'&&!o.clean&&!prev&&st.vz<1&&!L){ctx.save();ctx.globalAlpha=.3;applyT(ctx,g);ctx.drawImage(img,0,0,st.sw,st.sh);ctx.restore();}
     if(L!=='ring'){ctx.save();ctx.beginPath();ctx.arc(c,c,clipR,0,TAU);ctx.clip();ctx.save();applyT(ctx,g);ctx.drawImage(img,0,0,st.sw,st.sh);ctx.restore();ctx.restore();}
     if(RC)ctx.drawImage(RC,0,0);}
-  if(L!=='ring'&&L!=='art'&&(st.popOn||iso||L==='pop')&&popCount()>0){
-    const P=st.act==='bg'?st.popFrozen:o.hi?hiPop():(refreshPop(),st.popCv);
+  if(L!=='ring'&&L!=='art'&&(st.popOn||iso||L==='pop')&&st.selCount>0){
+    const P=o.hi?hiPop():(refreshPop(),st.popCv);
     if(st.shadow>0&&!iso&&!ghost&&!L){/* the shadow is clipped to the ring: it never darkens the picture or the empty canvas */
       const SH=off(4,S),sx=SH.getContext('2d');sx.globalCompositeOperation='source-over';sx.clearRect(0,0,S,S);
       sx.save();sx.shadowColor='rgba(0,0,0,'+(.6*st.shadow)+')';sx.shadowBlur=R*.05*(.4+st.shadow);sx.shadowOffsetY=R*.02;applyT(sx,g);sx.drawImage(P,0,0,st.sw,st.sh);sx.restore();
@@ -19,10 +19,9 @@ function render(ctx,S,o={}){
       sx.globalCompositeOperation='destination-in';sx.drawImage(RC,0,0);sx.globalCompositeOperation='source-over';ctx.drawImage(SH,0,0);}
     ctx.save();if(ghost)ctx.globalAlpha=.4;applyT(ctx,g);ctx.drawImage(P,0,0,st.sw,st.sh);ctx.restore();}
   if(!o.clean){
-    if(!prev&&(tab==='popout'||tab==='bg')&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
+    if(!prev&&tab==='popout'&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
     if(st.tool==='brush'&&st.hover&&!st.space){const r=brushR()*g.sc,sub=curMode()==='sub';ctx.save();ctx.beginPath();ctx.arc(st.hover.x,st.hover.y,r,0,TAU);
       ctx.fillStyle=sub?'rgba(255,69,58,.22)':'rgba(48,209,88,.22)';ctx.fill();ctx.lineWidth=2.5/st.vz;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.stroke();ctx.lineWidth=1.2/st.vz;ctx.strokeStyle='#fff';ctx.stroke();ctx.restore();}
-    if(!prev&&tab==='bg'&&popCount()>0&&!iso){ctx.save();ctx.globalAlpha=.4;applyT(ctx,g);ctx.drawImage(st.popTint,0,0,st.sw,st.sh);ctx.restore();}
     if(st.lasso&&st.lasso.pts.length>1){const sub=st.lasso.mode==='sub';ctx.save();applyT(ctx,g);ctx.beginPath();st.lasso.pts.forEach((p,i)=>i?ctx.lineTo(p.u,p.v):ctx.moveTo(p.u,p.v));ctx.closePath();
       ctx.fillStyle=sub?'rgba(255,69,58,.18)':'rgba(48,209,88,.18)';ctx.fill();ctx.lineJoin='round';
       for(const[w,col]of[[3,'rgba(0,0,0,.65)'],[1.4,'#fff']]){ctx.lineWidth=w/(g.sc*st.vz);ctx.strokeStyle=col;ctx.stroke();}ctx.restore();}
@@ -39,7 +38,7 @@ function stripePat(ctx){if(!stripe){const p=mk();p.width=p.height=16;const x=p.g
 function selOverlay(ctx,g,S){refreshSel();const T=off(2,S),t=T.getContext('2d'),tool=st.tool!=='move';
   if(tool){t.globalCompositeOperation='source-over';t.clearRect(0,0,S,S);t.save();applyT(t,g);t.drawImage(st.selCv,0,0,st.sw,st.sh);t.restore();
     t.globalCompositeOperation='source-in';t.fillStyle='#ff2d55';t.fillRect(0,0,S,S);t.globalCompositeOperation='source-over';
-    ctx.save();ctx.globalAlpha=wand?.38:tab==='bg'?.1:.2;ctx.drawImage(T,0,0);ctx.restore();}
+    ctx.save();ctx.globalAlpha=wand?.38:.2;ctx.drawImage(T,0,0);ctx.restore();}
   t.globalCompositeOperation='source-over';t.clearRect(0,0,S,S);
   const lw=Math.max(1.6,S/420)/(g.sc*st.vz);t.save();applyT(t,g);
   for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1],[.7,.7],[-.7,.7],[.7,-.7],[-.7,-.7]])t.drawImage(st.selCv,dx*lw,dy*lw,st.sw,st.sh);t.restore();

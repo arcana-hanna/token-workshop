@@ -60,8 +60,7 @@ function syncUI(){syncers.forEach(f=>f());updExport();}
 applyTheme();buildLooks();
 loadCanvas(sampleArt(),'Sample art. Use Open, drop an image on the preview, or paste one with Ctrl/⌘+V.');
 Object.assign(st,{zoom:1.3,iy:.05});
-{const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();
- {const t=mk();t.width=st.sw;t.height=st.sh;const q=t.getContext('2d');q.drawImage(sampleArt.subject,0,0,st.sw,st.sh);const d=q.getImageData(0,0,st.sw,st.sh).data,bm=new Uint8Array(st.sw*st.sh);for(let i=0;i<bm.length;i++)bm[i]=255-d[i*4+3];st.bgM=bm;}}
+{const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();}   // pre-select the hat so the pop-out shows on first view
 setTab('image');syncUI();commit();draw();
 if(!store.get('tw_coach'))$('#coach').hidden=false;
 rove();{const t=store.get('tw_table');setStrip(t===null?DESKTOP.matches:t==='1');}autoRestore();

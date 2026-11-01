@@ -9,7 +9,6 @@
     "test": "node build.mjs && node --test tests/*.test.mjs",
     "lint": "node build.mjs && eslint dist/app.js",
     "quality": "node build.mjs && node scripts/quality.mjs",
-    "backdrop": "node scripts/backdrop-quality.mjs",
     "shots": "node build.mjs && node scripts/screenshots.mjs"
   },
   "devDependencies": {

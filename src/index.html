@@ -24,15 +24,15 @@
   <section class="stage" aria-label="Token preview and tools">
     <div class="tools" role="toolbar" aria-label="Tools">
       <button class="tbtn lbl" data-steps="image" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
-      <button class="tbtn lbl" data-steps="popout bg" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
-      <button class="tbtn lbl" data-steps="popout bg" data-tool="lasso" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
-      <button class="tbtn lbl" data-steps="popout bg" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
-      <span class="vsep" data-steps="popout bg"></span>
-      <button class="tbtn lbl" data-steps="popout bg" id="bAuto" title="Auto-select the main subject" aria-label="Auto-select subject"><i data-ic="spark"></i><span>Auto</span></button>
-      <button class="tbtn lbl" data-steps="popout bg" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="lasso" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
+      <span class="vsep" data-steps="popout"></span>
+      <button class="tbtn lbl" data-steps="popout" id="bAuto" title="Auto-select the main subject" aria-label="Auto-select subject"><i data-ic="spark"></i><span>Auto</span></button>
+      <button class="tbtn lbl" data-steps="popout" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
       <button class="tbtn lbl" data-steps="popout" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
       <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
-      <button class="tbtn" data-steps="popout bg" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
+      <button class="tbtn" data-steps="popout" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
       <span class="vsep push"></span>
       <button class="tbtn mob-hide" id="bUndo" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" disabled><i data-ic="undo"></i><span>Undo</span></button>
       <button class="tbtn mob-hide" id="bRedo" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" disabled><i data-ic="redo"></i><span>Redo</span></button>
@@ -67,7 +67,7 @@
         <div class="hud" id="hud" aria-hidden="true"></div>
         <button class="vreset" id="viewReset" hidden title="Return the workspace to full view">Reset view</button>
         <div class="coach" id="coach" hidden>
-          <p><b>Drag to place your picture.</b> Auto has already found the pop-out. Fine-tune it in step 2, then change the backdrop, ring and export.</p>
+          <p><b>Drag to place your picture.</b> Auto has already found the pop-out. Fine-tune it in step 2, then style the ring and export.</p>
           <button class="btn primary" id="coachOk">Got it</button>
         </div>
         <div class="dropov">Drop image to open</div>
@@ -83,11 +83,10 @@
   <!-- ======== INSPECTOR ======== -->
   <aside class="inspector" aria-label="Token settings">
     <div class="tabs" role="tablist" aria-label="Steps">
-      <button class="tab" role="tab" id="t-image" aria-controls="p-image" aria-selected="true" data-tab="image"><span class="n">1</span><span>Place</span></button>
+      <button class="tab" role="tab" id="t-image" aria-controls="p-image" aria-selected="true" data-tab="image"><span class="n">1</span><span>Image</span></button>
       <button class="tab" role="tab" id="t-popout" aria-controls="p-popout" aria-selected="false" data-tab="popout" tabindex="-1"><span class="n">2</span><span>Pop-out</span></button>
-      <button class="tab" role="tab" id="t-bg" aria-controls="p-bg" aria-selected="false" data-tab="bg" tabindex="-1"><span class="n">3</span><span>Backdrop</span></button>
-      <button class="tab" role="tab" id="t-ring" aria-controls="p-ring" aria-selected="false" data-tab="ring" tabindex="-1"><span class="n">4</span><span>Ring</span></button>
-      <button class="tab" role="tab" id="t-export" aria-controls="p-export" aria-selected="false" data-tab="export" tabindex="-1"><span class="n">5</span><span>Export</span></button>
+      <button class="tab" role="tab" id="t-ring" aria-controls="p-ring" aria-selected="false" data-tab="ring" tabindex="-1"><span class="n">3</span><span>Ring</span></button>
+      <button class="tab" role="tab" id="t-export" aria-controls="p-export" aria-selected="false" data-tab="export" tabindex="-1"><span class="n">4</span><span>Export</span></button>
     </div>
 
     <!-- 1 IMAGE -->
@@ -99,6 +98,15 @@
         <div data-sl="zoom"></div><div data-sl="rot"></div>
         <div class="acts"><button class="btn" id="bFlip">Flip</button><button class="btn" id="bReset" title="Reset position, zoom and rotation (0)">Reset view</button></div>
       </div>
+      <h2 class="cap">Picture colour <span class="sp"></span><button class="link" id="bAdjReset" title="Back to the original colours">Reset</button></h2>
+      <div class="group">
+        <div data-sl="bri"></div><div data-sl="con"></div><div data-sl="sat"></div>
+      </div>
+      <h2 class="cap">Fill behind picture</h2>
+      <div class="group">
+        <div class="row"><label for="bgOn">Fill<span class="sub">Shows through transparent areas</span></label>
+          <div class="grow"><input id="bg" type="color" aria-label="Fill colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
+      </div>
       <button class="next" data-next="popout">Next: choose the pop-out <span aria-hidden="true">→</span></button>
     </section>
 
@@ -107,7 +115,7 @@
       <h2 class="cap">Selection</h2>
       <div class="group">
         <p class="note" style="padding-bottom:4px"><b id="selStat">Nothing selected</b></p>
-        <p class="note" style="padding-top:0">Pick what pops out with <b>Select</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.</p>
+        <p class="note" style="padding-top:0">Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.</p>
       </div>
       <h2 class="cap">Edges <span class="sp"></span><button class="link" id="bMaskView" aria-pressed="false" title="Show the selection as black and white to spot holes, specks and halos (M)">Show mask</button></h2>
       <div class="group">
@@ -119,55 +127,18 @@
           <div class="acts"><button class="btn" id="bClean" title="Remove tiny stray bits and fill tiny holes">Remove specks &amp; holes</button></div>
         </details>
       </div>
-      <h2 class="cap">Character colour <span class="sp"></span><button class="link" id="bAdjReset" title="Back to the original colours">Reset</button></h2>
-      <div class="group">
-        <div data-sl="bri"></div><div data-sl="con"></div><div data-sl="sat"></div>
-        <div class="acts"><button class="btn" id="bMatch" title="Match the picture colour to the current ring. Brightness stays as it is."><i data-ic="spark"></i>Match colour to ring</button></div>
-      </div>
-      <h2 class="cap">Look</h2>
-      <div class="group">
-        <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
-        <div data-sl="shadow"></div>
-      </div>
-      <h2 class="cap">Canvas</h2>
-      <div class="group">
-        <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Never crops pop-out art</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
-        <div data-sl="pad" id="rowPad"></div>
-      </div>
-      <button class="next" data-next="bg">Next: backdrop <span aria-hidden="true">→</span></button>
-    </section>
-
-    <!-- 3 BACKDROP -->
-    <section class="panel" id="p-bg" role="tabpanel" aria-labelledby="t-bg" tabindex="-1" hidden>
-      <h2 class="cap">Backdrop area</h2>
-      <div class="group">
-        <p class="note" style="padding-bottom:4px"><b id="bgStat">No background marked yet</b></p>
-        <p class="note" style="padding-top:0">Mark what is <i>behind</i> the character with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b>. The pop-out (purple) is protected and is never touched.</p>
-        <div class="acts"><button class="btn" id="bBgAuto"><i data-ic="spark"></i>Auto backdrop</button><button class="btn" id="bBgRest" title="Mark everything except the pop-out as backdrop">All but pop-out</button></div>
-      </div>
-      <h2 class="cap">Backdrop look <span class="sp"></span><output id="bgName"></output></h2>
-      <div class="group">
-        <div class="seg bgSeg" id="bgModeSeg" role="group" aria-label="Backdrop look" style="margin:8px 16px">
-          <button data-v="keep">Keep</button><button data-v="colour">Colour</button><button data-v="gradient">Gradient</button><button data-v="blur">Blur</button><button data-v="clear">Clear</button></div>
-        <div class="row" id="rowBgCol" hidden><label for="bgCol">Colour</label><div class="grow"><span class="pal" data-for="bgCol"></span><input id="bgCol" type="color"></div></div>
-        <div class="row" id="rowBgG1" hidden><label for="bgG1">From</label><div class="grow"><span class="pal" data-for="bgG1"></span><input id="bgG1" type="color"></div></div>
-        <div class="row" id="rowBgG2" hidden><label for="bgG2">To</label><div class="grow"><span class="pal" data-for="bgG2"></span><input id="bgG2" type="color"></div></div>
-        <div data-sl="bgGMid" id="rowBgMid" hidden></div><div data-sl="bgGAng" id="rowBgAng" hidden></div>
-        <div data-sl="bgBlur" id="rowBgBlur" hidden></div>
-        <div class="acts" id="rowBgRing" hidden><button class="btn" id="bBgRing" title="Use a dark shade of the ring colour as backdrop">Match ring colour</button></div>
-        <div data-sl="bgBri" id="rowBgBri"></div><div data-sl="bgSat" id="rowBgSat"></div>
-        <div data-sl="bgEdge" id="rowBgEdge"></div>
-        <p class="note" id="bgClearNote" hidden>Clear removes the backdrop, so only the character and the ring fill remain. Use Fill behind picture below to colour it.</p>
-      </div>
-      <h2 class="cap">Fill behind picture</h2>
-      <div class="group">
-        <div class="row"><label for="bgOn">Fill<span class="sub">Shows through transparent areas</span></label>
-          <div class="grow"><input id="bg" type="color" aria-label="Fill colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
-      </div>
+      <details class="adv" id="lookAdv"><summary>Look &amp; canvas</summary>
+        <div class="group">
+          <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
+          <div data-sl="shadow"></div>
+          <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Never crops pop-out art</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
+          <div data-sl="pad" id="rowPad"></div>
+        </div>
+      </details>
       <button class="next" data-next="ring">Next: style the ring <span aria-hidden="true">→</span></button>
     </section>
 
-    <!-- 4 RING -->
+    <!-- 3 RING -->
     <section class="panel" id="p-ring" role="tabpanel" aria-labelledby="t-ring" tabindex="-1" hidden>
       <details class="sec" id="secColour" open>
         <summary class="cap">Colour <span class="sp"></span><output id="colorName"></output></summary>
@@ -178,6 +149,7 @@
           <div data-sl="gMid" id="rowGradMid" hidden></div>
           <div data-sl="gAng" id="rowGradAng" hidden></div>
           <div class="row" id="rowAccent"><label for="accent">Accent colour<span class="sub">Second colour used by this shape</span></label><div class="grow"><span class="pal" data-for="accent"></span><input id="accent" type="color"></div></div>
+          <div class="acts"><button class="btn" id="bMatch" title="Match the picture colour to this ring, then adjust it in the Image step. Brightness stays as it is."><i data-ic="spark"></i>Match picture colour to ring</button></div>
           <details class="adv" id="presetsAdv"><summary>Preset metals &amp; gradients</summary>
             <p class="sub-h">Metals, gems &amp; stone</p>
             <div class="grid sw-grid" id="gridMetal" role="group" aria-label="Metals, gems and stone"></div>
@@ -277,9 +249,8 @@
 <dialog id="helpDlg" aria-labelledby="helpH"><div class="dlg">
   <h2 id="helpH">How it works</h2>
   <ol>
-    <li><b>Place</b>: open a photo (or paste / drop one) and drag it into position. The pop-out is already found by Auto.</li>
+    <li><b>Image</b>: open a photo (or paste / drop one), drag it into position and adjust its colour. Auto has already found the pop-out.</li>
     <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Lasso</i>, <i>Brush</i> or <i>Auto</i>. Tap <i>Fix edges automatically</i> for hair, and tune with <i>Auto detail</i> and <i>Shrink / grow</i>.</li>
-    <li><b>Backdrop</b>: mark what is behind the character and recolour it, give it a gradient, blur it or remove it. The pop-out is never touched.</li>
     <li><b>Ring</b>: pick a Look, or build your own shape, colour and texture.</li>
     <li><b>Export</b>: choose a size and download a transparent PNG. Tokens keep their editable project inside, so you can reopen them with <i>Open</i>.</li>
   </ol>
