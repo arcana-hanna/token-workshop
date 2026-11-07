@@ -45,8 +45,12 @@ const ringCache=new Map();let ringVer=0;
 function ringLayer(S,R,c){let e=ringCache.get(S);
   if(!e){e={key:'',cv:mk()};e.cv.width=e.cv.height=S;ringCache.set(S,e);if(ringCache.size>4)ringCache.delete(ringCache.keys().next().value);}
   const key=R.toFixed(2)+'|'+RING_KEYS.map(k=>st[k]).join(',')+'|'+ringVer;
-  if(e.key!==key){const x=e.cv.getContext('2d');x.clearRect(0,0,S,S);drawRing(x,c,R,st);e.key=key;}
+  if(e.key!==key){const x=e.cv.getContext('2d');x.clearRect(0,0,S,S);drawRing(x,c,R,st);featherEdge(x,c,R,st);e.key=key;}
   return e.cv;}
+/* soft 1px alpha falloff at the outer radius so stray antialiased bits past the ring fade out (patterns that protrude by design are left alone) */
+function featherEdge(x,c,R,p){if(p.formula==='chain'||p.formula==='gems')return;
+  const g=x.createRadialGradient(c,c,0,c,c,R+1);g.addColorStop(0,'#000');g.addColorStop(R/(R+1),'#000');g.addColorStop(1,'rgba(0,0,0,0)');
+  x.save();x.globalCompositeOperation='destination-in';x.fillStyle=g;x.fillRect(0,0,x.canvas.width,x.canvas.height);x.restore();}
 function off(i,S){const key=i+'_'+S;let o=offMap.get(key);if(!o){o=mk();o.width=o.height=S;offMap.set(key,o);if(offMap.size>24)offMap.delete(offMap.keys().next().value);}return o;}
 /* Energy is drawn, not tiled: real branching lightning (midpoint displacement) that arcs around the ring */
 function drawBolts(l,c,R,ri,p){const w=R-ri,lo=ri+w*.07,hi=R-w*.07,nb=Math.max(1,Math.round(p.eAmt)),len=p.eLen;let rnd=()=>0;

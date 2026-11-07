@@ -337,3 +337,5 @@ body[data-step=ring] .tools [data-steps],
 body[data-step=export] .tools [data-steps]{display:none}
 body[data-step=export] #optbar{display:none}
 body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
+
+.fitpush{grid-template-columns:repeat(2,1fr)}.btn:disabled{opacity:.45;pointer-events:none}

@@ -345,6 +345,8 @@ body[data-step=export] .tools [data-steps]{display:none}
 body[data-step=export] #optbar{display:none}
 body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
 
+.fitpush{grid-template-columns:repeat(2,1fr)}.btn:disabled{opacity:.45;pointer-events:none}
+
 </style>
 </head>
 <body>
@@ -437,6 +439,18 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         <div data-sl="zoom"></div><div data-sl="rot"></div>
         <div class="acts"><button class="btn" id="bFlip">Flip</button><button class="btn" id="bReset" title="Reset position, zoom and rotation (0)">Reset view</button></div>
       </div>
+      <h2 class="cap">Fit pop-out to frame</h2>
+      <div class="group" id="fitGrp">
+        <p class="note" id="fitInfo"></p>
+        <div class="acts"><button class="btn" id="bFitScale" title="Shrink picture and pop-out together until nothing leaves the frame">Scale down to fit</button></div>
+        <div class="acts fitpush" role="group" aria-label="Push pop-out to fit the frame">
+          <button class="btn" id="bPushL" title="Push the pop-out left until its right side fits" aria-label="Push left to fit">← Left</button>
+          <button class="btn" id="bPushR" title="Push the pop-out right until its left side fits" aria-label="Push right to fit">Right →</button>
+          <button class="btn" id="bPushU" title="Push the pop-out up until its bottom fits" aria-label="Push up to fit">↑ Up</button>
+          <button class="btn" id="bPushD" title="Push the pop-out down until its top fits" aria-label="Push down to fit">Down ↓</button>
+        </div>
+        <p class="note">Uses a frame where the ring touches all four sides. Auto-fit canvas is turned off while you do this.</p>
+      </div>
       <h2 class="cap">Picture colour <span class="sp"></span><button class="link" id="bAdjReset" title="Back to the original colours">Reset</button></h2>
       <div class="group">
         <div data-sl="bri"></div><div data-sl="con"></div><div data-sl="sat"></div>
@@ -470,7 +484,7 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         <div class="group">
           <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
           <div data-sl="shadow"></div>
-          <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Never crops pop-out art</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
+          <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Frame grows to fit the pop-out</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
           <div data-sl="pad" id="rowPad"></div>
         </div>
       </details>
@@ -576,6 +590,7 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
   <hr>
   <button role="menuitemcheckbox" id="mTable" aria-checked="false"><i data-ic="eye"></i>Table-size preview<i class="ck" data-ic="check"></i></button>
   <button role="menuitemcheckbox" id="mMask" aria-checked="false"><i data-ic="eye"></i>Show mask (black and white)<i class="ck" data-ic="check"></i></button>
+  <button role="menuitemcheckbox" id="mFrame" aria-checked="true"><i data-ic="eye"></i>Show image frame<i class="ck" data-ic="check"></i></button>
   <button role="menuitemcheckbox" id="mAutoFix" aria-checked="true"><i data-ic="spark"></i>Auto also fixes edges<i class="ck" data-ic="check"></i></button>
   <hr>
   <p class="menu-h" id="bgH">Preview background</p>
@@ -860,8 +875,12 @@ const ringCache=new Map();let ringVer=0;
 function ringLayer(S,R,c){let e=ringCache.get(S);
   if(!e){e={key:'',cv:mk()};e.cv.width=e.cv.height=S;ringCache.set(S,e);if(ringCache.size>4)ringCache.delete(ringCache.keys().next().value);}
   const key=R.toFixed(2)+'|'+RING_KEYS.map(k=>st[k]).join(',')+'|'+ringVer;
-  if(e.key!==key){const x=e.cv.getContext('2d');x.clearRect(0,0,S,S);drawRing(x,c,R,st);e.key=key;}
+  if(e.key!==key){const x=e.cv.getContext('2d');x.clearRect(0,0,S,S);drawRing(x,c,R,st);featherEdge(x,c,R,st);e.key=key;}
   return e.cv;}
+/* soft 1px alpha falloff at the outer radius so stray antialiased bits past the ring fade out (patterns that protrude by design are left alone) */
+function featherEdge(x,c,R,p){if(p.formula==='chain'||p.formula==='gems')return;
+  const g=x.createRadialGradient(c,c,0,c,c,R+1);g.addColorStop(0,'#000');g.addColorStop(R/(R+1),'#000');g.addColorStop(1,'rgba(0,0,0,0)');
+  x.save();x.globalCompositeOperation='destination-in';x.fillStyle=g;x.fillRect(0,0,x.canvas.width,x.canvas.height);x.restore();}
 function off(i,S){const key=i+'_'+S;let o=offMap.get(key);if(!o){o=mk();o.width=o.height=S;offMap.set(key,o);if(offMap.size>24)offMap.delete(offMap.keys().next().value);}return o;}
 /* Energy is drawn, not tiled: real branching lightning (midpoint displacement) that arcs around the ring */
 function drawBolts(l,c,R,ri,p){const w=R-ri,lo=ri+w*.07,hi=R-w*.07,nb=Math.max(1,Math.round(p.eAmt)),len=p.eLen;let rnd=()=>0;
@@ -921,7 +940,7 @@ const st={maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,
   autoFit:true,pad:.08,padCur:.08,padT:.08,fitDirty:true,lockPad:false,snapPad:true,
   formula:'ridge',color:'#d9a521',accent:'#2b2f3a',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',
   gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1,vz:1,vx:0,vy:0,
-  popOn:true,feather:.5,shadow:0,showSel:true,iso:false,prev:false,kc:null,embedOn:true,
+  popOn:true,feather:.5,shadow:0,showSel:true,showFrame:true,iso:false,prev:false,kc:null,embedOn:true,
   bri:0,con:0,sat:0,defr:0,bgC:'#808080',bgAuto:true,eReach:4,eTol:14,eSoft:70,eShift:0,speck:30,gap:0,autoSens:50,autoShrink:0,bsoft:0,strand:false,maskView:false,
   tool:'select',mode:'add',alt:false,space:false,tol:30,contig:true,brush:10,exportSize:512,exportWhat:'token',exportFmt:'png',pal:[],hover:null};
 const RING_DEFAULT={formula:'ridge',color:'#d9a521',accent:'#2b2d33',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1};
@@ -939,12 +958,18 @@ function toImg(g,x,y){const dx=x-g.tx,dy=y-g.ty,co=Math.cos(st.rot),si=Math.sin(
   return{u:(dx*co+dy*si)/(g.sc*st.flip)+st.sw/2,v:(-dx*si+dy*co)/g.sc+st.sh/2};}
 function applyT(ctx,g){ctx.translate(g.tx,g.ty);ctx.rotate(st.rot);ctx.scale(g.sc*st.flip,g.sc);ctx.translate(-st.sw/2,-st.sh/2);}
 
-/* Auto-fit: smallest canvas margin that keeps ring + pop-out art fully inside */
-function recomputeFit(){let d=1;
-  if(st.popOn&&st.selCount&&st.bx){const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by;
-    for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k;const r=Math.hypot(x*co-y*si+st.ix,x*si+y*co+st.iy);if(r>d)d=r;}
-    d=d*1.005+(st.feather>0?st.feather*k:0)+(st.shadow>0?.01+.05*st.shadow:0);}
+/* Pop-out extent in ring radii (centre = ring centre): {x0,x1,y0,y1} incl. half a source pixel, or null */
+function popBounds(){if(!(st.popOn&&st.selCount&&st.bx&&st.bx.length))return null;
+  const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by,hx=.5*k*(Math.abs(co)+Math.abs(si));
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k,X=x*co-y*si+st.ix,Y=x*si+y*co+st.iy;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}
+  return{x0:x0-hx,x1:x1+hx,y0:y0-hx,y1:y1+hx};}
+/* Auto-fit: the ring stays centred and the frame is exactly as large as ring or pop-out needs, so one of them always touches it */
+function recomputeFit(){let d=1;const b=popBounds();
+  if(b)d=Math.max(d,-b.x0,b.x1,-b.y0,b.y1);
   st.padT=clamp(.5-.5/d,0,.45);st.fitDirty=false;}
+/* how far the pop-out sticks out of a frame with this margin, per side, in ring radii (>0 = outside) */
+function overflow(pad){const b=popBounds();if(!b)return null;const L=1/(1-2*pad);return{l:-b.x0-L,r:b.x1-L,t:-b.y0-L,b:b.y1-L,L};}
 function exportPad(){if(!st.autoFit)return st.pad;if(st.fitDirty)recomputeFit();return st.padT;}
 
 /* ===== 05-mask.js ===== */
@@ -1436,6 +1461,9 @@ function render(ctx,S,o={}){
       sx.globalCompositeOperation='destination-out';sx.save();applyT(sx,g);sx.drawImage(P,0,0,st.sw,st.sh);sx.restore();
       sx.globalCompositeOperation='destination-in';sx.drawImage(RC,0,0);sx.globalCompositeOperation='source-over';ctx.drawImage(SH,0,0);}
     ctx.save();if(ghost)ctx.globalAlpha=.4;applyT(ctx,g);ctx.drawImage(P,0,0,st.sw,st.sh);ctx.restore();}
+  if(!o.clean&&!prev&&st.showFrame&&st.vz<1){/* the edge of the saved image; red where the pop-out leaves it */
+    const ov=st.autoFit?null:overflow(effPad()),bad=ov&&Math.max(ov.l,ov.r,ov.t,ov.b)>.002;
+    ctx.save();ctx.lineWidth=3.2/st.vz;ctx.strokeStyle='rgba(0,0,0,.55)';ctx.strokeRect(0,0,S,S);ctx.lineWidth=1.5/st.vz;ctx.setLineDash([6/st.vz,4/st.vz]);ctx.strokeStyle=bad?'#ff453a':'#fff';ctx.strokeRect(0,0,S,S);ctx.restore();}
   if(!o.clean){
     if(!prev&&tab==='popout'&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
     if(st.tool==='brush'&&st.hover&&!st.space){const r=brushR()*g.sc,sub=curMode()==='sub';ctx.save();ctx.beginPath();ctx.arc(st.hover.x,st.hover.y,r,0,TAU);
@@ -1474,6 +1502,7 @@ function frame(){queued=false;let again=false;
     if(st.snapPad||REDUCED){st.padCur=st.padT;st.snapPad=false;}
     else if(!st.lockPad){if(Math.abs(dl)<.0006)st.padCur=st.padT;else{st.padCur+=dl*.3;again=true;}}}
   const S=cv.width;cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,S,S);cx.setTransform(st.vz,0,0,st.vz,st.vx*S,st.vy*S);render(cx,S);cx.setTransform(1,0,0,1,0,0);
+  if(tab==='image'&&typeof fitStatus==='function')fitStatus();
   if(again)draw();miniSoon();stripSoon();}
 new ResizeObserver(()=>{const r=cv.getBoundingClientRect(),S=clamp(Math.round(r.width*(devicePixelRatio||1)),200,1400);if(cv.width!==S)cv.width=cv.height=S;draw();}).observe(cv);
 
@@ -1743,17 +1772,25 @@ function fx(kind){if(kind==='wand'){wandRetune();return;}
   if(kind==='soft'){st.softDirty=st.popDirty=st.fitDirty=true;}
   if(kind==='ring')thumbsSoon();draw();}
 function mkSlider(key,host){const s=SL[key],dec=s.step<1?1:0,fmt=v=>(+v).toFixed(dec);
-  host.classList.add('row','srow');host.title=s.tip+'  (double-click to reset)';
+  host.classList.add('row','srow');host.title=s.tip+'  (double-click the name to reset)';
   host.innerHTML='<label for="r_'+key+'">'+s.label+'</label><input id="r_'+key+'" type="range" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'"><span class="nv"><input type="number" inputmode="decimal" aria-label="'+s.label+' value" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'"><em>'+s.unit+'</em></span>';
   const label=host.querySelector('label'),range=host.querySelector('input[type=range]'),num=host.querySelector('input[type=number]');
-  const sync=()=>{const v=st[key]/s.k;range.value=v;num.value=fmt(Math.round(v/s.step)*s.step);};
-  const set=(v,fromNum)=>{st[key]=+(v*s.k).toFixed(6);if(fromNum)range.value=v;else num.value=fmt(v);fx(s.fx);};
-  const done=()=>s.fx==='wand'?wandDone():s.fx==='auto'?autoCommit():(s.fx==='edge'||s.fx==='shift'||s.fx==='gap')?edgeCommit():commit();
+  /* while the thumb is held, recalculations (which refresh every control) must never write to it: the pointer is the only authority */
+  let held=false,lastInput=0;
+  const sync=()=>{if(held)return;const v=st[key]/s.k;range.value=v;num.value=fmt(Math.round(v/s.step)*s.step);};
+  range.addEventListener('pointerdown',()=>{held=true;});
+  for(const ev of['pointerup','pointercancel'])addEventListener(ev,()=>{held=false;},true);
+  range.addEventListener('blur',()=>{held=false;});
+  const set=(v,fromNum)=>{lastInput=performance.now();st[key]=+(v*s.k).toFixed(6);if(fromNum)range.value=v;else num.value=fmt(v);fx(s.fx);};
+  /* on release the state is read back from the thumb, so what is applied is exactly where the thumb sits */
+  const settle=()=>{held=false;const v=+range.value;if(!isNaN(v)){st[key]=+(v*s.k).toFixed(6);num.value=fmt(Math.round(v/s.step)*s.step);}};
+  const done=()=>{settle();finish();};
+  const finish=()=>s.fx==='wand'?wandDone():s.fx==='auto'?autoCommit():(s.fx==='edge'||s.fx==='shift'||s.fx==='gap')?edgeCommit():commit();
   range.addEventListener('input',()=>set(+range.value));range.addEventListener('change',done);
   num.addEventListener('input',()=>{const v=parseFloat(num.value);if(!isNaN(v))set(clamp(v,+range.min,+range.max),true);});
   num.addEventListener('change',()=>{sync();done();});
   const reset=()=>{const d=typeof s.def==='function'?s.def():s.def;set(d);range.value=d;done();};
-  range.addEventListener('dblclick',reset);label.addEventListener('dblclick',reset);
+  range.addEventListener('dblclick',()=>{if(performance.now()-lastInput>700)reset();});label.addEventListener('dblclick',reset);   /* a double-click that is really two quick grabs must not reset */
   SLI[key]={sync,range,num,label,host};syncers.push(sync);}
 $$('[data-sl]').forEach(h=>mkSlider(h.dataset.sl,h));
 
@@ -1853,6 +1890,28 @@ $('#file').addEventListener('change',e=>{openFile(e.target.files[0]);e.target.va
 $('#bHelp').onclick=()=>$('#helpDlg').showModal();$('#helpClose').onclick=()=>$('#helpDlg').close();
 function dismissCoach(persist){$('#coach').hidden=true;if(persist)store.set('tw_coach','1');}
 $('#coachOk').onclick=()=>dismissCoach(true);
+
+/* ---------- image frame + fit-to-frame helpers ---------- */
+{const v=store.get('tw_frame');st.showFrame=v!=='0';}
+$('#mFrame').onclick=()=>{closeMenu();st.showFrame=!st.showFrame;store.set('tw_frame',st.showFrame?'1':'0');syncUI();draw();};
+syncers.push(()=>$('#mFrame').setAttribute('aria-checked',String(st.showFrame)));
+const pct=v=>Math.round(v*100)+'%';
+function fitStatus(){const ov=overflow(st.autoFit?0:effPad()),btns=['bFitScale','bPushL','bPushR','bPushU','bPushD'].map(i=>$('#'+i));
+  btns.forEach(b=>b.disabled=!ov);
+  if(!ov){$('#fitInfo').textContent='Pick a pop-out in step 2 first, then these buttons keep it inside the frame.';return;}
+  const m=Math.max(ov.l,ov.r,ov.t,ov.b),side=[['left',ov.l],['right',ov.r],['top',ov.t],['bottom',ov.b]].filter(a=>a[1]>.002).map(a=>a[0]+' '+pct(a[1]/2)).join(', ');
+  $('#fitInfo').textContent=st.autoFit?'Auto-fit keeps the frame just big enough for the pop-out. Use these to keep the ring at full size instead.':m>.002?'Pop-out leaves the frame: '+side+' (of the ring width).':'Everything fits inside the frame.';}
+syncers.push(fitStatus);
+function fitMode(){if(st.autoFit){st.autoFit=false;st.pad=0;st.padCur=0;st.snapPad=true;}}
+function fitDone(msg){syncUI();viewChanged();commit();toast(msg);}
+$('#bFitScale').onclick=()=>{if(!popBounds())return;fitMode();const b=popBounds(),L=1/(1-2*st.pad);
+  const s=Math.min(1,L/Math.max(-b.x0,b.x1,-b.y0,b.y1));if(s>=.9995){fitDone('Already fits.');return;}
+  const z=clamp(st.zoom*s,.1,8),r=z/st.zoom;st.zoom=z;st.ix*=r;st.iy*=r;SLI.zoom.sync();fitDone('Scaled to '+Math.round(st.zoom*100)+'% so it fits.');};
+function push(dir){if(!popBounds())return;fitMode();const o=overflow(st.pad);
+  const need={L:o.r,R:o.l,U:o.b,D:o.t}[dir],ax=dir==='L'||dir==='R'?'ix':'iy',sg=dir==='L'||dir==='U'?-1:1;
+  if(need<=.002){fitDone('Nothing to push that way: that side already fits.');return;}
+  st[ax]+=sg*need;fitDone(Math.max(overflow(st.pad).l,overflow(st.pad).r,overflow(st.pad).t,overflow(st.pad).b)>.002?'Pushed as far as it goes; the other sides still stick out. Try Scale down to fit.':'Pushed to fit.');}
+[['bPushL','L'],['bPushR','R'],['bPushU','U'],['bPushD','D']].forEach(([i,d])=>$('#'+i).onclick=()=>push(d));
 
 /* ===== 12-looks.js ===== */
 /* ---------- pattern grid, colour swatches, looks ---------- */

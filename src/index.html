@@ -98,6 +98,18 @@
         <div data-sl="zoom"></div><div data-sl="rot"></div>
         <div class="acts"><button class="btn" id="bFlip">Flip</button><button class="btn" id="bReset" title="Reset position, zoom and rotation (0)">Reset view</button></div>
       </div>
+      <h2 class="cap">Fit pop-out to frame</h2>
+      <div class="group" id="fitGrp">
+        <p class="note" id="fitInfo"></p>
+        <div class="acts"><button class="btn" id="bFitScale" title="Shrink picture and pop-out together until nothing leaves the frame">Scale down to fit</button></div>
+        <div class="acts fitpush" role="group" aria-label="Push pop-out to fit the frame">
+          <button class="btn" id="bPushL" title="Push the pop-out left until its right side fits" aria-label="Push left to fit">← Left</button>
+          <button class="btn" id="bPushR" title="Push the pop-out right until its left side fits" aria-label="Push right to fit">Right →</button>
+          <button class="btn" id="bPushU" title="Push the pop-out up until its bottom fits" aria-label="Push up to fit">↑ Up</button>
+          <button class="btn" id="bPushD" title="Push the pop-out down until its top fits" aria-label="Push down to fit">Down ↓</button>
+        </div>
+        <p class="note">Uses a frame where the ring touches all four sides. Auto-fit canvas is turned off while you do this.</p>
+      </div>
       <h2 class="cap">Picture colour <span class="sp"></span><button class="link" id="bAdjReset" title="Back to the original colours">Reset</button></h2>
       <div class="group">
         <div data-sl="bri"></div><div data-sl="con"></div><div data-sl="sat"></div>
@@ -131,7 +143,7 @@
         <div class="group">
           <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
           <div data-sl="shadow"></div>
-          <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Never crops pop-out art</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
+          <div class="row"><label for="autoFit">Auto-fit canvas<span class="sub">Frame grows to fit the pop-out</span></label><div class="grow"><span class="switch"><input id="autoFit" type="checkbox"><i></i></span></div></div>
           <div data-sl="pad" id="rowPad"></div>
         </div>
       </details>
@@ -237,6 +249,7 @@
   <hr>
   <button role="menuitemcheckbox" id="mTable" aria-checked="false"><i data-ic="eye"></i>Table-size preview<i class="ck" data-ic="check"></i></button>
   <button role="menuitemcheckbox" id="mMask" aria-checked="false"><i data-ic="eye"></i>Show mask (black and white)<i class="ck" data-ic="check"></i></button>
+  <button role="menuitemcheckbox" id="mFrame" aria-checked="true"><i data-ic="eye"></i>Show image frame<i class="ck" data-ic="check"></i></button>
   <button role="menuitemcheckbox" id="mAutoFix" aria-checked="true"><i data-ic="spark"></i>Auto also fixes edges<i class="ck" data-ic="check"></i></button>
   <hr>
   <p class="menu-h" id="bgH">Preview background</p>

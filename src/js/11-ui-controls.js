@@ -56,17 +56,25 @@ function fx(kind){if(kind==='wand'){wandRetune();return;}
   if(kind==='soft'){st.softDirty=st.popDirty=st.fitDirty=true;}
   if(kind==='ring')thumbsSoon();draw();}
 function mkSlider(key,host){const s=SL[key],dec=s.step<1?1:0,fmt=v=>(+v).toFixed(dec);
-  host.classList.add('row','srow');host.title=s.tip+'  (double-click to reset)';
+  host.classList.add('row','srow');host.title=s.tip+'  (double-click the name to reset)';
   host.innerHTML='<label for="r_'+key+'">'+s.label+'</label><input id="r_'+key+'" type="range" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'"><span class="nv"><input type="number" inputmode="decimal" aria-label="'+s.label+' value" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'"><em>'+s.unit+'</em></span>';
   const label=host.querySelector('label'),range=host.querySelector('input[type=range]'),num=host.querySelector('input[type=number]');
-  const sync=()=>{const v=st[key]/s.k;range.value=v;num.value=fmt(Math.round(v/s.step)*s.step);};
-  const set=(v,fromNum)=>{st[key]=+(v*s.k).toFixed(6);if(fromNum)range.value=v;else num.value=fmt(v);fx(s.fx);};
-  const done=()=>s.fx==='wand'?wandDone():s.fx==='auto'?autoCommit():(s.fx==='edge'||s.fx==='shift'||s.fx==='gap')?edgeCommit():commit();
+  /* while the thumb is held, recalculations (which refresh every control) must never write to it: the pointer is the only authority */
+  let held=false,lastInput=0;
+  const sync=()=>{if(held)return;const v=st[key]/s.k;range.value=v;num.value=fmt(Math.round(v/s.step)*s.step);};
+  range.addEventListener('pointerdown',()=>{held=true;});
+  for(const ev of['pointerup','pointercancel'])addEventListener(ev,()=>{held=false;},true);
+  range.addEventListener('blur',()=>{held=false;});
+  const set=(v,fromNum)=>{lastInput=performance.now();st[key]=+(v*s.k).toFixed(6);if(fromNum)range.value=v;else num.value=fmt(v);fx(s.fx);};
+  /* on release the state is read back from the thumb, so what is applied is exactly where the thumb sits */
+  const settle=()=>{held=false;const v=+range.value;if(!isNaN(v)){st[key]=+(v*s.k).toFixed(6);num.value=fmt(Math.round(v/s.step)*s.step);}};
+  const done=()=>{settle();finish();};
+  const finish=()=>s.fx==='wand'?wandDone():s.fx==='auto'?autoCommit():(s.fx==='edge'||s.fx==='shift'||s.fx==='gap')?edgeCommit():commit();
   range.addEventListener('input',()=>set(+range.value));range.addEventListener('change',done);
   num.addEventListener('input',()=>{const v=parseFloat(num.value);if(!isNaN(v))set(clamp(v,+range.min,+range.max),true);});
   num.addEventListener('change',()=>{sync();done();});
   const reset=()=>{const d=typeof s.def==='function'?s.def():s.def;set(d);range.value=d;done();};
-  range.addEventListener('dblclick',reset);label.addEventListener('dblclick',reset);
+  range.addEventListener('dblclick',()=>{if(performance.now()-lastInput>700)reset();});label.addEventListener('dblclick',reset);   /* a double-click that is really two quick grabs must not reset */
   SLI[key]={sync,range,num,label,host};syncers.push(sync);}
 $$('[data-sl]').forEach(h=>mkSlider(h.dataset.sl,h));
 
@@ -166,3 +174,25 @@ $('#file').addEventListener('change',e=>{openFile(e.target.files[0]);e.target.va
 $('#bHelp').onclick=()=>$('#helpDlg').showModal();$('#helpClose').onclick=()=>$('#helpDlg').close();
 function dismissCoach(persist){$('#coach').hidden=true;if(persist)store.set('tw_coach','1');}
 $('#coachOk').onclick=()=>dismissCoach(true);
+
+/* ---------- image frame + fit-to-frame helpers ---------- */
+{const v=store.get('tw_frame');st.showFrame=v!=='0';}
+$('#mFrame').onclick=()=>{closeMenu();st.showFrame=!st.showFrame;store.set('tw_frame',st.showFrame?'1':'0');syncUI();draw();};
+syncers.push(()=>$('#mFrame').setAttribute('aria-checked',String(st.showFrame)));
+const pct=v=>Math.round(v*100)+'%';
+function fitStatus(){const ov=overflow(st.autoFit?0:effPad()),btns=['bFitScale','bPushL','bPushR','bPushU','bPushD'].map(i=>$('#'+i));
+  btns.forEach(b=>b.disabled=!ov);
+  if(!ov){$('#fitInfo').textContent='Pick a pop-out in step 2 first, then these buttons keep it inside the frame.';return;}
+  const m=Math.max(ov.l,ov.r,ov.t,ov.b),side=[['left',ov.l],['right',ov.r],['top',ov.t],['bottom',ov.b]].filter(a=>a[1]>.002).map(a=>a[0]+' '+pct(a[1]/2)).join(', ');
+  $('#fitInfo').textContent=st.autoFit?'Auto-fit keeps the frame just big enough for the pop-out. Use these to keep the ring at full size instead.':m>.002?'Pop-out leaves the frame: '+side+' (of the ring width).':'Everything fits inside the frame.';}
+syncers.push(fitStatus);
+function fitMode(){if(st.autoFit){st.autoFit=false;st.pad=0;st.padCur=0;st.snapPad=true;}}
+function fitDone(msg){syncUI();viewChanged();commit();toast(msg);}
+$('#bFitScale').onclick=()=>{if(!popBounds())return;fitMode();const b=popBounds(),L=1/(1-2*st.pad);
+  const s=Math.min(1,L/Math.max(-b.x0,b.x1,-b.y0,b.y1));if(s>=.9995){fitDone('Already fits.');return;}
+  const z=clamp(st.zoom*s,.1,8),r=z/st.zoom;st.zoom=z;st.ix*=r;st.iy*=r;SLI.zoom.sync();fitDone('Scaled to '+Math.round(st.zoom*100)+'% so it fits.');};
+function push(dir){if(!popBounds())return;fitMode();const o=overflow(st.pad);
+  const need={L:o.r,R:o.l,U:o.b,D:o.t}[dir],ax=dir==='L'||dir==='R'?'ix':'iy',sg=dir==='L'||dir==='U'?-1:1;
+  if(need<=.002){fitDone('Nothing to push that way: that side already fits.');return;}
+  st[ax]+=sg*need;fitDone(Math.max(overflow(st.pad).l,overflow(st.pad).r,overflow(st.pad).t,overflow(st.pad).b)>.002?'Pushed as far as it goes; the other sides still stick out. Try Scale down to fit.':'Pushed to fit.');}
+[['bPushL','L'],['bPushR','R'],['bPushU','U'],['bPushD','D']].forEach(([i,d])=>$('#'+i).onclick=()=>push(d));

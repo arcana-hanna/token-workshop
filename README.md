@@ -102,4 +102,10 @@ Desktop and landscape tablets use a workbench: one horizontal toolbar, a wrappin
 - **Pop-out**: Select, Lasso, Brush, Auto, Clear, Isolate; Edges (Fix edges, Auto detail, Shrink / grow, Feather, More); *Look & canvas* (Show pop-out, Shadow, Auto-fit) is collapsed.
 - **Ring**: collapsible sections, Colour first. *Match picture colour to ring* sits next to the colours and jumps back to the Image step, where you can fine-tune the sliders. The toolbar Auto jumps to the Pop-out step.
 - **Export**: size, what to export, file name (taken from the dropped picture), download.
+### Frame
+- **Image frame**: when you zoom the workspace out, a dashed outline shows the edge of the saved image. Hide or show it in the toolbar's More menu (*Show image frame*). It turns red when the pop-out leaves the frame.
+- **Auto-fit canvas** keeps the ring centred and makes the frame exactly as big as ring or pop-out needs, so one of them always touches the edge (no gaps).
+- **Fit pop-out to frame** (Image step): *Scale down to fit* and *Push left / right / up / down* keep the pop-out inside a frame where the ring touches all four sides. They switch Auto-fit off.
+- The ring's outer edge has a 1 px alpha falloff so stray antialiased bits fade out (chain and gems protrude by design and are left alone).
+
 Changing the backdrop of a picture was deliberately left out: this is a token maker, not an image editor.

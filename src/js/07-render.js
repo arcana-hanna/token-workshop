@@ -18,6 +18,9 @@ function render(ctx,S,o={}){
       sx.globalCompositeOperation='destination-out';sx.save();applyT(sx,g);sx.drawImage(P,0,0,st.sw,st.sh);sx.restore();
       sx.globalCompositeOperation='destination-in';sx.drawImage(RC,0,0);sx.globalCompositeOperation='source-over';ctx.drawImage(SH,0,0);}
     ctx.save();if(ghost)ctx.globalAlpha=.4;applyT(ctx,g);ctx.drawImage(P,0,0,st.sw,st.sh);ctx.restore();}
+  if(!o.clean&&!prev&&st.showFrame&&st.vz<1){/* the edge of the saved image; red where the pop-out leaves it */
+    const ov=st.autoFit?null:overflow(effPad()),bad=ov&&Math.max(ov.l,ov.r,ov.t,ov.b)>.002;
+    ctx.save();ctx.lineWidth=3.2/st.vz;ctx.strokeStyle='rgba(0,0,0,.55)';ctx.strokeRect(0,0,S,S);ctx.lineWidth=1.5/st.vz;ctx.setLineDash([6/st.vz,4/st.vz]);ctx.strokeStyle=bad?'#ff453a':'#fff';ctx.strokeRect(0,0,S,S);ctx.restore();}
   if(!o.clean){
     if(!prev&&tab==='popout'&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
     if(st.tool==='brush'&&st.hover&&!st.space){const r=brushR()*g.sc,sub=curMode()==='sub';ctx.save();ctx.beginPath();ctx.arc(st.hover.x,st.hover.y,r,0,TAU);
@@ -56,6 +59,7 @@ function frame(){queued=false;let again=false;
     if(st.snapPad||REDUCED){st.padCur=st.padT;st.snapPad=false;}
     else if(!st.lockPad){if(Math.abs(dl)<.0006)st.padCur=st.padT;else{st.padCur+=dl*.3;again=true;}}}
   const S=cv.width;cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,S,S);cx.setTransform(st.vz,0,0,st.vz,st.vx*S,st.vy*S);render(cx,S);cx.setTransform(1,0,0,1,0,0);
+  if(tab==='image'&&typeof fitStatus==='function')fitStatus();
   if(again)draw();miniSoon();stripSoon();}
 new ResizeObserver(()=>{const r=cv.getBoundingClientRect(),S=clamp(Math.round(r.width*(devicePixelRatio||1)),200,1400);if(cv.width!==S)cv.width=cv.height=S;draw();}).observe(cv);
 
