@@ -20,8 +20,8 @@ const SL={
  rot:{label:'Rotate',min:-180,max:180,step:1,unit:'°',k:Math.PI/180,def:0,fx:'view',tip:'Rotate the picture'},
  pad:{label:'Margin',min:0,max:45,step:.1,unit:'%',k:.01,def:8,fx:'draw',tip:'Empty space around the ring so pop-out art can extend past it'},
  feather:{label:'Feather',min:0,max:12,step:.5,unit:'px',k:1,def:.5,fx:'soft',tip:'Fades the outer edge of the cut-out inward. Soft hair edges are left alone. Try Show mask to see it.'},
- autoSens:{label:'Auto detail',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
- autoShrink:{label:'Shrink / grow',min:-10,max:10,step:1,unit:'px',k:1,def:0,fx:'auto',tip:'Moves the whole Auto outline in (positive) or out (negative), like shrinking a wand selection. Runs Auto again.'},
+ autoSens:{label:'Auto detail',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'For plain backgrounds: low needs a clear difference from the background, high keeps even faint strands. Re-selects with the Plain background method, so it replaces the current selection.'},
+ autoShrink:{label:'Shrink / grow',min:-10,max:10,step:1,unit:'px',k:1,def:0,fx:'auto',tip:'For plain backgrounds: moves the whole outline in (positive) or out (negative), like shrinking a wand selection. Re-selects with the Plain background method.'},
  gap:{label:'Close small gaps',min:0,max:40,step:1,unit:'px',k:1,def:0,fx:'gap',tip:'Removes background-coloured gaps between curls up to this width. Larger gaps: use the Brush set to Remove.'},
  shadow:{label:'Drop shadow',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'fit',tip:'Shadow the pop-out casts onto the ring'},
  tol:{label:'Sensitivity',min:1,max:100,step:1,unit:'',k:1,def:30,fx:'wand',tip:'How different a colour can be and still be selected. Low picks only almost identical colours, high picks more. The whole slider is useful. Drag it after a click to adjust live.'},
@@ -108,17 +108,17 @@ let popTool='select';
 /* each step has its own tool set: Image, Ring and Export drag the picture (Move); Pop-out uses the selection tools */
 function stepTool(){setTool(tab==='popout'?(st.tool==='move'?popTool:st.tool):'move');}
 function goTool(v){if(v==='move'){if(tab!=='image')setTab('image');}else if(tab!=='popout')setTab('popout');setTool(v);}
-function setTool(v){if(v!=='move')popTool=v;wand=null;st.lasso=null;st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
+function setTool(v){if(v!=='move')popTool=v;wand=null;st.lasso=null;magCancel();st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
   $$('#optbar .o').forEach(o=>o.hidden=o.dataset.for!==v);cv.dataset.tool=v;updBadge();draw();}
 $$('.tbtn[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',lasso:'Lasso',brush:'Brush'}[st.tool];
+function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',lasso:'Lasso',magnet:'Magnet',brush:'Brush'}[st.tool];
   b.className='badge'+(st.tool==='move'||st.space?'':' '+m);b.lastChild.textContent=st.space?'Pan (Space held)':st.tool==='move'?T:T+' · '+(m==='sub'?'Remove':'Add');}
 
 /* ---------- selection actions: toolbar buttons + "More" menu ---------- */
 function clearSel(){if(!st.src||!st.selCount)return;st.mask=new Uint8Array(st.mask.length);maskChanged();draw();commit();toast('Selection cleared. Undo brings it back.');}
 function invertSel(){if(!st.src)return;const m=new Uint8Array(st.mask.length),d=st.sdata;for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>8?255-st.mask[i]:0;st.mask=m;maskChanged();draw();commit();}
 function morphSel(grow){if(!st.src)return;busy(1,grow?'Growing…':'Shrinking…');setTimeout(()=>{morph(grow);busy(-1);draw();commit();},10);}
-$('#bAuto').onclick=()=>{if(tab!=='popout')setTab('popout');runAuto();};$('#bClear').onclick=clearSel;
+$('#bAuto').onclick=()=>{if(tab!=='popout')setTab('popout');runSuggest();};$('#bClear').onclick=clearSel;
 const menu=$('#moreMenu'),bMore=$('#bMore');
 function closeMenu(){menu.hidden=true;bMore.setAttribute('aria-expanded','false');}
 function openMenu(){menu.hidden=false;const r=bMore.getBoundingClientRect(),mw=menu.offsetWidth,mh=menu.offsetHeight;

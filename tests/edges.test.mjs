@@ -108,13 +108,13 @@ test('Auto runs the edge chain after finding the subject, and can be switched of
     const c = document.createElement('canvas'); c.width = c.height = 400; const x = c.getContext('2d');
     x.fillStyle = '#d6d6d6'; x.fillRect(0, 0, 400, 400); x.fillStyle = '#2a1a10'; x.beginPath(); x.arc(200, 200, 90, 0, 7); x.fill();
     x.strokeStyle = '#2a1a10'; x.lineWidth = 1.2; for (let i = 0; i < 20; i++) { const a = i / 20 * 6.28; x.beginPath(); x.moveTo(200 + Math.cos(a) * 85, 200 + Math.sin(a) * 85); x.lineTo(200 + Math.cos(a) * 118, 200 + Math.sin(a) * 118); x.stroke(); }
-    loadCanvas(c, 't'); runAuto(); await new Promise(r => setTimeout(r, 900));
+    loadCanvas(c, 't'); suggestBest("whole","matte"); await new Promise(r => setTimeout(r, 900));
     return { sel: st.selCount, partial: st.partial };
   });
   assert.ok(on.sel > 1000);
   assert.ok(on.partial > 0, 'soft edges from Auto: ' + on.partial);
   const off = await page.evaluate(async () => {
-    store.set('tw_autofix', '0'); runAuto(); await new Promise(r => setTimeout(r, 900)); return st.partial;
+    store.set('tw_autofix', '0'); suggestBest("whole","matte"); await new Promise(r => setTimeout(r, 900)); return st.partial;
   });
   assert.equal(off, 0);
   assert.deepEqual(page.errors, []);

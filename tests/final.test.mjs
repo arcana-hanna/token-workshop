@@ -11,7 +11,7 @@ test('four steps with visible numbers, no backdrop feature left', async () => {
   const r = await page.evaluate(() => ({
     tabs: [...document.querySelectorAll('.tab')].map(t => t.dataset.tab + ':' + (t.querySelector('.n').offsetParent ? 'n' : '-')),
     bgTab: !!document.querySelector('#t-bg,#p-bg'), keys: SETTINGS.filter(k => /^bg(Mode|Col|G1|G2|GAng|GMid|Blur|Bri|Sat|Edge)$/.test(k)),
-    meta: Object.keys(projectMeta({ type: 'image/png' })), fits: [...document.querySelectorAll('.tab')].every(b => b.getBoundingClientRect().right <= document.querySelector('.tabs').getBoundingClientRect().right + 1) }));
+    meta: Object.keys(projectMeta({ type: 'image/png', crop: { x: 0, y: 0, w: st.sw, h: st.sh } })), fits: [...document.querySelectorAll('.tab')].every(b => b.getBoundingClientRect().right <= document.querySelector('.tabs').getBoundingClientRect().right + 1) }));
   assert.deepEqual(r.tabs, ['image:n', 'popout:n', 'ring:n', 'export:n']);
   assert.ok(!r.bgTab); assert.deepEqual(r.keys, []); assert.ok(!r.meta.includes('bgMask')); assert.ok(r.fits);
 });

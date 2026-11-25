@@ -102,6 +102,15 @@ Desktop and landscape tablets use a workbench: one horizontal toolbar, a wrappin
 - **Pop-out**: Select, Lasso, Brush, Auto, Clear, Isolate; Edges (Fix edges, Auto detail, Shrink / grow, Feather, More); *Look & canvas* (Show pop-out, Shadow, Auto-fit) is collapsed.
 - **Ring**: collapsible sections, Colour first. *Match picture colour to ring* sits next to the colours and jumps back to the Image step, where you can fine-tune the sliders. The toolbar Auto jumps to the Pop-out step.
 - **Export**: size, what to export, file name (taken from the dropped picture), download.
+### Auto suggestions
+Auto applies nothing by itself. It uses the ring position as a hint (the ring is aimed at the face) and runs several different methods: plain-background matte, connected background, colour match, and edge-following fills (whole picture or only near the ring). Each is offered as a whole-figure and, where it makes sense, a head-and-hair-only version (everything well below the ring centre is dropped, so shoulders disappear behind the border). They are scored without any reference answer (outline strength, ring centre covered, nothing running off the picture border, a plausible share of the ring band), near-duplicates are dropped and up to four are shown with a "Best guess" badge. Tap to preview on the canvas, tap again (or "Use this") to apply; Undo reverts. Opening a picture selects nothing; entering the Pop-out step offers suggestions. Before scoring, each automatic outline is **edge-snapped** with the same live-wire search as the Magnet tool: the outline is cut into short pieces, each piece is re-routed along the picture's real edges inside a narrow corridor around the old outline, and a piece is only replaced when the new route follows clearly stronger edges. This corrects the small errors of the reduced-size analysis. No AI models are used.
+
+### Magnetic lasso
+The **Magnet** tool (E) works like Lasso, but the outline sticks to the strongest nearby edge in the picture (a live-wire over the colour gradient, with the cursor snapping onto the nearest edge). Hold and trace along an edge, release to close it; or click to place points, then Finish (Enter, double-click or clicking the first point). Back (Backspace) removes the last point, Cancel (Esc) drops the outline. Hold Shift or Alt, or use Remove, to subtract.
+
+### Editable saves
+"Keep editable" now embeds only what can be seen: the frame of the token mapped back into the source picture, plus a 10% margin, stored as WebP (PNG/JPEG only where WebP is not available). The picture offsets, zoom and mask are rewritten for the cropped picture so it reopens in exactly the same place. Older files with the whole picture still open. WebP is the default file format.
+
 ### Frame
 - **Image frame**: when you zoom the workspace out, a dashed outline shows the edge of the saved image. Hide or show it in the toolbar's More menu (*Show image frame*). It turns red when the pop-out leaves the frame.
 - **Auto-fit canvas** keeps the ring centred and makes the frame exactly as big as ring or pop-out needs, so one of them always touches the edge (no gaps).

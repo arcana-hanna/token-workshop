@@ -339,3 +339,16 @@ body[data-step=export] #optbar{display:none}
 body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
 
 .fitpush{grid-template-columns:repeat(2,1fr)}.btn:disabled{opacity:.45;pointer-events:none}
+
+/* Auto suggestions */
+.sgbar{width:max(var(--bw),min(100%,430px));background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:6px 10px 8px}
+.sg-h{display:flex;align-items:center;gap:8px;font-size:13px}.sg-h .sp{flex:1}
+.sg-sub{color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sg-h .chip{min-height:30px;padding:0 12px}.chip.primary{background:var(--accent);color:var(--accent-fg)}.chip:disabled{opacity:.45;pointer-events:none}
+.sg-list{display:flex;gap:6px;margin-top:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.sg-card{position:relative;flex:0 0 92px;border:2px solid transparent;background:var(--fill);border-radius:12px;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:11.5px;line-height:1.2}
+.sg-card canvas{width:100%;aspect-ratio:1;border-radius:8px;display:block}
+.sg-card[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.sg-card b{font-weight:600}.sg-card .k{color:var(--sub);font-size:10.5px}
+.sg-card .best{position:absolute;top:6px;left:6px;background:var(--accent);color:var(--accent-fg);border-radius:999px;font-size:10px;font-weight:600;padding:1px 6px}
+@media (max-width:520px){.sg-sub{display:none}}

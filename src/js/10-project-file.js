@@ -14,9 +14,26 @@ function rle8Dec(u8,len){const m=new Uint8Array(len);let p=0,i=0;
     if(v)m.fill((v<<3)|(v>>2),p,Math.min(len,p+n));p+=n;}return m;}
 function resampleMask(m,w,h){const o=new Uint8Array(st.sw*st.sh);
   for(let y=0;y<st.sh;y++){const sy=Math.min(h-1,Math.floor(y/st.sh*h));for(let x=0;x<st.sw;x++)o[y*st.sw+x]=m[sy*w+Math.min(w-1,Math.floor(x/st.sw*w))];}return o;}
-async function embedImage(){if(st.embed)return st.embed;let alpha=false;const d=st.sdata;for(let i=3;i<d.length;i+=4)if(d[i]<250){alpha=true;break;}
-  const type=alpha?'image/png':'image/jpeg',blob=await new Promise(r=>st.full.toBlob(r,type,.92));
-  return st.embed={type,bytes:new Uint8Array(await blob.arrayBuffer())};}
+/* Editable saves keep only what can be seen: the frame of the saved token, mapped back into the source picture, plus 10% around it. */
+function embedCrop(){const S=1024,g=geom(S,exportPad()),W=st.sw,H=st.sh;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const[a,b]of[[0,0],[S,0],[S,S],[0,S]]){const m=toImg(g,a,b);x0=Math.min(x0,m.u);x1=Math.max(x1,m.u);y0=Math.min(y0,m.v);y1=Math.max(y1,m.v);}
+  const mx=(x1-x0)*.1,my=(y1-y0)*.1;
+  x0=Math.max(0,Math.floor(x0-mx));y0=Math.max(0,Math.floor(y0-my));x1=Math.min(W,Math.ceil(x1+mx));y1=Math.min(H,Math.ceil(y1+my));
+  if(x1-x0<16||y1-y0<16||!isFinite(x0+x1+y0+y1))return{x:0,y:0,w:W,h:H};
+  return{x:x0,y:y0,w:x1-x0,h:y1-y0};}
+/* settings that keep the picture exactly where it was after the source is cut down to the crop (all offsets are in ring radii) */
+function cropSettings(r){const W=st.sw,H=st.sh,f=2/Math.min(W,H)*st.zoom,a=f*(r.x+r.w/2-W/2)*st.flip,b=f*(r.y+r.h/2-H/2),co=Math.cos(st.rot),si=Math.sin(st.rot);
+  return{ix:st.ix+a*co-b*si,iy:st.iy+a*si+b*co,zoom:st.zoom*Math.min(r.w,r.h)/Math.min(W,H)};}
+function cropMask(r){if(r.w===st.sw&&r.h===st.sh)return st.mask;const m=new Uint8Array(r.w*r.h);for(let y=0;y<r.h;y++)m.set(st.mask.subarray((r.y+y)*st.sw+r.x,(r.y+y)*st.sw+r.x+r.w),y*r.w);return m;}
+async function embedImage(){const r=embedCrop(),key=r.x+','+r.y+','+r.w+','+r.h;
+  if(st.embed&&st.embed.key===key)return{...st.embed,crop:r};
+  let alpha=false;const d=st.sdata,W=st.sw;
+  for(let y=r.y;y<r.y+r.h&&!alpha;y++)for(let x=r.x;x<r.x+r.w;x++)if(d[(y*W+x)*4+3]<250){alpha=true;break;}
+  const k=st.full.width/st.sw,fx=Math.round(r.x*k),fy=Math.round(r.y*k),fw=Math.max(1,Math.min(st.full.width-fx,Math.round(r.w*k))),fh=Math.max(1,Math.min(st.full.height-fy,Math.round(r.h*k)));
+  const c=mk();c.width=fw;c.height=fh;const x=c.getContext('2d');if(!alpha){x.fillStyle='#fff';x.fillRect(0,0,fw,fh);}x.drawImage(st.full,fx,fy,fw,fh,0,0,fw,fh);
+  let blob=await new Promise(res=>c.toBlob(res,'image/webp',.92));
+  if(!blob||blob.type!=='image/webp')blob=await new Promise(res=>c.toBlob(res,alpha?'image/png':'image/jpeg',.92));
+  st.embed={key,type:blob.type,bytes:new Uint8Array(await blob.arrayBuffer())};return{...st.embed,crop:r};}
 function buildChunk(meta,img){const j=new TextEncoder().encode(JSON.stringify(meta)),data=new Uint8Array(4+j.length+img.length);
   new DataView(data.buffer).setUint32(0,j.length);data.set(j,4);data.set(img,4+j.length);
   const out=new Uint8Array(12+data.length),dv=new DataView(out.buffer);dv.setUint32(0,data.length);out.set([0x74,0x6b,0x57,0x73],4);out.set(data,8);
@@ -28,7 +45,7 @@ const NUM=(a,b)=>v=>typeof v==='number'&&isFinite(v)?clamp(v,a,b):undefined;
 const BOOL=v=>typeof v==='boolean'?v:undefined;
 const COLOR=v=>typeof v==='string'&&/^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():undefined;
 const STR=n=>v=>typeof v==='string'?v.slice(0,n):undefined;
-const SCHEMA={ix:NUM(-3,3),iy:NUM(-3,3),zoom:NUM(.1,8),rot:NUM(-12.6,12.6),flip:v=>v===-1||v===1?v:undefined,bgOn:BOOL,bg:COLOR,autoFit:BOOL,pad:NUM(0,.45),popOn:BOOL,
+const SCHEMA={ix:NUM(-6,6),iy:NUM(-6,6),zoom:NUM(.005,8),rot:NUM(-12.6,12.6),flip:v=>v===-1||v===1?v:undefined,bgOn:BOOL,bg:COLOR,autoFit:BOOL,pad:NUM(0,.45),popOn:BOOL,
   feather:NUM(0,12),shadow:NUM(0,1),formula:v=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(PAT,v)?v:undefined,color:COLOR,accent:COLOR,width:NUM(.04,.3),count:NUM(0,90),depth:NUM(0,1),
   tex:v=>typeof v==='string'?fixTex(v):undefined,texAmt:NUM(0,1),texDens:NUM(.4,5),seed:v=>Number.isInteger(v)?clamp(v,0,1e9):undefined,eCol:COLOR,gradOn:BOOL,g1:COLOR,g2:COLOR,
   gAng:NUM(-12.6,12.6),gMid:NUM(.05,.95),colorKey:STR(40),lAng:NUM(-12.6,12.6),lInt:NUM(0,1.5),texRot:NUM(-12.6,12.6),lineW:NUM(.01,.4),eAmt:NUM(1,24),eLen:NUM(.2,2),
@@ -37,7 +54,7 @@ function sanitizeSettings(o){const out={};if(!o||typeof o!=='object')return out;
   for(const k of SETTINGS){if(!Object.prototype.hasOwnProperty.call(o,k))continue;const v=SCHEMA[k]?SCHEMA[k](o[k]):undefined;if(v!==undefined)out[k]=v;}return out;}
 function validMeta(meta){const M=meta&&meta.mask;
   if(!meta||meta.app!=='token-workshop'||!meta.img||!M||!meta.settings||typeof meta.settings!=='object')return false;
-  if(meta.img.type!=='image/png'&&meta.img.type!=='image/jpeg')return false;
+  if(!['image/png','image/jpeg','image/webp'].includes(meta.img.type))return false;
   return Number.isInteger(M.w)&&Number.isInteger(M.h)&&M.w>=1&&M.h>=1&&M.w*M.h<=LIMITS.maskPixels&&((typeof M.rle==='string'&&M.rle.length<=M.w*M.h*2+16)||(typeof M.rle8==='string'&&M.rle8.length<=M.w*M.h*3+16));}
 /* payload = 4-byte JSON length, JSON, then the source picture; shared by the PNG chunk and the WebP chunk */
 function parsePayload(pl){if(pl.length<4)return null;const jl=new DataView(pl.buffer,pl.byteOffset,pl.byteLength).getUint32(0);if(jl>LIMITS.json||4+jl>pl.length)return null;

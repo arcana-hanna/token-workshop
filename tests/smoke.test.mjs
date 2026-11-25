@@ -76,7 +76,7 @@ test('live wand: sensitivity re-runs the selection and keeps a single undo step'
 test('export embeds the project and re-importing restores selection and ring', async () => {
   const page = await openApp(browser);
   await page.evaluate(() => { applyLook(LOOKS.find((l) => l.name === 'Royal Braid')); });
-  await page.click('#t-export');
+  await page.click('#t-export'); await page.click('#fmtSeg [data-v=png]');
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#bDownload')]);
   const path = join(mkdtempSync(join(tmpdir(), 'tw-')), 'token.png');
   await dl.saveAs(path);

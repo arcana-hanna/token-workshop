@@ -7,10 +7,11 @@ addEventListener('keydown',e=>{
     if(!typing){if(k==='z'){e.preventDefault();e.shiftKey?redo():undo();return;}if(k==='y'){e.preventDefault();redo();return;}}}
   if(typing||mod||document.querySelector('dialog[open]'))return;
   const onCanvas=document.activeElement===cv,k=e.key,free=onCanvas||t===document.body;
+  if(st.mag){if(k==='Enter'){e.preventDefault();magFinish();return;}if(k==='Escape'){e.preventDefault();magCancel();draw();return;}if(k==='Backspace'||k==='Delete'){e.preventDefault();magBack();return;}}
   if(k===' '&&free){e.preventDefault();if(!st.space){st.space=true;cv.style.cursor='grab';updBadge();}return;}
   if((k==='Delete'||k==='Backspace')&&free){e.preventDefault();clearSel();return;}
   const low=k.toLowerCase();
-  if(low==='v')goTool('move');else if(low==='w')goTool('select');else if(low==='b')goTool('brush');else if(low==='l')goTool('lasso');else if(low==='i'&&tab==='popout')toggleIso();else if(low==='m'&&tab==='popout')toggleMask();else if(low==='p')togglePrev();
+  if(low==='v')goTool('move');else if(low==='w')goTool('select');else if(low==='b')goTool('brush');else if(low==='l')goTool('lasso');else if(low==='e')goTool('magnet');else if(low==='i'&&tab==='popout')toggleIso();else if(low==='m'&&tab==='popout')toggleMask();else if(low==='p')togglePrev();
   else if(onCanvas&&st.tool!=='move'&&(k.startsWith('Arrow')||k==='Enter'))kbCursor(e);
   else if(k==='['){st.brush=clamp(st.brush-2,2,40);SLI.brush.sync();draw();}else if(k===']'){st.brush=clamp(st.brush+2,2,40);SLI.brush.sync();draw();}
   else if(k==='?'){$('#helpDlg').showModal();}

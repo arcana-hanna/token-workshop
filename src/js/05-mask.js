@@ -242,12 +242,4 @@ let autoTimer=0;
 function autoRetune(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>{autoTimer=0;busy(1,'Updating…');setTimeout(()=>{try{autoLive();}finally{busy(-1);}},20);},260);}
 function autoCommit(){if(autoTimer){clearTimeout(autoTimer);autoTimer=0;busy(1,'Updating…');try{autoLive();}finally{busy(-1);}}
   if(H.i===autoHi){H.a[H.i]=snap();updHist();}else{commit();autoHi=H.i;}}
-function runAuto(){
-  if(!st.src)return;busy(1,'Finding subject…');
-  setTimeout(()=>{let m=null,soft=null;try{soft=autoUniform();if(soft&&!autoFixOn()){const b=soft.mask;for(let i=0;i<b.length;i++)b[i]=b[i]>=128?255:0;m=b;soft=null;}else m=soft?soft.mask:autoSubject();}catch(e){}
-    busy(-1);
-    if(!m){toast('No clear subject found. Open the Pop-out step and click the part that should pop out.');setTab('popout');setTool('select');return;}
-    st.mask=m;maskChanged();let note='Subject selected. Fine-tune it in the Pop-out step, or Undo.';
-    if(soft){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;eSess=null;note='Subject selected with soft edges. Fine-tune it in the Pop-out step. Undo reverts.';}
-    else if(autoFixOn()){try{const r=fixEdges(true);if(r&&r.matte)note='Subject selected and edges softened. Fine-tune it in the Pop-out step, or Undo.';}catch(e){}}
-    st.popOn=true;syncUI();draw();commit();toast(note);},30);}
+

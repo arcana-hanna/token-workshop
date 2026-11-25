@@ -46,7 +46,7 @@ export const SCENE_SRC = `(async (opts) => {
   let src = comp;
   if (opts.jpeg) { const url = comp.toDataURL('image/jpeg', opts.jpeg), im = new Image(); await new Promise(r => { im.onload = r; im.src = url; }); src = mkc(); src.getContext('2d').drawImage(im, 0, 0); }
   window.__scene = { fg, W, H };
-  loadCanvas(src, 'scene'); st.popOn = true; runAuto();
+  loadCanvas(src, 'scene'); st.popOn = true; suggestBest("whole","matte");
   await new Promise(r => setTimeout(r, 40)); await new Promise(r => { const iv = setInterval(() => { if (!document.querySelector('#busy.on')) { clearInterval(iv); r(); } }, 50); });
   await new Promise(r => setTimeout(r, 200));
   return true; })`;

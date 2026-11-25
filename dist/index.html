@@ -347,6 +347,19 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
 
 .fitpush{grid-template-columns:repeat(2,1fr)}.btn:disabled{opacity:.45;pointer-events:none}
 
+/* Auto suggestions */
+.sgbar{width:max(var(--bw),min(100%,430px));background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:6px 10px 8px}
+.sg-h{display:flex;align-items:center;gap:8px;font-size:13px}.sg-h .sp{flex:1}
+.sg-sub{color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sg-h .chip{min-height:30px;padding:0 12px}.chip.primary{background:var(--accent);color:var(--accent-fg)}.chip:disabled{opacity:.45;pointer-events:none}
+.sg-list{display:flex;gap:6px;margin-top:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.sg-card{position:relative;flex:0 0 92px;border:2px solid transparent;background:var(--fill);border-radius:12px;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:11.5px;line-height:1.2}
+.sg-card canvas{width:100%;aspect-ratio:1;border-radius:8px;display:block}
+.sg-card[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.sg-card b{font-weight:600}.sg-card .k{color:var(--sub);font-size:10.5px}
+.sg-card .best{position:absolute;top:6px;left:6px;background:var(--accent);color:var(--accent-fg);border-radius:999px;font-size:10px;font-weight:600;padding:1px 6px}
+@media (max-width:520px){.sg-sub{display:none}}
+
 </style>
 </head>
 <body>
@@ -367,9 +380,10 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
       <button class="tbtn lbl" data-steps="image" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="lasso" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="magnet" aria-pressed="false" title="Magnetic lasso (E): trace along an edge and the line sticks to it. Hold and drag, or click to place points."><i data-ic="magnet"></i><span>Magnet</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
       <span class="vsep" data-steps="popout"></span>
-      <button class="tbtn lbl" data-steps="popout" id="bAuto" title="Auto-select the main subject" aria-label="Auto-select subject"><i data-ic="spark"></i><span>Auto</span></button>
+      <button class="tbtn lbl" data-steps="popout" id="bAuto" title="Suggest pop-outs. Nothing changes until you pick one." aria-label="Suggest pop-outs"><i data-ic="spark"></i><span>Auto</span></button>
       <button class="tbtn lbl" data-steps="popout" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
       <button class="tbtn lbl" data-steps="popout" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
       <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
@@ -394,11 +408,20 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
           <div class="seg modeSeg" role="group" aria-label="Lasso mode"><button data-v="add" aria-pressed="true" title="The area you draw is added to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="The area you draw is removed from the pop-out (or hold Shift/Alt)">Remove</button></div>
           <span class="hintline">Hold and draw around the area, release to select it</span>
         </div>
+        <div class="o" data-for="magnet">
+          <div class="seg modeSeg" role="group" aria-label="Magnetic lasso mode"><button data-v="add" aria-pressed="true" title="The area you trace is added to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="The area you trace is removed from the pop-out (or hold Shift/Alt)">Remove</button></div>
+          <button class="chip" id="magDone" hidden title="Close the outline and select it (Enter, or double-click)">Finish</button><button class="chip" id="magBack" hidden title="Remove the last point (Backspace)">Back</button><button class="chip" id="magCancel" hidden title="Throw the outline away (Esc)">Cancel</button>
+          <span class="hintline" id="magHint">Hold and trace along an edge; release to close it. Or click to place points, then Finish.</span>
+        </div>
         <div class="o" data-for="brush">
           <div class="seg modeSeg" role="group" aria-label="Brush mode"><button data-v="add" aria-pressed="true" title="Paint to add to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="Paint to remove from the pop-out (hold Alt/Option)">Remove</button></div>
           <div data-sl="brush"></div><div data-sl="bsoft"></div>
           <button class="chip" id="strandChip" aria-pressed="false" title="Hair-aware: Add paints in only what differs from the background. Remove erases only background-like pixels.">Hair-aware</button>
         </div>
+      </div>
+      <div class="sgbar" id="sgBar" hidden role="region" aria-label="Auto suggestions">
+        <div class="sg-h"><b>Suggestions</b><span class="sg-sub">Tap to preview. Nothing changes until you use one.</span><span class="sp"></span><button class="chip primary" id="sgUse" disabled>Use this</button><button class="chip" id="sgClose" aria-label="Close suggestions">Ignore</button></div>
+        <div class="sg-list" id="sgList" role="group" aria-label="Suggested pop-outs"></div>
       </div>
       <div class="work">
       <div class="board" id="board" data-bg="checker">
@@ -408,7 +431,7 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         <div class="hud" id="hud" aria-hidden="true"></div>
         <button class="vreset" id="viewReset" hidden title="Return the workspace to full view">Reset view</button>
         <div class="coach" id="coach" hidden>
-          <p><b>Drag to place your picture.</b> Auto has already found the pop-out. Fine-tune it in step 2, then style the ring and export.</p>
+          <p><b>Drag to place your picture.</b> Put the ring over the face. In step 2, Auto then suggests pop-outs you can pick from.</p>
           <button class="btn primary" id="coachOk">Got it</button>
         </div>
         <div class="dropov">Drop image to open</div>
@@ -563,10 +586,10 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
       </div>
       <h2 class="cap">File</h2>
       <div class="group">
-        <div class="row"><label>Format</label><div class="grow"><div class="seg" id="fmtSeg" role="group" aria-label="File format"><button data-v="png" aria-pressed="true">PNG</button><button data-v="webp" aria-pressed="false">WebP</button></div></div></div>
+        <div class="row"><label>Format</label><div class="grow"><div class="seg" id="fmtSeg" role="group" aria-label="File format"><button data-v="png" aria-pressed="false">PNG</button><button data-v="webp" aria-pressed="true">WebP</button></div></div></div>
         <p class="note" style="padding-block:0 6px">WebP files are smaller. Both formats keep transparency and the editable data.</p>
         <div class="row"><label for="fname">File name</label><div class="grow"><input id="fname" class="txt" type="text" value="token" maxlength="60" placeholder="token" title="The file extension is added for you"><span id="fext" style="color:var(--sub)">.png</span></div></div>
-        <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds your picture and settings so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
+        <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds the visible part of your picture (plus a 10% margin) and your settings, so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
       </div>
       <div class="dl-row">
         <button class="btn primary big" id="bDownload" title="Download the token as a transparent PNG (Ctrl/⌘+S)"><i data-ic="download"></i><span id="dlWhat">Download PNG</span> <small id="dlSize">512 px</small></button>
@@ -603,14 +626,14 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
 <dialog id="helpDlg" aria-labelledby="helpH"><div class="dlg">
   <h2 id="helpH">How it works</h2>
   <ol>
-    <li><b>Image</b>: open a photo (or paste / drop one), drag it into position and adjust its colour. Auto has already found the pop-out.</li>
-    <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Lasso</i>, <i>Brush</i> or <i>Auto</i>. Tap <i>Fix edges automatically</i> for hair, and tune with <i>Auto detail</i> and <i>Shrink / grow</i>.</li>
+    <li><b>Image</b>: open a photo (or paste / drop one), drag it into position and adjust its colour. Put the ring over the character's face, since Auto uses it as a hint.</li>
+    <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Lasso</i>, <i>Magnet</i> (a lasso that sticks to edges), <i>Brush</i> or <i>Auto</i>. Auto never changes anything by itself: it shows up to four suggestions (some select the whole figure, some only head and hair). Tap one to preview it, tap again to use it, or ignore them. <i>Fix edges automatically</i> helps with hair.</li>
     <li><b>Ring</b>: pick a Look, or build your own shape, colour and texture.</li>
     <li><b>Export</b>: choose a size and download a transparent PNG. Tokens keep their editable project inside, so you can reopen them with <i>Open</i>.</li>
   </ol>
   <h3>Shortcuts</h3>
   <dl>
-    <dt><kbd>V</kbd> <kbd>W</kbd> <kbd>L</kbd> <kbd>B</kbd></dt><dd>Move · Select · Lasso · Brush (each jumps to the step that uses it)</dd>
+    <dt><kbd>V</kbd> <kbd>W</kbd> <kbd>L</kbd> <kbd>E</kbd> <kbd>B</kbd></dt><dd>Move · Select · Lasso · Magnet · Brush (each jumps to the step that uses it)</dd>
     <dt><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Select, Brush: move the cursor, Enter applies it (Shift+Enter removes). Move: arrows move the picture</dd>
     <dt><kbd>M</kbd></dt><dd>Show the selection as a black and white mask</dd>
     <dt><kbd>P</kbd></dt><dd>Preview: see the finished token without outlines</dd>
@@ -667,6 +690,7 @@ const IC={
  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
  move:'<path d="M12 3v18M3 12h18M12 3 9 6M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
  wand:'<path d="M5 19 15 9"/><path d="m17 3 .9 2.1L20 6l-2.1.9L17 9l-.9-2.1L14 6l2.1-.9z"/><path d="m19 13 .5 1.2L20.7 15l-1.2.5L19 17l-.5-1.5-1.2-.5 1.2-.8z"/>',
+ magnet:'<path d="M6 3v9a6 6 0 0 0 12 0V3"/><path d="M6 8h4M14 8h4"/><path d="M6 3h4v5M14 8V3h4"/>',
  lasso:'<path d="M7 20c-2-1-3.5-2.7-3.5-4.7C3.5 10.6 8 6 13 6c4.4 0 7.5 2.2 7.5 5s-3.3 5-7.8 5c-2 0-3.700-.4-5-1.300"/><path d="M7 20c1.500.5 2.500-.3 2.500-1.500S8.500 16.500 7 17"/>',
  brush:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
  spark:'<path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="m19 16 .7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>',
@@ -942,7 +966,7 @@ const st={maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,
   gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1,vz:1,vx:0,vy:0,
   popOn:true,feather:.5,shadow:0,showSel:true,showFrame:true,iso:false,prev:false,kc:null,embedOn:true,
   bri:0,con:0,sat:0,defr:0,bgC:'#808080',bgAuto:true,eReach:4,eTol:14,eSoft:70,eShift:0,speck:30,gap:0,autoSens:50,autoShrink:0,bsoft:0,strand:false,maskView:false,
-  tool:'select',mode:'add',alt:false,space:false,tol:30,contig:true,brush:10,exportSize:512,exportWhat:'token',exportFmt:'png',pal:[],hover:null};
+  tool:'select',mode:'add',alt:false,space:false,tol:30,contig:true,brush:10,exportSize:512,exportWhat:'token',exportFmt:'webp',pal:[],hover:null};
 const RING_DEFAULT={formula:'ridge',color:'#d9a521',accent:'#2b2d33',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1};
 
 /* ---------- busy pill, toast, zoom hud ---------- */
@@ -1217,15 +1241,7 @@ let autoTimer=0;
 function autoRetune(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>{autoTimer=0;busy(1,'Updating…');setTimeout(()=>{try{autoLive();}finally{busy(-1);}},20);},260);}
 function autoCommit(){if(autoTimer){clearTimeout(autoTimer);autoTimer=0;busy(1,'Updating…');try{autoLive();}finally{busy(-1);}}
   if(H.i===autoHi){H.a[H.i]=snap();updHist();}else{commit();autoHi=H.i;}}
-function runAuto(){
-  if(!st.src)return;busy(1,'Finding subject…');
-  setTimeout(()=>{let m=null,soft=null;try{soft=autoUniform();if(soft&&!autoFixOn()){const b=soft.mask;for(let i=0;i<b.length;i++)b[i]=b[i]>=128?255:0;m=b;soft=null;}else m=soft?soft.mask:autoSubject();}catch(e){}
-    busy(-1);
-    if(!m){toast('No clear subject found. Open the Pop-out step and click the part that should pop out.');setTab('popout');setTool('select');return;}
-    st.mask=m;maskChanged();let note='Subject selected. Fine-tune it in the Pop-out step, or Undo.';
-    if(soft){st.bgC=soft.bg;st.bgAuto=true;st.defr=1;eSess=null;note='Subject selected with soft edges. Fine-tune it in the Pop-out step. Undo reverts.';}
-    else if(autoFixOn()){try{const r=fixEdges(true);if(r&&r.matte)note='Subject selected and edges softened. Fine-tune it in the Pop-out step, or Undo.';}catch(e){}}
-    st.popOn=true;syncUI();draw();commit();toast(note);},30);}
+
 
 /* ===== 05a-bounds.js ===== */
 /* the whole picture is always the working area */
@@ -1427,6 +1443,205 @@ function matchToRing(){if(!st.src)return;const S=128,g=geom(S,effPad()),ring=lum
   st.popDirty=true;syncUI();draw();commit();
   setTab('image');toast('Picture colour matched to the ring. Fine-tune it under Picture colour. Brightness is unchanged.');}
 
+/* ===== 05d-suggest.js ===== */
+/* ---------- Auto suggestions: several different ideas, nothing is applied until the user picks one ----------
+   Every method returns a full-size opacity mask (0-255) or null. They share the analysis grid and the ring position:
+   the ring is aimed at the character, so its centre is the best hint for "this is the subject". */
+const SG_LONG=360;
+function sgInput(){
+  const W=st.sw,H=st.sh,k=Math.min(1,SG_LONG/Math.max(W,H)),w=Math.max(8,Math.round(W*k)),h=Math.max(8,Math.round(H*k)),N=w*h;
+  const c=mk();c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(st.src,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data;
+  /* ring position in picture pixels, as it is now with a ring that fills the frame */
+  const S=1024,g=geom(S,0),m=toImg(g,S/2,S/2),R=g.R/g.sc,ri=R*(1-st.width);
+  return{W,H,w,h,N,k,d,cx:m.u*w/W,cy:m.v*h/H,R:R*k,ri:ri*k};}
+/* full-size mask from an analysis-grid opacity (0..1) */
+function sgUp(a,I){const{W,H,w,h,N}=I,s=mk();s.width=w;s.height=h;const sx=s.getContext('2d'),id=sx.createImageData(w,h);
+  for(let i=0;i<N;i++)id.data[i*4+3]=Math.round(clamp(a[i],0,1)*255);sx.putImageData(id,0,0);
+  const b=mk();b.width=W;b.height=H;const bx=b.getContext('2d',{willReadFrequently:true});bx.imageSmoothingEnabled=true;bx.imageSmoothingQuality='high';bx.drawImage(s,0,0,W,H);
+  const bd=bx.getImageData(0,0,W,H).data,m=new Uint8Array(W*H);for(let i=0;i<m.length;i++){const v=bd[i*4+3];m[i]=v<10?0:v;}return m;}
+/* 4-connected labelling of a binary grid; returns {lab,sizes} */
+function sgLabel(b,w,h){const N=w*h,lab=new Int32Array(N),sizes=[0],st2=new Int32Array(N);let n=0;
+  for(let s=0;s<N;s++){if(!b[s]||lab[s])continue;n++;let sp=0,cnt=0;st2[sp++]=s;lab[s]=n;
+    while(sp){const i=st2[--sp],x=i%w;cnt++;
+      if(x>0&&b[i-1]&&!lab[i-1]){lab[i-1]=n;st2[sp++]=i-1;}if(x<w-1&&b[i+1]&&!lab[i+1]){lab[i+1]=n;st2[sp++]=i+1;}
+      if(i>=w&&b[i-w]&&!lab[i-w]){lab[i-w]=n;st2[sp++]=i-w;}if(i<N-w&&b[i+w]&&!lab[i+w]){lab[i+w]=n;st2[sp++]=i+w;}}
+    sizes[n]=cnt;}
+  return{lab,sizes,n};}
+/* keep the components that touch the subject seed (the ring centre), drop the rest, fill holes that do not reach the border */
+function sgTidy(b,I){const{w,h,N,cx,cy,ri}=I,{lab,sizes}=sgLabel(b,w,h),keep=new Set();
+  const r0=Math.max(2,ri*.3);for(let y=Math.max(0,Math.floor(cy-r0));y<=Math.min(h-1,Math.ceil(cy+r0));y++)for(let x=Math.max(0,Math.floor(cx-r0));x<=Math.min(w-1,Math.ceil(cx+r0));x++){
+    if((x-cx)**2+(y-cy)**2<=r0*r0&&lab[y*w+x])keep.add(lab[y*w+x]);}
+  if(!keep.size){let bi=0;for(let i=1;i<sizes.length;i++)if(sizes[i]>sizes[bi])bi=i;if(bi)keep.add(bi);}
+  const out=new Uint8Array(N);let tot=0;for(let i=0;i<N;i++)if(lab[i]&&keep.has(lab[i])){out[i]=1;tot++;}
+  /* holes */
+  const bgc=new Uint8Array(N),stk=new Int32Array(N);let sp=0;
+  const sd=i=>{if(!out[i]&&!bgc[i]){bgc[i]=1;stk[sp++]=i;}};
+  for(let x=0;x<w;x++){sd(x);sd((h-1)*w+x);}for(let y=0;y<h;y++){sd(y*w);sd(y*w+w-1);}
+  while(sp){const i=stk[--sp],x=i%w;if(x>0)sd(i-1);if(x<w-1)sd(i+1);if(i>=w)sd(i-w);if(i<N-w)sd(i+w);}
+  for(let i=0;i<N;i++)if(!out[i]&&!bgc[i]){out[i]=1;tot++;}
+  return tot<N*.004||tot>N*.95?null:out;}
+/* a hard grid mask becomes a soft 1-pixel edge */
+function sgSoft(b,w,h){const N=w*h,t=new Float32Array(N),o=new Float32Array(N);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let s=0,n=0;for(let q=Math.max(0,x-1);q<=Math.min(w-1,x+1);q++){s+=b[y*w+q];n++;}t[y*w+x]=s/n;}
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let s=0,n=0;for(let q=Math.max(0,y-1);q<=Math.min(h-1,y+1);q++){s+=t[q*w+x];n++;}o[y*w+x]=s/n;}
+  return o;}
+
+/* Idea 1: plain background (paper, studio): per-pixel difference from the estimated background, soft strands */
+function sgMatte(){let r=null;try{r=autoUniform();}catch(e){}if(!r)return null;r.mask.bg=r.bg;return r.mask;}
+
+/* Idea 2: connected background: grow the background in from the picture border while neighbouring colours stay alike */
+function sgFlood(){let r=null;try{r=autoSubject();}catch(e){}return r;}
+
+/* Idea 3: colour statistics. The colours around the ring centre are the subject, the colours along the picture border are the
+   background; every pixel is judged by which of the two its colour looks more like (with the distance to the ring as a gentle prior). */
+function sgScore(I){if(I.sc!==undefined)return I.sc;const{w,h,N,d,cx,cy,R,ri}=I,K=20;
+  /* k-means on a subsample of the pixels */
+  const cen=new Float32Array(K*3),px=[];for(let i=0;i<N;i+=3)px.push(i);
+  for(let c=0;c<K;c++){const i=px[Math.floor((c+.5)*px.length/K)];cen[c*3]=d[i*4];cen[c*3+1]=d[i*4+1];cen[c*3+2]=d[i*4+2];}
+  const asg=new Uint8Array(N),near=(i)=>{let b=0,bd=1e9;for(let c=0;c<K;c++){const e=(d[i*4]-cen[c*3])**2+(d[i*4+1]-cen[c*3+1])**2+(d[i*4+2]-cen[c*3+2])**2;if(e<bd){bd=e;b=c;}}return b;};
+  for(let it=0;it<6;it++){const s=new Float32Array(K*3),n=new Float32Array(K);
+    for(const i of px){const c=near(i);s[c*3]+=d[i*4];s[c*3+1]+=d[i*4+1];s[c*3+2]+=d[i*4+2];n[c]++;}
+    for(let c=0;c<K;c++)if(n[c]){cen[c*3]=s[c*3]/n[c];cen[c*3+1]=s[c*3+1]/n[c];cen[c*3+2]=s[c*3+2]/n[c];}}
+  for(let i=0;i<N;i++)asg[i]=near(i);
+  const fg=new Float32Array(K),bg=new Float32Array(K);let nf=0,nb=0;
+  const rs=Math.max(2,ri*.85);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;
+    if((x-cx)**2+(y-cy)**2<=rs*rs){fg[asg[i]]++;nf++;}
+    if(x<3||y<3||x>=w-3||y>=h-3){bg[asg[i]]++;nb++;}}
+  if(!nf||!nb)return I.sc=null;
+  const sc=new Float32Array(N);
+  for(let i=0;i<N;i++){const c=asg[i],f=(fg[c]+.5)/nf,b=(bg[c]+.5)/nb,p=f/(f+b),dist=Math.hypot(i%w-cx,((i/w)|0)-cy)/R,pr=dist<1.2?1:Math.max(.25,1.2/dist**1.5);sc[i]=.5+(p-.5)*pr*1.0+(dist<.6?.15:0);}
+  /* smooth the score so single odd pixels do not matter */
+  const t=new Float32Array(N),s2=new Float32Array(N),SR=2;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let s=0,n=0;for(let q=Math.max(0,x-SR);q<=Math.min(w-1,x+SR);q++){s+=sc[y*w+q];n++;}t[y*w+x]=s/n;}
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let s=0,n=0;for(let q=Math.max(0,y-SR);q<=Math.min(h-1,y+SR);q++){s+=t[q*w+x];n++;}s2[y*w+x]=s/n;}
+  return I.sc=s2;}
+function sgColours(I){const sc=sgScore(I);if(!sc)return null;const{w,h,N}=I,b=new Uint8Array(N);for(let i=0;i<N;i++)b[i]=sc[i]>.5?1:0;
+  const o=sgTidy(b,I);if(!o)return null;return sgUp(sgSoft(o,w,h),I);}
+
+/* colour gradient size of every grid pixel (0-255) */
+function sgGrad(I){if(I.gr)return I.gr;const{w,h,N,d}=I,gr=new Uint8Array(N),ch=(i,c)=>d[i*4+c];
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x;let m=0;
+    for(let c=0;c<3;c++){const gx=ch(i+1,c)*2+ch(i+1-w,c)+ch(i+1+w,c)-ch(i-1,c)*2-ch(i-1-w,c)-ch(i-1+w,c),gy=ch(i+w,c)*2+ch(i+w-1,c)+ch(i+w+1,c)-ch(i-w,c)*2-ch(i-w-1,c)-ch(i-w+1,c);
+      const v=(Math.abs(gx)+Math.abs(gy))/8;if(v>m)m=v;}
+    gr[i]=Math.min(255,Math.round(m));}
+  return I.gr=gr;}
+/* Idea 4: edges. Seeds in the ring centre and along the picture border grow like water filling basins; the meeting line follows the strongest outline. */
+function sgEdges(I,opt={}){const{w,h,N,cx,cy,ri,R}=I,rad=opt.rad,sc=opt.colour?sgScore(I):null;
+  const gr=sgGrad(I);
+  const lab=new Uint8Array(N),Q=Array.from({length:256},()=>[]),rs=Math.max(2,ri*.3);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;
+    if((x-cx)**2+(y-cy)**2<=rs*rs){lab[i]=1;Q[0].push(i);}
+    else if(x<2||y<2||x>=w-2||y>=h-2||(rad&&(x-cx)**2+(y-cy)**2>=(rad*R)**2)||(sc&&sc[i]<.15&&(x-cx)**2+(y-cy)**2>R*R)){lab[i]=2;Q[0].push(i);}}
+  for(let lv=0;lv<256;){const q=Q[lv];if(!q.length){lv++;continue;}const i=q.pop(),x=i%w,l=lab[i];
+    const nb=j=>{if(lab[j])return;lab[j]=l;Q[Math.max(lv,gr[j])].push(j);};
+    if(x>0)nb(i-1);if(x<w-1)nb(i+1);if(i>=w)nb(i-w);if(i<N-w)nb(i+w);}
+  const b=new Uint8Array(N);for(let i=0;i<N;i++)b[i]=lab[i]===1?1:0;
+  const o=sgTidy(b,I);if(!o)return null;return sgUp(sgSoft(o,w,h),I);}
+
+/* "Pop-out only": keep the part of a whole-subject mask that can show around the ring, and let the lower body vanish behind the border.
+   Everything below a line a little under the ring centre is dropped, except hair-like thin parts are kept by the caller's choice (not here). */
+function sgTop(m,I){const{W,H,k,cy,R}=I,lim=Math.round((cy+R*.3)/k),o=new Uint8Array(m.length);
+  for(let y=0;y<Math.min(H,lim);y++)o.set(m.subarray(y*W,y*W+W),y*W);
+  /* a short soft fade instead of a hard cut */
+  const f=Math.max(2,Math.round(R*.06/k));for(let y=Math.max(0,lim-f);y<lim;y++){const a=(lim-y)/f;for(let x=0;x<W;x++)o[y*W+x]=Math.round(o[y*W+x]*a);}
+  if(m.bg)o.bg=m.bg;return o;}
+
+/* How plausible is a candidate? No picture of the answer exists, so look at what a good pop-out looks like:
+   it follows real outlines, covers the ring centre, never runs off the picture border, and takes only a small share of the ring band. */
+function sgFeatures(m,I){const{W,H,w,h,N,k,cx,cy,R,ri}=I,gr=sgGrad(I),b=new Uint8Array(N);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)b[y*w+x]=m[Math.min(H-1,Math.floor(y/k))*W+Math.min(W-1,Math.floor(x/k))]>=128?1:0;
+  let area=0,cen=0,cenN=0,bor=0,borN=0,band=0,bandN=0,bs=0,bn=0,out=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,v=b[i],r=Math.hypot(x-cx,y-cy);area+=v;
+    if(r<ri*.5){cenN++;cen+=v;}if(x<2||y<2||x>=w-2||y>=h-2){borN++;bor+=v;}
+    if(r>ri&&r<=R){bandN++;band+=v;}if(r>R)out+=v;
+    if(v&&x>0&&y>0&&x<w-1&&y<h-1&&(!b[i-1]||!b[i+1]||!b[i-w]||!b[i+w])){bs+=gr[i];bn++;}}
+  return{edge:bn?bs/bn/255:0,centre:cenN?cen/cenN:0,border:borN?bor/borN:0,band:bandN?band/bandN:0,area:area/N,out:out/Math.max(1,bandN)};}
+function sgPlausible(f,whole){let s=f.edge*3;
+  if(f.centre<.85)s-=(.85-f.centre)*4;
+  s-=f.border*6;
+  if(f.area>.6)s-=(f.area-.6)*4;
+  if(!whole){s-=2.5*Math.max(0,f.out-.05);if(f.band>.4)s-=(f.band-.4)*3;if(f.band<.02)s-=(.02-f.band)*25;}
+  return s;}
+/* all methods, as {id,name,kind,mask}; "pop-out" candidates keep only what can show around the ring, "whole" ones select the whole figure */
+const SG_METHODS=[
+  {id:'edges',name:'Outlines',whole:I=>sgEdges(I)},
+  {id:'local',name:'Outlines near the ring',pop:I=>sgEdges(I,{rad:1.7})},
+  {id:'localC',name:'Outlines and colours near the ring',pop:I=>sgEdges(I,{rad:1.7,colour:1})},
+  {id:'edgesC',name:'Outlines and colours',whole:I=>sgEdges(I,{colour:1})},
+  {id:'colour',name:'Colour match',whole:I=>sgColours(I)},
+  {id:'flood',name:'Connected background',whole:()=>sgFlood()},
+  {id:'matte',name:'Plain background',whole:()=>sgMatte()}];
+function sgCandidates(){const I=sgInput(),out=[];
+  for(const M of SG_METHODS){let m=null;try{m=(M.whole||M.pop)(I);}catch(e){}if(!m)continue;
+    if(!m.bg&&window.SG_SNAP!==false){try{m=sgSnap(m);}catch(e){}}
+    if(M.whole){out.push({id:M.id,name:M.name,kind:'whole',mask:m});const t=sgTop(m,I);out.push({id:M.id+'-top',name:M.name,kind:'pop',mask:t});}
+    else out.push({id:M.id,name:M.name,kind:'pop',mask:m});}
+  for(const c of out){c.feat=sgFeatures(c.mask,I);c.score=sgPlausible(c.feat,c.kind==='whole');}
+  return{I,cands:out};}
+/* two of each kind, best first, never two that are nearly the same mask */
+function sgPick(cands,n=4){const same=(a,b)=>{let i=0,u=0;const A=a.mask,B=b.mask;for(let x=0;x<A.length;x+=7){const p=A[x]>=128,q=B[x]>=128;if(p||q)u++;if(p&&q)i++;}return u?i/u:1;};
+  const pick=[],tryAdd=c=>{if(c&&pick.length<n&&!pick.includes(c)&&pick.every(p=>same(p,c)<.92))pick.push(c);};
+  const pop=cands.filter(c=>c.kind==='pop').sort((a,b)=>b.score-a.score),whole=cands.filter(c=>c.kind==='whole'&&c.score>0).sort((a,b)=>b.score-a.score);
+  const best=pop[0];if(best)tryAdd(best);
+  for(let i=0;i<2;i++){tryAdd(whole[i]);}
+  for(const c of pop)tryAdd(c);for(const c of whole)tryAdd(c);
+  return pick;}
+
+/* ===== 05e-snap.js ===== */
+/* ---------- edge snapping: the magnetic-lasso idea applied to an automatic selection ----------
+   The outline of a candidate is cut into short pieces. Each piece is re-routed through the picture's real edges with the same
+   live-wire search the Magnet tool uses, but only inside a narrow corridor around the old outline, so it can fix small errors
+   (the analysis runs on a reduced picture) without ever wandering off. */
+function sgContour(b,W,H,sx,sy){const dx=[1,1,0,-1,-1,-1,0,1],dy=[0,1,1,1,0,-1,-1,-1],at=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&b[y*W+x]===1,pts=[{x:sx,y:sy}];
+  let x=sx,y=sy,bk=4,first=-1,guard=0;const lim=4*(W+H)+W*H/4;
+  while(guard++<lim){let found=-1;for(let k=1;k<=8;k++){const d=(bk+k)%8;if(at(x+dx[d],y+dy[d])){found=k;break;}}
+    if(found<0)break;const d=(bk+found)%8,pd=(bk+found-1)%8,nx=x+dx[d],ny=y+dy[d],bx=x+dx[pd],by=y+dy[pd];
+    if(first<0)first=ny*W+nx;else if(x===sx&&y===sy&&ny*W+nx===first)break;
+    let nb=0;for(let q=0;q<8;q++)if(nx+dx[q]===bx&&ny+dy[q]===by){nb=q;break;}
+    x=nx;y=ny;bk=nb;if(x===sx&&y===sy&&first>=0&&guard>2){/* back at the start: stop when the next step repeats the first */}
+    pts.push({x,y});}
+  return pts;}
+/* cheapest route between two points inside the corridor (null when the corridor does not connect them) */
+function sgRoute(a,b,corr,W,H,pad){const G=magGrad(),x0=Math.max(0,Math.min(a.x,b.x)-pad),y0=Math.max(0,Math.min(a.y,b.y)-pad),x1=Math.min(W,Math.max(a.x,b.x)+pad+1),y1=Math.min(H,Math.max(a.y,b.y)+pad+1),w=x1-x0,h=y1-y0,N=w*h;
+  const dist=new Float32Array(N).fill(1e30),prev=new Int32Array(N).fill(-1),done=new Uint8Array(N),hp=new Int32Array(N*8+8),hk=new Float32Array(N*8+8);let hn=0;
+  const push=(i,k)=>{let p=hn++;while(p>0){const q=(p-1)>>1;if(hk[q]<=k)break;hp[p]=hp[q];hk[p]=hk[q];p=q;}hp[p]=i;hk[p]=k;};
+  const pop=()=>{const r=hp[0];hn--;const ki=hp[hn],kk=hk[hn];let p=0;while(true){let c=p*2+1;if(c>=hn)break;if(c+1<hn&&hk[c+1]<hk[c])c++;if(hk[c]>=kk)break;hp[p]=hp[c];hk[p]=hk[c];p=c;}hp[p]=ki;hk[p]=kk;return r;};
+  const s=(a.y-y0)*w+(a.x-x0),t=(b.y-y0)*w+(b.x-x0);dist[s]=0;push(s,0);
+  while(hn){const i=pop();if(done[i])continue;done[i]=1;if(i===t)break;const ix=i%w,iy=(i/w)|0,di=dist[i];
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=ix+dx,ny=iy+dy;if(nx<0||ny<0||nx>=w||ny>=h)continue;const j=ny*w+nx;if(done[j])continue;
+      const gi=(y0+ny)*W+x0+nx;if(!corr[gi])continue;const nd=di+G.lut[G.g[gi]]*(dx&&dy?1.414:1);if(nd<dist[j]){dist[j]=nd;prev[j]=i;push(j,nd);}}}
+  if(!done[t])return null;const out=[];let i=t;while(i>=0){out.push({u:x0+i%w+.5,v:y0+((i/w)|0)+.5});i=prev[i];}return out.reverse();}
+function sgSnap(m){const W=st.sw,H=st.sh,N=W*H,b=new Uint8Array(N);let any=0;for(let i=0;i<N;i++)if(m[i]>=128){b[i]=1;any++;}
+  if(any<200||any>N*.97)return m;
+  const{lab,sizes}=sgLabel(b,W,H),first=new Int32Array(sizes.length).fill(-1);for(let i=0;i<N;i++){const l=lab[i];if(l&&first[l]<0)first[l]=i;}
+  const comps=[];for(let l=1;l<sizes.length;l++)if(sizes[l]>=Math.max(300,any*.02))comps.push(l);comps.sort((p,q)=>sizes[q]-sizes[p]);
+  const d=clamp(Math.round(Math.max(W,H)/220),3,8),step=Math.max(8,Math.round(Math.max(W,H)/80)),polys=[],ring=new Uint8Array(N);
+  for(const l of comps.slice(0,3)){const f=first[l],P=sgContour(b,W,H,f%W,(f/W)|0);if(P.length<24)continue;
+    for(const p of P)ring[p.y*W+p.x]=1;
+    const A=[],O=[];for(let i=0;i<P.length;i+=step){const g0=magGrad().g,o=P[i],q=magSnap({u:o.x,v:o.y},d),keep=g0[q.v*W+q.u]>=1.5*g0[o.y*W+o.x]+8;
+      A.push(keep?{x:q.u,y:q.v}:{x:o.x,y:o.y});O.push(P.slice(i,i+step+1));}
+    if(P.length%step!==1)O[O.length-1]=P.slice((O.length-1)*step).concat([P[0]]);polys.push({A,O});}
+  if(!polys.length)return m;
+  /* corridor = every pixel within d of the old outline */
+  const t=new Uint8Array(N),corr=new Uint8Array(N);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!ring[y*W+x])continue;for(let q=Math.max(0,x-d);q<=Math.min(W-1,x+d);q++)t[y*W+q]=1;}
+  for(let x=0;x<W;x++)for(let y=0;y<H;y++){if(!t[y*W+x])continue;for(let q=Math.max(0,y-d);q<=Math.min(H-1,y+d);q++)corr[q*W+x]=1;}
+  const c=mk();c.width=W;c.height=H;const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';
+  const G=magGrad(),cost=(pts)=>{let c=0;for(const p of pts)c+=G.lut[G.g[Math.min(H-1,Math.floor(p.v))*W+Math.min(W-1,Math.floor(p.u))]];return c/Math.max(1,pts.length);};
+  for(const{A,O}of polys){x.beginPath();let started=false;
+    for(let i=0;i<A.length;i++){const a=A[i],bb=A[(i+1)%A.length],r=sgRoute(a,bb,corr,W,H,d+2),old=(O[i]||[]).map(p=>({u:p.x+.5,v:p.y+.5})),
+        /* keep the old piece unless the new route really runs along stronger edges */
+        seg=r&&(!old.length||cost(r)<cost(old)*.8)?r:old.length>1?old:[{u:a.x+.5,v:a.y+.5},{u:bb.x+.5,v:bb.y+.5}];
+      seg.forEach((p,j)=>{if(!started){x.moveTo(p.u,p.v);started=true;}else if(j||!i)x.lineTo(p.u,p.v);});}
+    x.closePath();x.fill();}
+  const pd=x.getImageData(0,0,W,H).data,out=new Uint8Array(m);
+  for(let i=0;i<N;i++)if(corr[i])out[i]=pd[i*4+3]>=128?255:0;
+  /* a 1 px soft edge inside the corridor only */
+  const o2=new Uint8Array(out);for(let y=1;y<H-1;y++)for(let xx=1;xx<W-1;xx++){const i=y*W+xx;if(!corr[i])continue;let s=0;for(let q=-1;q<=1;q++)for(let p=-1;p<=1;p++)s+=out[i+q*W+p];o2[i]=Math.round(s/9);}
+  return o2;}
+
 /* ===== 06-history.js ===== */
 /* ---------- history: one stack for selection, view and ring changes ---------- */
 const H={a:[],i:-1};
@@ -1465,12 +1680,15 @@ function render(ctx,S,o={}){
     const ov=st.autoFit?null:overflow(effPad()),bad=ov&&Math.max(ov.l,ov.r,ov.t,ov.b)>.002;
     ctx.save();ctx.lineWidth=3.2/st.vz;ctx.strokeStyle='rgba(0,0,0,.55)';ctx.strokeRect(0,0,S,S);ctx.lineWidth=1.5/st.vz;ctx.setLineDash([6/st.vz,4/st.vz]);ctx.strokeStyle=bad?'#ff453a':'#fff';ctx.strokeRect(0,0,S,S);ctx.restore();}
   if(!o.clean){
+    if(!prev&&tab==='popout'&&st.sgShow&&!iso)sgOverlay(ctx,g,S);
     if(!prev&&tab==='popout'&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
     if(st.tool==='brush'&&st.hover&&!st.space){const r=brushR()*g.sc,sub=curMode()==='sub';ctx.save();ctx.beginPath();ctx.arc(st.hover.x,st.hover.y,r,0,TAU);
       ctx.fillStyle=sub?'rgba(255,69,58,.22)':'rgba(48,209,88,.22)';ctx.fill();ctx.lineWidth=2.5/st.vz;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.stroke();ctx.lineWidth=1.2/st.vz;ctx.strokeStyle='#fff';ctx.stroke();ctx.restore();}
-    if(st.lasso&&st.lasso.pts.length>1){const sub=st.lasso.mode==='sub';ctx.save();applyT(ctx,g);ctx.beginPath();st.lasso.pts.forEach((p,i)=>i?ctx.lineTo(p.u,p.v):ctx.moveTo(p.u,p.v));ctx.closePath();
+    {const L=st.lasso||st.magDraw;if(L&&L.pts.length>1){const sub=L.mode==='sub';ctx.save();applyT(ctx,g);ctx.beginPath();L.pts.forEach((p,i)=>i?ctx.lineTo(p.u,p.v):ctx.moveTo(p.u,p.v));ctx.closePath();
       ctx.fillStyle=sub?'rgba(255,69,58,.18)':'rgba(48,209,88,.18)';ctx.fill();ctx.lineJoin='round';
-      for(const[w,col]of[[3,'rgba(0,0,0,.65)'],[1.4,'#fff']]){ctx.lineWidth=w/(g.sc*st.vz);ctx.strokeStyle=col;ctx.stroke();}ctx.restore();}
+      for(const[w,col]of[[3,'rgba(0,0,0,.65)'],[1.4,'#fff']]){ctx.lineWidth=w/(g.sc*st.vz);ctx.strokeStyle=col;ctx.stroke();}
+      if(L.anc)L.anc.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.u,p.v,(i?3.2:5.5)/(g.sc*st.vz),0,TAU);ctx.fillStyle=i?'#fff':'#30d158';ctx.fill();ctx.lineWidth=1.2/(g.sc*st.vz);ctx.strokeStyle='rgba(0,0,0,.7)';ctx.stroke();});
+      ctx.restore();}}
     if(!prev&&st.maskView&&st.selCount>=0){refreshSoft();ctx.save();ctx.fillStyle='#000';ctx.fillRect(-1e5,-1e5,2e5,2e5);applyT(ctx,g);ctx.drawImage(st.softCv,0,0,st.sw,st.sh);ctx.restore();}
     if(!prev&&st.kc&&st.tool!=='brush'&&st.tool!=='move'&&document.activeElement===cv){const r=S/45/st.vz;ctx.save();ctx.lineCap='round';
       for(const[w,c]of[[3.2,'rgba(0,0,0,.7)'],[1.5,'#fff']]){ctx.lineWidth=w/st.vz;ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(st.kc.x-r,st.kc.y);ctx.lineTo(st.kc.x+r,st.kc.y);ctx.moveTo(st.kc.x,st.kc.y-r);ctx.lineTo(st.kc.x,st.kc.y+r);ctx.stroke();}ctx.restore();}
@@ -1529,7 +1747,7 @@ const ptrs=new Map();let drag=null,gest=null,lastPt=null,wheelT=0,selCtx=null,so
 function cpt(x,y){const r=cv.getBoundingClientRect(),k=cv.width/r.width;return{x:(x-r.left)*k,y:(y-r.top)*k,k};}
 function pt(e){return cpt(e.clientX,e.clientY);}
 function imgPt(e){const q=toTok(pt(e));return toImg(geom(cv.width,effPad()),q.x,q.y);}
-const curMode=e=>((e&&(e.altKey||(st.tool==='lasso'&&e.shiftKey)))||st.alt)?'sub':st.mode;
+const curMode=e=>((e&&(e.altKey||((st.tool==='lasso'||st.tool==='magnet')&&e.shiftKey)))||st.alt)?'sub':st.mode;
 function startPaint(){refreshSoft();refreshSel();st.mask=st.mask.slice();st.painting=true;lastPt=null;selCtx=st.selCv.getContext('2d');softCtx=st.softCv.getContext('2d');
   if(st.strand)strandSetup();
 }
@@ -1539,7 +1757,7 @@ function paintTo(e){const q=imgPt(e),val=curMode(e)==='sub'?0:255,r=brushR();
   else dab(q.u,q.v,r,val);
   flushDirty();lastPt=q;if(val&&!st.selCount)st.selCount=1;st.popDirty=true;draw();}
 /* lasso: the drawn outline is closed and filled into the selection when the pointer is released */
-function lassoApply(){const L=st.lasso;st.lasso=null;if(!L||L.pts.length<3){draw();return;}
+function lassoApply(L0){const L=L0||st.lasso;st.lasso=null;if(!L||L.pts.length<3){draw();return;}
   const P=L.pts;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of P){x0=Math.min(x0,p.u);y0=Math.min(y0,p.v);x1=Math.max(x1,p.u);y1=Math.max(y1,p.v);}
   const B=bounds();x0=Math.max(B.x0,Math.floor(x0));y0=Math.max(B.y0,Math.floor(y0));x1=Math.min(B.x1,Math.ceil(x1)+1);y1=Math.min(B.y1,Math.ceil(y1)+1);
   const w=x1-x0,h=y1-y0;if(w<2||h<2){draw();return;}
@@ -1552,15 +1770,18 @@ function endPaint(){flushDirty();st.painting=false;maskChanged();commit();draw()
 cv.addEventListener('pointerdown',e=>{if(!st.src)return;if(e.pointerType==='mouse'&&e.button!==0)return;
   cv.focus({preventScroll:true});st.kc=null;
   dismissCoach(true);cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso){st.lasso=null;draw();}if(!viewTool())st.lockPad=true;
+  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
     if(st.painting)endPaint();return;}
   if(st.tool==='move'||st.space){const vw=st.space&&viewTool()&&st.vz>1;drag={x:e.clientX,y:e.clientY,view:vw};if(!vw)st.lockPad=true;cv.classList.add('grabbing');}
   else if(st.tool==='select'){const q=imgPt(e);wandStart(q.u,q.v,curMode(e));}
   else if(st.tool==='lasso'){const q=imgPt(e);st.lasso={pts:[q],mode:curMode(e)};draw();}
+  else if(st.tool==='magnet'){magDown(e);}
   else{startPaint();paintTo(e);}});
 cv.addEventListener('pointermove',e=>{
   if(st.tool==='brush'){st.hover=toTok(pt(e));if(!ptrs.has(e.pointerId))draw();}
+  if(st.mag&&!ptrs.has(e.pointerId)){magMove(e);return;}
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(st.mag){magMove(e);return;}
   if(ptrs.size===2&&gest){const[a,b]=[...ptrs.values()],ratio=Math.hypot(a.x-b.x,a.y-b.y)/gest.d;
     if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
     else{st.zoom=clamp(gest.z*ratio,.1,8);SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
@@ -1574,6 +1795,7 @@ cv.addEventListener('pointermove',e=>{
 const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest;ptrs.delete(e.pointerId);if(ptrs.size<2)gest=null;drag=null;cv.classList.remove('grabbing');
   if(st.painting)endPaint();
   if(st.lasso)lassoApply();
+  if(st.mag)magUp(e);
   if(!ptrs.size){st.lockPad=false;st.fitDirty=true;draw();if(moved)commit();}};
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('pointerleave',()=>{st.hover=null;draw();});
@@ -1592,6 +1814,73 @@ addEventListener('dragover',e=>e.preventDefault());
 addEventListener('drop',e=>{e.preventDefault();dragDepth=0;board.classList.remove('drop');openFile(e.dataTransfer.files[0]);});
 addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();openFile(f);}});
 
+/* ===== 08a-magnetic.js ===== */
+/* ---------- magnetic lasso: the outline is a least-effort path through the picture's edges (live-wire) ----------
+   Hold and drag along an edge (release closes the outline), or click to place points and finish with Enter / Finish.
+   Costs come from the colour gradient, so the line prefers to run along strong edges. */
+let mgrad=null;
+function magGrad(){if(mgrad&&mgrad.d===st.sdata)return mgrad;const W=st.sw,H=st.sh,d=st.sdata,g=new Uint8Array(W*H);
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;let m=0;
+    for(let c=0;c<3;c++){const a=(j)=>d[j*4+c],gx=a(i+1)*2+a(i+1-W)+a(i+1+W)-a(i-1)*2-a(i-1-W)-a(i-1+W),gy=a(i+W)*2+a(i+W-1)+a(i+W+1)-a(i-W)*2-a(i-W-1)-a(i-W+1),v=(Math.abs(gx)+Math.abs(gy))/8;if(v>m)m=v;}
+    g[i]=m>255?255:m;}
+  const h=new Uint32Array(256);for(let i=0;i<g.length;i+=3)h[g[i]]++;let n=0,tot=Math.ceil(g.length/3),cap=24;for(let v=0;v<256;v++){n+=h[v];if(n>=tot*.97){cap=Math.max(24,v);break;}}
+  const lut=new Float32Array(256);for(let v=0;v<256;v++){const t=Math.min(1,v/cap);lut[v]=.03+(1-t)*(1-t);}
+  return mgrad={d:st.sdata,g,lut};}
+/* shortest paths from (sx,sy) inside a window around it */
+function magTree(sx,sy,half){const W=st.sw,H=st.sh,G=magGrad(),x0=Math.max(0,sx-half),y0=Math.max(0,sy-half),x1=Math.min(W,sx+half+1),y1=Math.min(H,sy+half+1),w=x1-x0,h=y1-y0,N=w*h;
+  const dist=new Float32Array(N).fill(1e30),prev=new Int32Array(N).fill(-1),done=new Uint8Array(N);
+  const hp=new Int32Array(N*8+8),hk=new Float32Array(N*8+8);let hn=0;
+  const push=(i,k)=>{let p=hn++;while(p>0){const q=(p-1)>>1;if(hk[q]<=k)break;hp[p]=hp[q];hk[p]=hk[q];p=q;}hp[p]=i;hk[p]=k;};
+  const pop=()=>{const r=hp[0];hn--;const ki=hp[hn];let p=0;while(true){let c=p*2+1;if(c>=hn)break;if(c+1<hn&&hk[c+1]<hk[c])c++;if(hk[c]>=hk[hn])break;hp[p]=hp[c];hk[p]=hk[c];p=c;}hp[p]=ki;hk[p]=hk[hn];return r;};
+  const s=(sy-y0)*w+(sx-x0);dist[s]=0;push(s,0);
+  while(hn){const i=pop();if(done[i])continue;done[i]=1;const ix=i%w,iy=(i/w)|0,di=dist[i];
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=ix+dx,ny=iy+dy;if(nx<0||ny<0||nx>=w||ny>=h)continue;const j=ny*w+nx;if(done[j])continue;
+      const nd=di+G.lut[G.g[(y0+ny)*W+x0+nx]]*(dx&&dy?1.414:1);if(nd<dist[j]){dist[j]=nd;prev[j]=i;push(j,nd);}}}
+  return{x0,y0,w,h,prev,sx,sy};}
+function magTrace(T,tx,ty){const px=clamp(Math.round(tx),T.x0,T.x0+T.w-1),py=clamp(Math.round(ty),T.y0,T.y0+T.h-1),out=[];let i=(py-T.y0)*T.w+(px-T.x0);
+  while(i>=0){out.push({u:T.x0+i%T.w+.5,v:T.y0+((i/T.w)|0)+.5});i=T.prev[i];}out.reverse();
+  if(px!==Math.round(tx)||py!==Math.round(ty))out.push({u:tx,v:ty});return out;}
+/* move the cursor onto the strongest nearby edge */
+function magSnap(q,r){const W=st.sw,H=st.sh,G=magGrad();let bx=Math.round(q.u),by=Math.round(q.v),bs=-1;
+  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=Math.round(q.u)+dx,y=Math.round(q.v)+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;const dd=Math.hypot(dx,dy);if(dd>r)continue;
+    const sc=G.g[y*W+x]-dd*1.5;if(sc>bs){bs=sc;bx=x;by=y;}}
+  return{u:clamp(bx,0,st.sw-1),v:clamp(by,0,st.sh-1)};}
+function magScale(){const g=geom(cv.width,effPad()),S=cv.width/g.sc/st.vz;return{snap:clamp(Math.round(S*.016),2,14),half:clamp(Math.round(S*.3),40,260),auto:Math.max(24,Math.round(S*.14)),close:S*.025};}
+function magDown(e){const sc=magScale(),q=magSnap(imgPt(e),sc.snap);
+  if(st.mag){/* click mode: closing click near the start, otherwise a new point at the end of the live path */
+    const m=st.mag;m.down={x:e.clientX,y:e.clientY};m.moved=false;m.press=true;m.mode=curMode(e);return;}
+  st.mag={mode:curMode(e),fixed:[{u:q.u+.5,v:q.v+.5}],anc:[{u:q.u+.5,v:q.v+.5}],path:[],tree:magTree(q.u,q.v,sc.half),cur:q,down:{x:e.clientX,y:e.clientY},moved:false,press:true,click:false};magSync();}
+function magPath(){const m=st.mag;return m.tree?magTrace(m.tree,m.cur.u,m.cur.v):[];}
+function magMove(e){const m=st.mag;if(!m)return;const sc=magScale();
+  if(m.press&&Math.hypot(e.clientX-m.down.x,e.clientY-m.down.y)>5)m.moved=true;
+  if(!m.press&&!m.click)return;
+  m.cur=magSnap(imgPt(e),sc.snap);m.path=magPath();
+  if(m.path.length>sc.auto*1.5&&(m.press&&m.moved||m.click)){/* keep the older part of the line, start a new live segment from a point behind the cursor */
+    const keep=Math.round(sc.auto*.5),idx=m.path.length-1-keep,p=m.path[idx];
+    m.fixed.push(...m.path.slice(1,idx+1));m.anc.push({u:p.u,v:p.v});m.tree=magTree(Math.round(p.u-.5),Math.round(p.v-.5),sc.half);m.path=magPath();}
+  magSync();}
+function magUp(e){const m=st.mag;if(!m||!m.press)return;m.press=false;
+  if(m.moved){magMove(e);magFinish();return;}
+  /* a click: place a point (or close when clicking the first one) */
+  const sc=magScale(),q=magSnap(imgPt(e),sc.snap),a0=m.anc[0];
+  if(m.click&&m.anc.length>=2&&Math.hypot(q.u-a0.u,q.v-a0.v)<=sc.close){magFinish();return;}
+  if(!m.click){m.click=true;magSync();return;}
+  m.cur=q;m.path=magPath();m.fixed.push(...m.path.slice(1));m.anc.push({u:q.u+.5,v:q.v+.5});m.tree=magTree(q.u,q.v,sc.half);m.path=[];magSync();}
+function magPts(){const m=st.mag;return m.fixed.concat(m.path.slice(1));}
+function magSync(){const m=st.mag;if(!m){st.magDraw=null;}else{st.magDraw={pts:magPts(),mode:m.mode,anc:m.anc};}
+  for(const id of['magDone','magBack','magCancel']){const b=$('#'+id);if(b)b.hidden=!(m&&m.click);}const h=$('#magHint');if(h)h.hidden=!!(m&&m.click);draw();}
+function magBack(){const m=st.mag;if(!m||!m.click)return;
+  if(m.anc.length<=1){magCancel();draw();return;}
+  m.anc.pop();const a=m.anc[m.anc.length-1];const at=m.fixed.findIndex((p,i)=>i&&Math.abs(p.u-a.u)<.6&&Math.abs(p.v-a.v)<.6);if(at>=0)m.fixed.length=at+1;
+  m.tree=magTree(Math.round(a.u-.5),Math.round(a.v-.5),magScale().half);m.path=magPath();magSync();}
+function magCancel(){if(st.mag||st.magDraw){st.mag=null;st.magDraw=null;const h=$('#magHint');if(h)h.hidden=false;for(const id of['magDone','magBack','magCancel']){const b=$('#'+id);if(b)b.hidden=true;}}}
+function magFinish(){const m=st.mag;if(!m)return;let pts=magPts();
+  /* close with a snapped line back to the start where it is close enough, otherwise straight */
+  const last=m.anc[m.anc.length-1],a0=m.anc[0];
+  if(Math.hypot(last.u-a0.u,last.v-a0.v)>1){const T=magTree(Math.round(last.u-.5),Math.round(last.v-.5),magScale().half),c=magTrace(T,a0.u-.5,a0.v-.5);pts=pts.concat(c.slice(1));}
+  const L={pts,mode:m.mode};magCancel();if(pts.length>=3)lassoApply(L);else draw();}
+$('#magDone').onclick=magFinish;$('#magBack').onclick=magBack;$('#magCancel').onclick=()=>{magCancel();draw();};
+
 /* ===== 09-image-load.js ===== */
 /* ---------- image loading ---------- */
 function loadCanvas(full,info){
@@ -1603,7 +1892,7 @@ function loadCanvas(full,info){
   st.pal=extractPalette(s);renderPalette();
   Object.assign(st,ADJ_DEFAULT,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
   $('#srcInfo').textContent=info;
-  H.a=[];H.i=-1;updHist();}
+  H.a=[];H.i=-1;updHist();if(typeof sgClose==='function')sgClose();}
 function loadFile(f){
   if(f.size>LIMITS.file)return toast('That file is too large (limit about 120 MB).');
   busy(1,'Loading image…');const url=URL.createObjectURL(f),im=new Image();
@@ -1615,7 +1904,7 @@ function loadFile(f){
     {const base=(f.name||'').replace(/\.[^.]*$/,'').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,70);
      if(base&&!/^(image|blob|unnamed)$/i.test(base))$('#fname').value=base+'-token';}
     st.popOn=true;syncUI();commit();draw();busy(-1);dismissCoach(true);setTab('image');
-    runAuto();};
+    st.sgPending=true;};
   im.onerror=()=>{busy(-1);toast('Could not read that image.');};im.src=url;}
 function sampleArt(){
   const c=mk();c.width=c.height=800;const x=c.getContext('2d');
@@ -1647,9 +1936,26 @@ function rle8Dec(u8,len){const m=new Uint8Array(len);let p=0,i=0;
     if(v)m.fill((v<<3)|(v>>2),p,Math.min(len,p+n));p+=n;}return m;}
 function resampleMask(m,w,h){const o=new Uint8Array(st.sw*st.sh);
   for(let y=0;y<st.sh;y++){const sy=Math.min(h-1,Math.floor(y/st.sh*h));for(let x=0;x<st.sw;x++)o[y*st.sw+x]=m[sy*w+Math.min(w-1,Math.floor(x/st.sw*w))];}return o;}
-async function embedImage(){if(st.embed)return st.embed;let alpha=false;const d=st.sdata;for(let i=3;i<d.length;i+=4)if(d[i]<250){alpha=true;break;}
-  const type=alpha?'image/png':'image/jpeg',blob=await new Promise(r=>st.full.toBlob(r,type,.92));
-  return st.embed={type,bytes:new Uint8Array(await blob.arrayBuffer())};}
+/* Editable saves keep only what can be seen: the frame of the saved token, mapped back into the source picture, plus 10% around it. */
+function embedCrop(){const S=1024,g=geom(S,exportPad()),W=st.sw,H=st.sh;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const[a,b]of[[0,0],[S,0],[S,S],[0,S]]){const m=toImg(g,a,b);x0=Math.min(x0,m.u);x1=Math.max(x1,m.u);y0=Math.min(y0,m.v);y1=Math.max(y1,m.v);}
+  const mx=(x1-x0)*.1,my=(y1-y0)*.1;
+  x0=Math.max(0,Math.floor(x0-mx));y0=Math.max(0,Math.floor(y0-my));x1=Math.min(W,Math.ceil(x1+mx));y1=Math.min(H,Math.ceil(y1+my));
+  if(x1-x0<16||y1-y0<16||!isFinite(x0+x1+y0+y1))return{x:0,y:0,w:W,h:H};
+  return{x:x0,y:y0,w:x1-x0,h:y1-y0};}
+/* settings that keep the picture exactly where it was after the source is cut down to the crop (all offsets are in ring radii) */
+function cropSettings(r){const W=st.sw,H=st.sh,f=2/Math.min(W,H)*st.zoom,a=f*(r.x+r.w/2-W/2)*st.flip,b=f*(r.y+r.h/2-H/2),co=Math.cos(st.rot),si=Math.sin(st.rot);
+  return{ix:st.ix+a*co-b*si,iy:st.iy+a*si+b*co,zoom:st.zoom*Math.min(r.w,r.h)/Math.min(W,H)};}
+function cropMask(r){if(r.w===st.sw&&r.h===st.sh)return st.mask;const m=new Uint8Array(r.w*r.h);for(let y=0;y<r.h;y++)m.set(st.mask.subarray((r.y+y)*st.sw+r.x,(r.y+y)*st.sw+r.x+r.w),y*r.w);return m;}
+async function embedImage(){const r=embedCrop(),key=r.x+','+r.y+','+r.w+','+r.h;
+  if(st.embed&&st.embed.key===key)return{...st.embed,crop:r};
+  let alpha=false;const d=st.sdata,W=st.sw;
+  for(let y=r.y;y<r.y+r.h&&!alpha;y++)for(let x=r.x;x<r.x+r.w;x++)if(d[(y*W+x)*4+3]<250){alpha=true;break;}
+  const k=st.full.width/st.sw,fx=Math.round(r.x*k),fy=Math.round(r.y*k),fw=Math.max(1,Math.min(st.full.width-fx,Math.round(r.w*k))),fh=Math.max(1,Math.min(st.full.height-fy,Math.round(r.h*k)));
+  const c=mk();c.width=fw;c.height=fh;const x=c.getContext('2d');if(!alpha){x.fillStyle='#fff';x.fillRect(0,0,fw,fh);}x.drawImage(st.full,fx,fy,fw,fh,0,0,fw,fh);
+  let blob=await new Promise(res=>c.toBlob(res,'image/webp',.92));
+  if(!blob||blob.type!=='image/webp')blob=await new Promise(res=>c.toBlob(res,alpha?'image/png':'image/jpeg',.92));
+  st.embed={key,type:blob.type,bytes:new Uint8Array(await blob.arrayBuffer())};return{...st.embed,crop:r};}
 function buildChunk(meta,img){const j=new TextEncoder().encode(JSON.stringify(meta)),data=new Uint8Array(4+j.length+img.length);
   new DataView(data.buffer).setUint32(0,j.length);data.set(j,4);data.set(img,4+j.length);
   const out=new Uint8Array(12+data.length),dv=new DataView(out.buffer);dv.setUint32(0,data.length);out.set([0x74,0x6b,0x57,0x73],4);out.set(data,8);
@@ -1661,7 +1967,7 @@ const NUM=(a,b)=>v=>typeof v==='number'&&isFinite(v)?clamp(v,a,b):undefined;
 const BOOL=v=>typeof v==='boolean'?v:undefined;
 const COLOR=v=>typeof v==='string'&&/^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():undefined;
 const STR=n=>v=>typeof v==='string'?v.slice(0,n):undefined;
-const SCHEMA={ix:NUM(-3,3),iy:NUM(-3,3),zoom:NUM(.1,8),rot:NUM(-12.6,12.6),flip:v=>v===-1||v===1?v:undefined,bgOn:BOOL,bg:COLOR,autoFit:BOOL,pad:NUM(0,.45),popOn:BOOL,
+const SCHEMA={ix:NUM(-6,6),iy:NUM(-6,6),zoom:NUM(.005,8),rot:NUM(-12.6,12.6),flip:v=>v===-1||v===1?v:undefined,bgOn:BOOL,bg:COLOR,autoFit:BOOL,pad:NUM(0,.45),popOn:BOOL,
   feather:NUM(0,12),shadow:NUM(0,1),formula:v=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(PAT,v)?v:undefined,color:COLOR,accent:COLOR,width:NUM(.04,.3),count:NUM(0,90),depth:NUM(0,1),
   tex:v=>typeof v==='string'?fixTex(v):undefined,texAmt:NUM(0,1),texDens:NUM(.4,5),seed:v=>Number.isInteger(v)?clamp(v,0,1e9):undefined,eCol:COLOR,gradOn:BOOL,g1:COLOR,g2:COLOR,
   gAng:NUM(-12.6,12.6),gMid:NUM(.05,.95),colorKey:STR(40),lAng:NUM(-12.6,12.6),lInt:NUM(0,1.5),texRot:NUM(-12.6,12.6),lineW:NUM(.01,.4),eAmt:NUM(1,24),eLen:NUM(.2,2),
@@ -1670,7 +1976,7 @@ function sanitizeSettings(o){const out={};if(!o||typeof o!=='object')return out;
   for(const k of SETTINGS){if(!Object.prototype.hasOwnProperty.call(o,k))continue;const v=SCHEMA[k]?SCHEMA[k](o[k]):undefined;if(v!==undefined)out[k]=v;}return out;}
 function validMeta(meta){const M=meta&&meta.mask;
   if(!meta||meta.app!=='token-workshop'||!meta.img||!M||!meta.settings||typeof meta.settings!=='object')return false;
-  if(meta.img.type!=='image/png'&&meta.img.type!=='image/jpeg')return false;
+  if(!['image/png','image/jpeg','image/webp'].includes(meta.img.type))return false;
   return Number.isInteger(M.w)&&Number.isInteger(M.h)&&M.w>=1&&M.h>=1&&M.w*M.h<=LIMITS.maskPixels&&((typeof M.rle==='string'&&M.rle.length<=M.w*M.h*2+16)||(typeof M.rle8==='string'&&M.rle8.length<=M.w*M.h*3+16));}
 /* payload = 4-byte JSON length, JSON, then the source picture; shared by the PNG chunk and the WebP chunk */
 function parsePayload(pl){if(pl.length<4)return null;const jl=new DataView(pl.buffer,pl.byteOffset,pl.byteLength).getUint32(0);if(jl>LIMITS.json||4+jl>pl.length)return null;
@@ -1736,8 +2042,8 @@ const SL={
  rot:{label:'Rotate',min:-180,max:180,step:1,unit:'°',k:Math.PI/180,def:0,fx:'view',tip:'Rotate the picture'},
  pad:{label:'Margin',min:0,max:45,step:.1,unit:'%',k:.01,def:8,fx:'draw',tip:'Empty space around the ring so pop-out art can extend past it'},
  feather:{label:'Feather',min:0,max:12,step:.5,unit:'px',k:1,def:.5,fx:'soft',tip:'Fades the outer edge of the cut-out inward. Soft hair edges are left alone. Try Show mask to see it.'},
- autoSens:{label:'Auto detail',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'Not happy with Auto? Low needs a clear difference from the background, high keeps even faint strands. Runs Auto again, so it replaces the current selection.'},
- autoShrink:{label:'Shrink / grow',min:-10,max:10,step:1,unit:'px',k:1,def:0,fx:'auto',tip:'Moves the whole Auto outline in (positive) or out (negative), like shrinking a wand selection. Runs Auto again.'},
+ autoSens:{label:'Auto detail',min:0,max:100,step:1,unit:'',k:1,def:50,fx:'auto',tip:'For plain backgrounds: low needs a clear difference from the background, high keeps even faint strands. Re-selects with the Plain background method, so it replaces the current selection.'},
+ autoShrink:{label:'Shrink / grow',min:-10,max:10,step:1,unit:'px',k:1,def:0,fx:'auto',tip:'For plain backgrounds: moves the whole outline in (positive) or out (negative), like shrinking a wand selection. Re-selects with the Plain background method.'},
  gap:{label:'Close small gaps',min:0,max:40,step:1,unit:'px',k:1,def:0,fx:'gap',tip:'Removes background-coloured gaps between curls up to this width. Larger gaps: use the Brush set to Remove.'},
  shadow:{label:'Drop shadow',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'fit',tip:'Shadow the pop-out casts onto the ring'},
  tol:{label:'Sensitivity',min:1,max:100,step:1,unit:'',k:1,def:30,fx:'wand',tip:'How different a colour can be and still be selected. Low picks only almost identical colours, high picks more. The whole slider is useful. Drag it after a click to adjust live.'},
@@ -1824,17 +2130,17 @@ let popTool='select';
 /* each step has its own tool set: Image, Ring and Export drag the picture (Move); Pop-out uses the selection tools */
 function stepTool(){setTool(tab==='popout'?(st.tool==='move'?popTool:st.tool):'move');}
 function goTool(v){if(v==='move'){if(tab!=='image')setTab('image');}else if(tab!=='popout')setTab('popout');setTool(v);}
-function setTool(v){if(v!=='move')popTool=v;wand=null;st.lasso=null;st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
+function setTool(v){if(v!=='move')popTool=v;wand=null;st.lasso=null;magCancel();st.tool=v;$$('.tbtn[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===v)));
   $$('#optbar .o').forEach(o=>o.hidden=o.dataset.for!==v);cv.dataset.tool=v;updBadge();draw();}
 $$('.tbtn[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',lasso:'Lasso',brush:'Brush'}[st.tool];
+function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Select',lasso:'Lasso',magnet:'Magnet',brush:'Brush'}[st.tool];
   b.className='badge'+(st.tool==='move'||st.space?'':' '+m);b.lastChild.textContent=st.space?'Pan (Space held)':st.tool==='move'?T:T+' · '+(m==='sub'?'Remove':'Add');}
 
 /* ---------- selection actions: toolbar buttons + "More" menu ---------- */
 function clearSel(){if(!st.src||!st.selCount)return;st.mask=new Uint8Array(st.mask.length);maskChanged();draw();commit();toast('Selection cleared. Undo brings it back.');}
 function invertSel(){if(!st.src)return;const m=new Uint8Array(st.mask.length),d=st.sdata;for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>8?255-st.mask[i]:0;st.mask=m;maskChanged();draw();commit();}
 function morphSel(grow){if(!st.src)return;busy(1,grow?'Growing…':'Shrinking…');setTimeout(()=>{morph(grow);busy(-1);draw();commit();},10);}
-$('#bAuto').onclick=()=>{if(tab!=='popout')setTab('popout');runAuto();};$('#bClear').onclick=clearSel;
+$('#bAuto').onclick=()=>{if(tab!=='popout')setTab('popout');runSuggest();};$('#bClear').onclick=clearSel;
 const menu=$('#moreMenu'),bMore=$('#bMore');
 function closeMenu(){menu.hidden=true;bMore.setAttribute('aria-expanded','false');}
 function openMenu(){menu.hidden=false;const r=bMore.getBoundingClientRect(),mw=menu.offsetWidth,mh=menu.offsetHeight;
@@ -1913,6 +2219,58 @@ function push(dir){if(!popBounds())return;fitMode();const o=overflow(st.pad);
   st[ax]+=sg*need;fitDone(Math.max(overflow(st.pad).l,overflow(st.pad).r,overflow(st.pad).t,overflow(st.pad).b)>.002?'Pushed as far as it goes; the other sides still stick out. Try Scale down to fit.':'Pushed to fit.');}
 [['bPushL','L'],['bPushR','R'],['bPushU','U'],['bPushD','D']].forEach(([i,d])=>$('#'+i).onclick=()=>push(d));
 
+/* ===== 11a-suggest-ui.js ===== */
+/* ---------- Auto suggestions: strip of options, preview on the canvas, nothing applied until the user picks one ---------- */
+/* exported suggestBest */
+let sg=null;
+const SG_KIND={whole:'Whole figure',pop:'Head & hair only'};
+function sgClose(){const had=!!(sg||st.sgShow);sg=null;st.sgShow=null;st.sgCv=null;const b=$('#sgBar');if(b)b.hidden=true;if(had)draw();}
+function sgPreview(c){st.sgShow=c||null;st.sgCv=null;draw();}
+/* tinted copy of a candidate's mask for the canvas overlay */
+function sgOverlay(ctx,g,S){const c=st.sgShow;if(!c)return;
+  if(!st.sgCv){const W=st.sw,H=st.sh,cv2=mk();cv2.width=W;cv2.height=H;const x=cv2.getContext('2d'),id=x.createImageData(W,H),m=c.mask;
+    for(let i=0;i<W*H;i++){id.data[i*4]=48;id.data[i*4+1]=209;id.data[i*4+2]=88;id.data[i*4+3]=m[i];}x.putImageData(id,0,0);st.sgCv=cv2;}
+  ctx.save();ctx.globalAlpha=.5;applyT(ctx,g);ctx.drawImage(st.sgCv,0,0,st.sw,st.sh);ctx.restore();}
+/* small picture of what a candidate selects: the area around the ring, with the rest dimmed */
+function sgThumb(c,I){const T=112,cv2=mk();cv2.width=cv2.height=T*2;const x=cv2.getContext('2d'),W=st.sw,H=st.sh,k=I.k,cx=I.cx/k,cy=I.cy/k,half=I.R/k*1.8,sx=cx-half,sy=cy-half,sz=half*2,P=T*2;
+  x.fillStyle='#d8d8de';x.fillRect(0,0,P,P);x.fillStyle='#ececf0';for(let i=0;i<8;i++)for(let j=0;j<8;j++)if((i+j)%2)x.fillRect(i*P/8,j*P/8,P/8,P/8);
+  x.imageSmoothingQuality='high';x.save();x.globalAlpha=.28;x.drawImage(st.src,sx,sy,sz,sz,0,0,P,P);x.restore();
+  const p=mk();p.width=p.height=P;const px=p.getContext('2d');px.imageSmoothingQuality='high';px.drawImage(st.src,sx,sy,sz,sz,0,0,P,P);
+  const mc=mk();mc.width=mc.height=P;const mx=mc.getContext('2d'),id=mx.createImageData(P,P),m=c.mask;
+  for(let yy=0;yy<P;yy++){const v=Math.min(H-1,Math.max(0,Math.floor(sy+(yy+.5)/P*sz)));for(let xx=0;xx<P;xx++){const u=Math.min(W-1,Math.max(0,Math.floor(sx+(xx+.5)/P*sz)));id.data[(yy*P+xx)*4+3]=(sx+(xx+.5)/P*sz<0||sy+(yy+.5)/P*sz<0)?0:m[v*W+u];}}
+  mx.putImageData(id,0,0);px.globalCompositeOperation='destination-in';px.drawImage(mc,0,0);x.drawImage(p,0,0);
+  x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=3;x.beginPath();x.arc(P/2,P/2,P/3.6,0,TAU);x.stroke();x.strokeStyle='rgba(0,0,0,.55)';x.lineWidth=1.5;x.stroke();
+  return cv2;}
+function sgRender(){const list=$('#sgList');list.textContent='';
+  sg.pick.forEach((c,i)=>{const b=document.createElement('button');b.className='sg-card';b.type='button';b.setAttribute('aria-pressed','false');
+    b.title=c.name+': '+SG_KIND[c.kind]+'. Tap to preview, tap again to use it.';
+    if(i===0){const t=document.createElement('span');t.className='best';t.textContent='Best guess';b.appendChild(t);}
+    b.appendChild(sgThumb(c,sg.I));
+    const n=document.createElement('b');n.textContent=c.name;const k=document.createElement('span');k.className='k';k.textContent=SG_KIND[c.kind];b.append(n,k);
+    b.onclick=()=>sgSelect(i,true);b.onmouseenter=()=>{if(matchMedia('(hover:hover)').matches)sgPreview(c);};
+    b.onmouseleave=()=>{sgPreview(sg&&sg.sel>=0?sg.pick[sg.sel]:null);};
+    list.appendChild(b);});
+  $('#sgBar').hidden=false;$('#sgUse').disabled=true;sg.sel=-1;sgPreview(null);}
+function sgSelect(i,again){if(!sg)return;if(again&&sg.sel===i){sgApply(sg.pick[i]);return;}
+  sg.sel=i;$$('#sgList .sg-card').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));$('#sgUse').disabled=false;sgPreview(sg.pick[i]);}
+function sgApply(c){if(!c)return;let m=c.mask.slice();const matte=!!c.mask.bg;
+  if(matte&&!autoFixOn())for(let i=0;i<m.length;i++)m[i]=m[i]>=128?255:0;
+  st.mask=m;maskChanged();let note='Pop-out applied. Fine-tune it with Select, Lasso or Brush, or Undo.';
+  if(matte&&autoFixOn()){st.bgC=c.mask.bg;st.bgAuto=true;st.defr=1;eSess=null;}
+  else if(!matte&&autoFixOn()){try{fixEdges(true);}catch(e){}}
+  st.popOn=true;sgClose();syncUI();draw();commit();toast(note);}
+function runSuggest(){if(!st.src)return;busy(1,'Finding suggestions…');
+  setTimeout(()=>{let r=null;try{r=sgCandidates();}catch(e){}
+    busy(-1);
+    const pick=r?sgPick(r.cands).filter(c=>c.score>(c.kind==='pop'?-.3:0)):[];
+    if(!pick.length){sgClose();toast('No clear suggestion. Open the Pop-out step and click the part that should pop out.');setTab('popout');setTool('select');return;}
+    sg={I:r.I,pick,sel:-1};sgRender();},30);}
+$('#sgUse').onclick=()=>{if(sg&&sg.sel>=0)sgApply(sg.pick[sg.sel]);};
+$('#sgClose').onclick=sgClose;
+
+/* apply the top suggestion straight away (used by the tests; the app always lets the user choose) */
+function suggestBest(kind,id){const r=sgCandidates(),c=id?r.cands.find(x=>x.id===id):sgPick(r.cands).find(x=>!kind||x.kind===kind);if(!c)return false;sgApply(c);return true;}
+
 /* ===== 12-looks.js ===== */
 /* ---------- pattern grid, colour swatches, looks ---------- */
 const patBtns={};
@@ -1988,7 +2346,9 @@ function thumbsNow(){if(tab!=='ring')return;thumbsStale=false;
 /* ---------- tabs ---------- */
 const TABS=['image','popout','ring','export'];let tab='image';
 function setTab(name,focus){tab=name;$('#toast').classList.remove('on');document.body.dataset.step=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
+  if(name!=='popout'&&typeof sgClose==='function')sgClose();
   stepTool();rove();
+  if(name==='popout'&&st.sgPending&&!st.selCount&&st.src){st.sgPending=false;setTimeout(()=>{if(tab==='popout'&&!st.selCount)runSuggest();},80);}
   if(focus)$('#t-'+name).focus();
   if(name==='ring'&&thumbsStale)thumbsNow();if(name==='export'){updExport();miniSoon(true);}
   if(!DESKTOP.matches)scrollTo({top:0});else $('.inspector').scrollTop=0;}
@@ -2036,8 +2396,9 @@ async function exportFile(){const what=st.exportWhat,base=exportBase(),fmt=st.ex
   return{blob:zipStore(files),name:base+'-layers.zip'};}
 async function exportPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const r=await exportFile();if(!r.blob)return toast('Export failed.');await saveBlob(r.blob,r.name);}finally{busy(-1);}}
-function projectMeta(e){return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type},
-  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(st.mask))}};}
+function projectMeta(e){const r=e.crop,cs=cropSettings(r),m=cropMask(r);
+  return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type,crop:{x:r.x,y:r.y,w:r.w,h:r.h,W:st.sw,H:st.sh}},
+  settings:{...Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),...cs},mask:{w:r.w,h:r.h,rle8:b64enc(rle8Enc(m))}};}
 async function makeBlob(embed){return(await renderImage(undefined,'png',embed)).blob;}
 async function copyPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const blob=await makeBlob(false);await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('Copied to clipboard.');}
@@ -2100,10 +2461,11 @@ addEventListener('keydown',e=>{
     if(!typing){if(k==='z'){e.preventDefault();e.shiftKey?redo():undo();return;}if(k==='y'){e.preventDefault();redo();return;}}}
   if(typing||mod||document.querySelector('dialog[open]'))return;
   const onCanvas=document.activeElement===cv,k=e.key,free=onCanvas||t===document.body;
+  if(st.mag){if(k==='Enter'){e.preventDefault();magFinish();return;}if(k==='Escape'){e.preventDefault();magCancel();draw();return;}if(k==='Backspace'||k==='Delete'){e.preventDefault();magBack();return;}}
   if(k===' '&&free){e.preventDefault();if(!st.space){st.space=true;cv.style.cursor='grab';updBadge();}return;}
   if((k==='Delete'||k==='Backspace')&&free){e.preventDefault();clearSel();return;}
   const low=k.toLowerCase();
-  if(low==='v')goTool('move');else if(low==='w')goTool('select');else if(low==='b')goTool('brush');else if(low==='l')goTool('lasso');else if(low==='i'&&tab==='popout')toggleIso();else if(low==='m'&&tab==='popout')toggleMask();else if(low==='p')togglePrev();
+  if(low==='v')goTool('move');else if(low==='w')goTool('select');else if(low==='b')goTool('brush');else if(low==='l')goTool('lasso');else if(low==='e')goTool('magnet');else if(low==='i'&&tab==='popout')toggleIso();else if(low==='m'&&tab==='popout')toggleMask();else if(low==='p')togglePrev();
   else if(onCanvas&&st.tool!=='move'&&(k.startsWith('Arrow')||k==='Enter'))kbCursor(e);
   else if(k==='['){st.brush=clamp(st.brush-2,2,40);SLI.brush.sync();draw();}else if(k===']'){st.brush=clamp(st.brush+2,2,40);SLI.brush.sync();draw();}
   else if(k==='?'){$('#helpDlg').showModal();}

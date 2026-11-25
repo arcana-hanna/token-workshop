@@ -1,7 +1,9 @@
 /* ---------- tabs ---------- */
 const TABS=['image','popout','ring','export'];let tab='image';
 function setTab(name,focus){tab=name;$('#toast').classList.remove('on');document.body.dataset.step=name;TABS.forEach(t=>{const sel=t===name;$('#t-'+t).setAttribute('aria-selected',String(sel));$('#t-'+t).tabIndex=sel?0:-1;$('#p-'+t).hidden=!sel;});
+  if(name!=='popout'&&typeof sgClose==='function')sgClose();
   stepTool();rove();
+  if(name==='popout'&&st.sgPending&&!st.selCount&&st.src){st.sgPending=false;setTimeout(()=>{if(tab==='popout'&&!st.selCount)runSuggest();},80);}
   if(focus)$('#t-'+name).focus();
   if(name==='ring'&&thumbsStale)thumbsNow();if(name==='export'){updExport();miniSoon(true);}
   if(!DESKTOP.matches)scrollTo({top:0});else $('.inspector').scrollTop=0;}
@@ -49,8 +51,9 @@ async function exportFile(){const what=st.exportWhat,base=exportBase(),fmt=st.ex
   return{blob:zipStore(files),name:base+'-layers.zip'};}
 async function exportPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const r=await exportFile();if(!r.blob)return toast('Export failed.');await saveBlob(r.blob,r.name);}finally{busy(-1);}}
-function projectMeta(e){return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type},
-  settings:Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),mask:{w:st.sw,h:st.sh,rle8:b64enc(rle8Enc(st.mask))}};}
+function projectMeta(e){const r=e.crop,cs=cropSettings(r),m=cropMask(r);
+  return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type,crop:{x:r.x,y:r.y,w:r.w,h:r.h,W:st.sw,H:st.sh}},
+  settings:{...Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),...cs},mask:{w:r.w,h:r.h,rle8:b64enc(rle8Enc(m))}};}
 async function makeBlob(embed){return(await renderImage(undefined,'png',embed)).blob;}
 async function copyPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const blob=await makeBlob(false);await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('Copied to clipboard.');}

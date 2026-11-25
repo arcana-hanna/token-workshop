@@ -32,7 +32,7 @@ test('layers: ring is transparent in the middle, pop-out is smaller than the tok
 
 test('All layers downloads a valid zip with four transparent images', async () => {
   const page = await openApp(browser);
-  await page.click('#t-export'); await page.click('#whatSeg [data-v=layers]');
+  await page.click('#t-export'); await page.click('#fmtSeg [data-v=png]'); await page.click('#whatSeg [data-v=layers]');
   await page.fill('#fname', 'hero');
   const { path, name } = await download(page, 'x.zip');
   assert.equal(name, 'hero-layers.zip');
@@ -61,7 +61,7 @@ test('WebP export keeps the editable project and imports again', async () => {
 
 test('ring-only export is a PNG without project data', async () => {
   const page = await openApp(browser);
-  await page.click('#t-export'); await page.click('#whatSeg [data-v=ring]');
+  await page.click('#t-export'); await page.click('#fmtSeg [data-v=png]'); await page.click('#whatSeg [data-v=ring]');
   const { path, name } = await download(page, 'r.png');
   assert.equal(name, 'token-ring.png');
   assert.ok(!readFileSync(path).includes('tkWs'));

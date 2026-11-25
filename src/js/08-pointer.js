@@ -3,7 +3,7 @@ const ptrs=new Map();let drag=null,gest=null,lastPt=null,wheelT=0,selCtx=null,so
 function cpt(x,y){const r=cv.getBoundingClientRect(),k=cv.width/r.width;return{x:(x-r.left)*k,y:(y-r.top)*k,k};}
 function pt(e){return cpt(e.clientX,e.clientY);}
 function imgPt(e){const q=toTok(pt(e));return toImg(geom(cv.width,effPad()),q.x,q.y);}
-const curMode=e=>((e&&(e.altKey||(st.tool==='lasso'&&e.shiftKey)))||st.alt)?'sub':st.mode;
+const curMode=e=>((e&&(e.altKey||((st.tool==='lasso'||st.tool==='magnet')&&e.shiftKey)))||st.alt)?'sub':st.mode;
 function startPaint(){refreshSoft();refreshSel();st.mask=st.mask.slice();st.painting=true;lastPt=null;selCtx=st.selCv.getContext('2d');softCtx=st.softCv.getContext('2d');
   if(st.strand)strandSetup();
 }
@@ -13,7 +13,7 @@ function paintTo(e){const q=imgPt(e),val=curMode(e)==='sub'?0:255,r=brushR();
   else dab(q.u,q.v,r,val);
   flushDirty();lastPt=q;if(val&&!st.selCount)st.selCount=1;st.popDirty=true;draw();}
 /* lasso: the drawn outline is closed and filled into the selection when the pointer is released */
-function lassoApply(){const L=st.lasso;st.lasso=null;if(!L||L.pts.length<3){draw();return;}
+function lassoApply(L0){const L=L0||st.lasso;st.lasso=null;if(!L||L.pts.length<3){draw();return;}
   const P=L.pts;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of P){x0=Math.min(x0,p.u);y0=Math.min(y0,p.v);x1=Math.max(x1,p.u);y1=Math.max(y1,p.v);}
   const B=bounds();x0=Math.max(B.x0,Math.floor(x0));y0=Math.max(B.y0,Math.floor(y0));x1=Math.min(B.x1,Math.ceil(x1)+1);y1=Math.min(B.y1,Math.ceil(y1)+1);
   const w=x1-x0,h=y1-y0;if(w<2||h<2){draw();return;}
@@ -26,15 +26,18 @@ function endPaint(){flushDirty();st.painting=false;maskChanged();commit();draw()
 cv.addEventListener('pointerdown',e=>{if(!st.src)return;if(e.pointerType==='mouse'&&e.button!==0)return;
   cv.focus({preventScroll:true});st.kc=null;
   dismissCoach(true);cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso){st.lasso=null;draw();}if(!viewTool())st.lockPad=true;
+  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
     if(st.painting)endPaint();return;}
   if(st.tool==='move'||st.space){const vw=st.space&&viewTool()&&st.vz>1;drag={x:e.clientX,y:e.clientY,view:vw};if(!vw)st.lockPad=true;cv.classList.add('grabbing');}
   else if(st.tool==='select'){const q=imgPt(e);wandStart(q.u,q.v,curMode(e));}
   else if(st.tool==='lasso'){const q=imgPt(e);st.lasso={pts:[q],mode:curMode(e)};draw();}
+  else if(st.tool==='magnet'){magDown(e);}
   else{startPaint();paintTo(e);}});
 cv.addEventListener('pointermove',e=>{
   if(st.tool==='brush'){st.hover=toTok(pt(e));if(!ptrs.has(e.pointerId))draw();}
+  if(st.mag&&!ptrs.has(e.pointerId)){magMove(e);return;}
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(st.mag){magMove(e);return;}
   if(ptrs.size===2&&gest){const[a,b]=[...ptrs.values()],ratio=Math.hypot(a.x-b.x,a.y-b.y)/gest.d;
     if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
     else{st.zoom=clamp(gest.z*ratio,.1,8);SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
@@ -48,6 +51,7 @@ cv.addEventListener('pointermove',e=>{
 const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest;ptrs.delete(e.pointerId);if(ptrs.size<2)gest=null;drag=null;cv.classList.remove('grabbing');
   if(st.painting)endPaint();
   if(st.lasso)lassoApply();
+  if(st.mag)magUp(e);
   if(!ptrs.size){st.lockPad=false;st.fitDirty=true;draw();if(moved)commit();}};
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('pointerleave',()=>{st.hover=null;draw();});

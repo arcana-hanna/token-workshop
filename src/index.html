@@ -26,9 +26,10 @@
       <button class="tbtn lbl" data-steps="image" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="lasso" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="magnet" aria-pressed="false" title="Magnetic lasso (E): trace along an edge and the line sticks to it. Hold and drag, or click to place points."><i data-ic="magnet"></i><span>Magnet</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
       <span class="vsep" data-steps="popout"></span>
-      <button class="tbtn lbl" data-steps="popout" id="bAuto" title="Auto-select the main subject" aria-label="Auto-select subject"><i data-ic="spark"></i><span>Auto</span></button>
+      <button class="tbtn lbl" data-steps="popout" id="bAuto" title="Suggest pop-outs. Nothing changes until you pick one." aria-label="Suggest pop-outs"><i data-ic="spark"></i><span>Auto</span></button>
       <button class="tbtn lbl" data-steps="popout" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
       <button class="tbtn lbl" data-steps="popout" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
       <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
@@ -53,11 +54,20 @@
           <div class="seg modeSeg" role="group" aria-label="Lasso mode"><button data-v="add" aria-pressed="true" title="The area you draw is added to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="The area you draw is removed from the pop-out (or hold Shift/Alt)">Remove</button></div>
           <span class="hintline">Hold and draw around the area, release to select it</span>
         </div>
+        <div class="o" data-for="magnet">
+          <div class="seg modeSeg" role="group" aria-label="Magnetic lasso mode"><button data-v="add" aria-pressed="true" title="The area you trace is added to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="The area you trace is removed from the pop-out (or hold Shift/Alt)">Remove</button></div>
+          <button class="chip" id="magDone" hidden title="Close the outline and select it (Enter, or double-click)">Finish</button><button class="chip" id="magBack" hidden title="Remove the last point (Backspace)">Back</button><button class="chip" id="magCancel" hidden title="Throw the outline away (Esc)">Cancel</button>
+          <span class="hintline" id="magHint">Hold and trace along an edge; release to close it. Or click to place points, then Finish.</span>
+        </div>
         <div class="o" data-for="brush">
           <div class="seg modeSeg" role="group" aria-label="Brush mode"><button data-v="add" aria-pressed="true" title="Paint to add to the pop-out">Add</button><button data-v="sub" aria-pressed="false" title="Paint to remove from the pop-out (hold Alt/Option)">Remove</button></div>
           <div data-sl="brush"></div><div data-sl="bsoft"></div>
           <button class="chip" id="strandChip" aria-pressed="false" title="Hair-aware: Add paints in only what differs from the background. Remove erases only background-like pixels.">Hair-aware</button>
         </div>
+      </div>
+      <div class="sgbar" id="sgBar" hidden role="region" aria-label="Auto suggestions">
+        <div class="sg-h"><b>Suggestions</b><span class="sg-sub">Tap to preview. Nothing changes until you use one.</span><span class="sp"></span><button class="chip primary" id="sgUse" disabled>Use this</button><button class="chip" id="sgClose" aria-label="Close suggestions">Ignore</button></div>
+        <div class="sg-list" id="sgList" role="group" aria-label="Suggested pop-outs"></div>
       </div>
       <div class="work">
       <div class="board" id="board" data-bg="checker">
@@ -67,7 +77,7 @@
         <div class="hud" id="hud" aria-hidden="true"></div>
         <button class="vreset" id="viewReset" hidden title="Return the workspace to full view">Reset view</button>
         <div class="coach" id="coach" hidden>
-          <p><b>Drag to place your picture.</b> Auto has already found the pop-out. Fine-tune it in step 2, then style the ring and export.</p>
+          <p><b>Drag to place your picture.</b> Put the ring over the face. In step 2, Auto then suggests pop-outs you can pick from.</p>
           <button class="btn primary" id="coachOk">Got it</button>
         </div>
         <div class="dropov">Drop image to open</div>
@@ -222,10 +232,10 @@
       </div>
       <h2 class="cap">File</h2>
       <div class="group">
-        <div class="row"><label>Format</label><div class="grow"><div class="seg" id="fmtSeg" role="group" aria-label="File format"><button data-v="png" aria-pressed="true">PNG</button><button data-v="webp" aria-pressed="false">WebP</button></div></div></div>
+        <div class="row"><label>Format</label><div class="grow"><div class="seg" id="fmtSeg" role="group" aria-label="File format"><button data-v="png" aria-pressed="false">PNG</button><button data-v="webp" aria-pressed="true">WebP</button></div></div></div>
         <p class="note" style="padding-block:0 6px">WebP files are smaller. Both formats keep transparency and the editable data.</p>
         <div class="row"><label for="fname">File name</label><div class="grow"><input id="fname" class="txt" type="text" value="token" maxlength="60" placeholder="token" title="The file extension is added for you"><span id="fext" style="color:var(--sub)">.png</span></div></div>
-        <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds your picture and settings so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
+        <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds the visible part of your picture (plus a 10% margin) and your settings, so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
       </div>
       <div class="dl-row">
         <button class="btn primary big" id="bDownload" title="Download the token as a transparent PNG (Ctrl/⌘+S)"><i data-ic="download"></i><span id="dlWhat">Download PNG</span> <small id="dlSize">512 px</small></button>
@@ -262,14 +272,14 @@
 <dialog id="helpDlg" aria-labelledby="helpH"><div class="dlg">
   <h2 id="helpH">How it works</h2>
   <ol>
-    <li><b>Image</b>: open a photo (or paste / drop one), drag it into position and adjust its colour. Auto has already found the pop-out.</li>
-    <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Lasso</i>, <i>Brush</i> or <i>Auto</i>. Tap <i>Fix edges automatically</i> for hair, and tune with <i>Auto detail</i> and <i>Shrink / grow</i>.</li>
+    <li><b>Image</b>: open a photo (or paste / drop one), drag it into position and adjust its colour. Put the ring over the character's face, since Auto uses it as a hint.</li>
+    <li><b>Pop-out</b>: choose the part that breaks out of the ring with <i>Select</i>, <i>Lasso</i>, <i>Magnet</i> (a lasso that sticks to edges), <i>Brush</i> or <i>Auto</i>. Auto never changes anything by itself: it shows up to four suggestions (some select the whole figure, some only head and hair). Tap one to preview it, tap again to use it, or ignore them. <i>Fix edges automatically</i> helps with hair.</li>
     <li><b>Ring</b>: pick a Look, or build your own shape, colour and texture.</li>
     <li><b>Export</b>: choose a size and download a transparent PNG. Tokens keep their editable project inside, so you can reopen them with <i>Open</i>.</li>
   </ol>
   <h3>Shortcuts</h3>
   <dl>
-    <dt><kbd>V</kbd> <kbd>W</kbd> <kbd>L</kbd> <kbd>B</kbd></dt><dd>Move · Select · Lasso · Brush (each jumps to the step that uses it)</dd>
+    <dt><kbd>V</kbd> <kbd>W</kbd> <kbd>L</kbd> <kbd>E</kbd> <kbd>B</kbd></dt><dd>Move · Select · Lasso · Magnet · Brush (each jumps to the step that uses it)</dd>
     <dt><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Select, Brush: move the cursor, Enter applies it (Shift+Enter removes). Move: arrows move the picture</dd>
     <dt><kbd>M</kbd></dt><dd>Show the selection as a black and white mask</dd>
     <dt><kbd>P</kbd></dt><dd>Preview: see the finished token without outlines</dd>

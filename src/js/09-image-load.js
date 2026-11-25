@@ -8,7 +8,7 @@ function loadCanvas(full,info){
   st.pal=extractPalette(s);renderPalette();
   Object.assign(st,ADJ_DEFAULT,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
   $('#srcInfo').textContent=info;
-  H.a=[];H.i=-1;updHist();}
+  H.a=[];H.i=-1;updHist();if(typeof sgClose==='function')sgClose();}
 function loadFile(f){
   if(f.size>LIMITS.file)return toast('That file is too large (limit about 120 MB).');
   busy(1,'Loading image…');const url=URL.createObjectURL(f),im=new Image();
@@ -20,7 +20,7 @@ function loadFile(f){
     {const base=(f.name||'').replace(/\.[^.]*$/,'').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,70);
      if(base&&!/^(image|blob|unnamed)$/i.test(base))$('#fname').value=base+'-token';}
     st.popOn=true;syncUI();commit();draw();busy(-1);dismissCoach(true);setTab('image');
-    runAuto();};
+    st.sgPending=true;};
   im.onerror=()=>{busy(-1);toast('Could not read that image.');};im.src=url;}
 function sampleArt(){
   const c=mk();c.width=c.height=800;const x=c.getContext('2d');
