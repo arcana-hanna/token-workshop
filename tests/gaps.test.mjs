@@ -31,8 +31,27 @@ test('Feather fades only the outer hard edge and the Mask view shows it', async 
   const page = await openApp(browser);
   await page.evaluate(SCENE);
   const r = await page.evaluate(() => { st.feather = 6; st.softDirty = true; refreshSoft();
-    const a = x => st.softCv.getContext('2d').getImageData(x, 200, 1, 1).data[3]; return { edge: a(61), mid: a(66), inner: a(200), out: a(30) }; });
+    const a = x => st.softCv.getContext('2d').getImageData(x, 200, 1, 1).data[3]; return { edge: a(61), mid: a(63), inner: a(200), out: a(30) }; });
   assert.ok(r.edge < 180, 'edge pixel faded ' + r.edge);
   assert.ok(r.mid > r.edge && r.mid < 255, 'gradient inward ' + r.mid);
   assert.equal(r.inner, 255); assert.equal(r.out, 0);
+});
+
+test('Feather keeps thin parts solid inside; Nudge edge moves 1 px per press; history is read-only text in the file', async () => {
+  const page = await openApp(browser);
+  await page.evaluate(SCENE);
+  const r = await page.evaluate(() => { const w = st.sw, m = new Uint8Array(st.mask.length);
+    for (let y = 100; y < 160; y++) for (let x = 40; x < 48; x++) m[y * w + x] = 255;   /* a thin strip, 8 px wide */
+    st.mask = m; maskChanged(); st.feather = 6; st.softDirty = true; refreshSoft();
+    const a = x => st.softCv.getContext('2d').getImageData(x, 130, 1, 1).data[3]; return { edge: a(40), core: a(43), core2: a(44) }; });
+  assert.ok(r.edge < 200 && r.edge > 40, 'outer pixel fades ' + r.edge);
+  assert.ok(r.core >= 250 && r.core2 >= 250, 'centre stays solid ' + r.core + ',' + r.core2);
+  await page.evaluate(SCENE);
+  const n1 = await page.evaluate(() => { const c = st.selCount; $('#nudgeN').value = 1; $('#nudgeN').dispatchEvent(new Event('input')); $('#bNudgeIn').click(); return { c, d: st.selCount }; });
+  assert.ok(n1.d < n1.c);
+  const n3 = await page.evaluate(() => { const b = st.selCount; $('#nudgeN').value = 3; $('#nudgeN').dispatchEvent(new Event('input')); $('#bNudgeIn').click(); return { b, d: st.selCount, nudge: st.nudge }; });
+  assert.equal(n3.nudge, 3); assert.ok(n3.d < n3.b - (n1.c - n1.d) * 2);
+  const meta = await page.evaluate(() => projectMeta({ type: 'image/png', crop: { x: 0, y: 0, w: st.sw, h: st.sh } }));
+  assert.ok(Array.isArray(meta.history) && meta.history.some(x => /Shrank the edge by 3 px/.test(x)), JSON.stringify(meta.history));
+  assert.ok(JSON.stringify(meta.history).length < 3000);
 });

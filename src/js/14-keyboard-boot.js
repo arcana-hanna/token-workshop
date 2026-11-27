@@ -62,6 +62,6 @@ applyTheme();buildLooks();
 loadCanvas(sampleArt(),'Sample art. Use Open, drop an image on the preview, or paste one with Ctrl/⌘+V.');
 Object.assign(st,{zoom:1.3,iy:.05});
 {const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();}   // pre-select the hat so the pop-out shows on first view
-setTab('image');syncUI();commit();draw();
+applyMode();applyFine();setTab('image');syncUI();commit();draw();
 if(!store.get('tw_coach'))$('#coach').hidden=false;
 rove();{const t=store.get('tw_table');setStrip(t===null?DESKTOP.matches:t==='1');}autoRestore();

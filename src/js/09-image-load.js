@@ -6,9 +6,9 @@ function loadCanvas(full,info){
   st.sdata=s.getContext('2d',{willReadFrequently:true}).getImageData(0,0,s.width,s.height).data;
   st.mask=new Uint8Array(s.width*s.height);maskChanged();
   st.pal=extractPalette(s);renderPalette();
-  Object.assign(st,ADJ_DEFAULT,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
+  Object.assign(st,ADJ_DEFAULT,HIDE_DEF,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
   $('#srcInfo').textContent=info;
-  H.a=[];H.i=-1;updHist();if(typeof sgClose==='function')sgClose();}
+  H.a=[];H.i=-1;st.log=[];st.lab=null;updHist();if(typeof sgClose==='function')sgClose();}
 function loadFile(f){
   if(f.size>LIMITS.file)return toast('That file is too large (limit about 120 MB).');
   busy(1,'Loading image…');const url=URL.createObjectURL(f),im=new Image();

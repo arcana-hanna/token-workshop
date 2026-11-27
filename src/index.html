@@ -14,6 +14,8 @@
   <h1>Token Workshop</h1>
   <button class="ibtn mob-only" id="bUndo2" title="Undo" aria-label="Undo" disabled><i data-ic="undo"></i></button>
   <button class="ibtn mob-only" id="bRedo2" title="Redo" aria-label="Redo" disabled><i data-ic="redo"></i></button>
+  <button class="btn" id="bFind" aria-label="Find a tool or setting (Ctrl+K)" title="Find any tool or setting (Ctrl+K)"><i data-ic="search"></i><span>Find</span></button>
+  <button class="btn" id="bMode" aria-pressed="false" title="Studio shows every control at once. Guided keeps the essentials and puts the rest under Fine-tune."><span>Studio</span></button>
   <button class="btn" id="bOpen" aria-label="Open a photo or a saved token" title="Open a photo, or a token you exported earlier. You can also drop or paste an image."><i data-ic="upload"></i><span>Open</span></button>
   <button class="ibtn" id="bHelp" title="How it works, shortcuts, appearance" aria-label="Help and shortcuts">?</button>
 </header>
@@ -25,13 +27,13 @@
     <div class="tools" role="toolbar" aria-label="Tools">
       <button class="tbtn lbl" data-steps="image" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
-      <button class="tbtn lbl" data-steps="popout" data-tool="lasso" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
-      <button class="tbtn lbl" data-steps="popout" data-tool="magnet" aria-pressed="false" title="Magnetic lasso (E): trace along an edge and the line sticks to it. Hold and drag, or click to place points."><i data-ic="magnet"></i><span>Magnet</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="lasso" data-adv="1" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="magnet" aria-pressed="false" title="Magnetic lasso (E): trace along an edge and the line sticks to it. Hold and drag, or click to place points."><i data-ic="magnet"></i><span>Magnet</span></button>
       <span class="vsep" data-steps="popout"></span>
       <button class="tbtn lbl" data-steps="popout" id="bAuto" title="Suggest pop-outs. Nothing changes until you pick one." aria-label="Suggest pop-outs"><i data-ic="spark"></i><span>Auto</span></button>
       <button class="tbtn lbl" data-steps="popout" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
-      <button class="tbtn lbl" data-steps="popout" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-adv="1" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
       <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
       <button class="tbtn" data-steps="popout" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
       <span class="vsep push"></span>
@@ -65,6 +67,7 @@
           <button class="chip" id="strandChip" aria-pressed="false" title="Hair-aware: Add paints in only what differs from the background. Remove erases only background-like pixels.">Hair-aware</button>
         </div>
       </div>
+      <div class="tip" id="tip" hidden role="note"><span id="tipT"></span><button class="x" id="tipX" aria-label="Hide this tip">×</button></div>
       <div class="sgbar" id="sgBar" hidden role="region" aria-label="Auto suggestions">
         <div class="sg-h"><b>Suggestions</b><span class="sg-sub">Tap to preview. Nothing changes until you use one.</span><span class="sp"></span><button class="chip primary" id="sgUse" disabled>Use this</button><button class="chip" id="sgClose" aria-label="Close suggestions">Ignore</button></div>
         <div class="sg-list" id="sgList" role="group" aria-label="Suggested pop-outs"></div>
@@ -102,7 +105,8 @@
     <!-- 1 IMAGE -->
     <section class="panel" id="p-image" role="tabpanel" aria-labelledby="t-image" tabindex="-1">
       <h2 class="cap">Picture</h2>
-      <div class="group"><p class="note" id="srcInfo"></p></div>
+      <div class="group"><p class="note" id="srcInfo"></p><p class="note" style="padding-top:0">Everything runs in your browser. Your pictures are never uploaded.</p></div>
+      <div class="fine">
       <h2 class="cap">Position</h2>
       <div class="group">
         <div data-sl="zoom"></div><div data-sl="rot"></div>
@@ -129,6 +133,8 @@
         <div class="row"><label for="bgOn">Fill<span class="sub">Shows through transparent areas</span></label>
           <div class="grow"><input id="bg" type="color" aria-label="Fill colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
       </div>
+      </div>
+      <button class="fineBtn" data-fine="image" aria-expanded="false">Fine-tune</button>
       <button class="next" data-next="popout">Next: choose the pop-out <span aria-hidden="true">→</span></button>
     </section>
 
@@ -137,18 +143,29 @@
       <h2 class="cap">Selection</h2>
       <div class="group">
         <p class="note" style="padding-bottom:4px"><b id="selStat">Nothing selected</b></p>
-        <p class="note" style="padding-top:0">Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.</p>
+        <p class="note" style="padding-top:0" id="selHelp">Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.</p>
       </div>
-      <h2 class="cap">Edges <span class="sp"></span><button class="link" id="bMaskView" aria-pressed="false" title="Show the selection as black and white to spot holes, specks and halos (M)">Show mask</button></h2>
+      <h2 class="cap">Edges <span class="sp"></span><button class="link fine" id="bMaskView" aria-pressed="false" title="Show the selection as black and white to spot holes, specks and halos (M)">Show mask</button></h2>
       <div class="group">
-        <p class="note" style="padding-bottom:4px">Hair, fur, or a halo of the old background around the outline? Tap once, then adjust.</p>
+        <div class="row" style="padding-block:10px"><div class="seg full" id="edgeSeg" role="group" aria-label="Edge style"><button data-v="crisp" aria-pressed="false" title="Hard, clean edge">Crisp</button><button data-v="natural" aria-pressed="false" title="A slightly soft edge">Natural</button><button data-v="soft" aria-pressed="false" title="A soft edge, good for hair and fur">Soft</button></div></div>
+        <p class="note" style="padding-top:0">Hair, fur, or a halo of the old background around the outline? Tap once, then adjust.</p>
         <div class="acts"><button class="btn primary" id="bFixEdges"><i data-ic="spark"></i>Fix edges automatically</button></div>
+        <div class="fine">
+        <div class="row" id="rowNudge"><label for="nudgeN">Nudge edge<span class="sub">Moves the outline by this many px, as often as you like</span></label><div class="grow"><input id="nudgeN" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-label="Nudge amount in pixels" style="width:52px"><button class="btn" id="bNudgeIn" title="Shrink the outline by the amount">Shrink</button><button class="btn" id="bNudgeOut" title="Grow the outline by the amount">Grow</button></div></div>
         <div data-sl="autoSens"></div><div data-sl="autoShrink"></div><div data-sl="feather"></div>
         <details class="adv" id="edgeAdv"><summary>More</summary>
           <div data-sl="defr"></div><div data-sl="gap"></div>
           <div class="acts"><button class="btn" id="bClean" title="Remove tiny stray bits and fill tiny holes">Remove specks &amp; holes</button></div>
         </details>
+        </div>
       </div>
+      <h2 class="cap">Hide a side</h2>
+      <div class="group">
+        <div class="row" style="padding-block:10px"><div class="seg full" id="hideSeg" role="group" aria-label="Hide a side behind the ring"><button data-v="none" aria-pressed="true">None</button><button data-v="bottom" aria-pressed="false">Bottom</button><button data-v="left" aria-pressed="false">Left</button><button data-v="right" aria-pressed="false">Right</button><button data-v="top" aria-pressed="false">Top</button></div></div>
+        <p class="note" id="hideNote" style="padding-top:0"></p>
+        <div class="fine" id="hideFine" hidden><div data-sl="hideW"></div><div data-sl="hideD"></div></div>
+      </div>
+      <div class="fine">
       <details class="adv" id="lookAdv"><summary>Look &amp; canvas</summary>
         <div class="group">
           <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
@@ -157,6 +174,8 @@
           <div data-sl="pad" id="rowPad"></div>
         </div>
       </details>
+      </div>
+      <button class="fineBtn" data-fine="popout" aria-expanded="false">Fine-tune</button>
       <button class="next" data-next="ring">Next: style the ring <span aria-hidden="true">→</span></button>
     </section>
 
@@ -181,7 +200,7 @@
         </div>
       </details>
 
-      <details class="sec" id="secShape">
+      <details class="sec fine" id="secShape">
         <summary class="cap">Shape</summary>
         <div class="group">
           <div class="grid pat-grid" id="patGrid" role="group" aria-label="Ring shape"></div>
@@ -196,12 +215,12 @@
         <div class="group"><div class="looks" id="looks" role="list" aria-label="Ring looks"></div></div>
       </details>
 
-      <details class="sec" id="secLight">
+      <details class="sec fine" id="secLight">
         <summary class="cap">Lighting</summary>
         <div class="group"><div data-sl="lAng"></div><div data-sl="lInt"></div></div>
       </details>
 
-      <details class="sec" id="secTex">
+      <details class="sec fine" id="secTex">
         <summary class="cap">Texture</summary>
         <div class="group">
           <div class="chips" id="texGrid" role="group" aria-label="Texture"></div>
@@ -213,17 +232,20 @@
           <div class="row" id="rowShuffleTex" hidden><label>Pattern</label><div class="grow"><button class="btn" id="bTexShuffle" title="Generate a different random pattern"><i data-ic="shuffle"></i>New pattern</button></div></div>
         </div>
       </details>
+      <button class="fineBtn" data-fine="ring" aria-expanded="false">Fine-tune</button>
       <button class="next" data-next="export">Next: export <span aria-hidden="true">→</span></button>
     </section>
 
     <!-- 4 EXPORT -->
     <section class="panel" id="p-export" role="tabpanel" aria-labelledby="t-export" tabindex="-1" hidden>
+      <div class="fine"><details class="adv" id="histAdv"><summary>Edit history of this token</summary><div class="group"><p class="note" id="histNote"></p><ol class="hist" id="histList"></ol></div></details></div>
       <h2 class="cap">Size</h2>
       <div class="group">
         <div class="row" style="padding-block:10px"><div class="seg full" id="sizes" role="group" aria-label="Export size in pixels">
           <button data-v="256" aria-pressed="false">256<span class="px">px</span></button><button data-v="512" aria-pressed="true">512<span class="px">px</span></button><button data-v="1024" aria-pressed="false">1024<span class="px">px</span></button><button data-v="2048" aria-pressed="false">2048<span class="px">px</span></button></div></div>
         <p class="note" id="expNote"></p>
       </div>
+      <div class="fine">
       <h2 class="cap">What to export</h2>
       <div class="group">
         <div class="row" style="padding-block:10px"><div class="seg full" id="whatSeg" role="group" aria-label="What to export">
@@ -237,6 +259,7 @@
         <div class="row"><label for="fname">File name</label><div class="grow"><input id="fname" class="txt" type="text" value="token" maxlength="60" placeholder="token" title="The file extension is added for you"><span id="fext" style="color:var(--sub)">.png</span></div></div>
         <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds the visible part of your picture (plus a 10% margin) and your settings, so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
       </div>
+      </div>
       <div class="dl-row">
         <button class="btn primary big" id="bDownload" title="Download the token as a transparent PNG (Ctrl/⌘+S)"><i data-ic="download"></i><span id="dlWhat">Download PNG</span> <small id="dlSize">512 px</small></button>
         <button class="btn" id="bCopy" title="Copy the token to the clipboard at the selected size (without editable data)">Copy image</button>
@@ -248,11 +271,15 @@
         <figure><canvas class="mini" data-s="40" style="width:40px;height:40px"></canvas>Small</figure>
       </div>
       <p class="note" style="padding-inline:4px">Check that the art still reads when the token is small.</p>
+      <button class="fineBtn" data-fine="export" aria-expanded="false">Fine-tune</button>
     </section>
   </aside>
 </main>
 
 <div class="menu" id="moreMenu" role="menu" aria-label="More selection tools" hidden>
+  <button role="menuitem" id="mLasso" class="simple-only"><i data-ic="lasso"></i>Lasso tool</button>
+  <button role="menuitem" id="mIso" class="simple-only"><i data-ic="iso"></i>Show only the pop-out</button>
+  <hr class="simple-only">
   <button role="menuitem" id="mInvert"><i data-ic="invert"></i>Invert selection</button>
   <button role="menuitem" id="mGrow"><i data-ic="grow"></i>Grow selection</button>
   <button role="menuitem" id="mShrink"><i data-ic="shrink"></i>Shrink selection</button>
@@ -295,9 +322,17 @@
     <dt><kbd>Ctrl/⌘</kbd>+<kbd>S</kbd></dt><dd>Download (PNG, WebP or layers)</dd>
     <dt><kbd>Double-click</kbd> a slider</dt><dd>Reset it to its default</dd>
   </dl>
+  <h3>Guidance</h3>
+  <div class="row"><label for="tipsOn">Show tips<span class="sub">One short line per step, until your first action there</span></label><div class="grow"><span class="switch"><input id="tipsOn" type="checkbox"><i></i></span></div></div>
   <h3>Appearance</h3>
   <div class="seg full" id="themeSeg" role="group" aria-label="Appearance"><button data-v="auto" aria-pressed="true">Automatic</button><button data-v="light" aria-pressed="false">Light</button><button data-v="dark" aria-pressed="false">Dark</button></div>
   <div class="foot"><button class="btn primary" id="helpClose">Done</button></div>
+</div></dialog>
+
+<dialog id="findDlg" aria-label="Find a tool or setting"><div class="dlg find">
+  <input id="findIn" type="text" role="combobox" aria-expanded="true" aria-controls="findList" aria-label="Find a tool or setting" placeholder="Find a tool or setting, e.g. feather, brush, size" autocomplete="off">
+  <ul id="findList" role="listbox" aria-label="Results"></ul><p class="note" id="findEmpty" hidden>Nothing matches. Try another word.</p>
+  <p class="note find-h"><kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> go · <kbd>Esc</kbd> close</p>
 </div></dialog>
 
 <dialog id="saveDlg" aria-labelledby="saveH"><form method="dialog" class="dlg" id="saveForm">

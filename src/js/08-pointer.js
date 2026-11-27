@@ -28,6 +28,7 @@ cv.addEventListener('pointerdown',e=>{if(!st.src)return;if(e.pointerType==='mous
   dismissCoach(true);cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
     if(st.painting)endPaint();return;}
+  if(tab==='popout'&&!st.space&&hideGrab(e)){cv.classList.add('grabbing');return;}
   if(st.tool==='move'||st.space){const vw=st.space&&viewTool()&&st.vz>1;drag={x:e.clientX,y:e.clientY,view:vw};if(!vw)st.lockPad=true;cv.classList.add('grabbing');}
   else if(st.tool==='select'){const q=imgPt(e);wandStart(q.u,q.v,curMode(e));}
   else if(st.tool==='lasso'){const q=imgPt(e);st.lasso={pts:[q],mode:curMode(e)};draw();}
@@ -37,6 +38,7 @@ cv.addEventListener('pointermove',e=>{
   if(st.tool==='brush'){st.hover=toTok(pt(e));if(!ptrs.has(e.pointerId))draw();}
   if(st.mag&&!ptrs.has(e.pointerId)){magMove(e);return;}
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(hdrag){hideDrag(e);return;}
   if(st.mag){magMove(e);return;}
   if(ptrs.size===2&&gest){const[a,b]=[...ptrs.values()],ratio=Math.hypot(a.x-b.x,a.y-b.y)/gest.d;
     if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
@@ -48,7 +50,7 @@ cv.addEventListener('pointermove',e=>{
     if(drag.view){st.vx+=(e.clientX-drag.x)*p.k/S;st.vy+=(e.clientY-drag.y)*p.k/S;clampView();draw();}
     else{const R=S*(.5-effPad())*st.vz;st.ix+=(e.clientX-drag.x)*p.k/R;st.iy+=(e.clientY-drag.y)*p.k/R;viewChanged();}
     drag={x:e.clientX,y:e.clientY,view:drag.view};}});
-const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest;ptrs.delete(e.pointerId);if(ptrs.size<2)gest=null;drag=null;cv.classList.remove('grabbing');
+const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest||hdrag;if(hdrag){hdrag=null;lab('Hide a side: turned');}ptrs.delete(e.pointerId);if(ptrs.size<2)gest=null;drag=null;cv.classList.remove('grabbing');
   if(st.painting)endPaint();
   if(st.lasso)lassoApply();
   if(st.mag)magUp(e);

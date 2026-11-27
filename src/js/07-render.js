@@ -24,6 +24,7 @@ function render(ctx,S,o={}){
   if(!o.clean){
     if(!prev&&tab==='popout'&&st.sgShow&&!iso)sgOverlay(ctx,g,S);
     if(!prev&&tab==='popout'&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
+    if(!prev&&tab==='popout'&&st.hideOn&&!iso)hideOverlay(ctx,g,S);
     if(st.tool==='brush'&&st.hover&&!st.space){const r=brushR()*g.sc,sub=curMode()==='sub';ctx.save();ctx.beginPath();ctx.arc(st.hover.x,st.hover.y,r,0,TAU);
       ctx.fillStyle=sub?'rgba(255,69,58,.22)':'rgba(48,209,88,.22)';ctx.fill();ctx.lineWidth=2.5/st.vz;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.stroke();ctx.lineWidth=1.2/st.vz;ctx.strokeStyle='#fff';ctx.stroke();ctx.restore();}
     {const L=st.lasso||st.magDraw;if(L&&L.pts.length>1){const sub=L.mode==='sub';ctx.save();applyT(ctx,g);ctx.beginPath();L.pts.forEach((p,i)=>i?ctx.lineTo(p.u,p.v):ctx.moveTo(p.u,p.v));ctx.closePath();

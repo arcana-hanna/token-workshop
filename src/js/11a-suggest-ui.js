@@ -31,7 +31,7 @@ function sgRender(){const list=$('#sgList');list.textContent='';
   $('#sgBar').hidden=false;$('#sgUse').disabled=true;sg.sel=-1;sgPreview(null);}
 function sgSelect(i,again){if(!sg)return;if(again&&sg.sel===i){sgApply(sg.pick[i]);return;}
   sg.sel=i;$$('#sgList .sg-card').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));$('#sgUse').disabled=false;sgPreview(sg.pick[i]);}
-function sgApply(c){if(!c)return;let m=c.mask.slice();const matte=!!c.mask.bg;
+function sgApply(c){if(!c)return;lab('Auto suggestion applied'+(c.label?': '+c.label:''));let m=c.mask.slice();const matte=!!c.mask.bg;
   if(matte&&!autoFixOn())for(let i=0;i<m.length;i++)m[i]=m[i]>=128?255:0;
   st.mask=m;maskChanged();let note='Pop-out applied. Fine-tune it with Select, Lasso or Brush, or Undo.';
   if(matte&&autoFixOn()){st.bgC=c.mask.bg;st.bgAuto=true;st.defr=1;eSess=null;}

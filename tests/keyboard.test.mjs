@@ -14,9 +14,9 @@ test('toolbar is one tab stop and arrow keys move between buttons', async () => 
   await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'lasso');
   await page.keyboard.press('ArrowDown');
-  assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'magnet');
-  await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'brush');
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'magnet');
   await page.keyboard.press('Home');
   assert.equal(await page.evaluate(() => document.activeElement.dataset.tool), 'select');   // Move belongs to the Place step
   assert.equal(await page.evaluate(() => document.activeElement.tabIndex), 0);

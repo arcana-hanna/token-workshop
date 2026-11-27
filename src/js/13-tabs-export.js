@@ -4,6 +4,7 @@ function setTab(name,focus){tab=name;$('#toast').classList.remove('on');document
   if(name!=='popout'&&typeof sgClose==='function')sgClose();
   stepTool();rove();
   if(name==='popout'&&st.sgPending&&!st.selCount&&st.src){st.sgPending=false;setTimeout(()=>{if(tab==='popout'&&!st.selCount)runSuggest();},80);}
+  if(typeof showTip==='function'){showTip();updProgress();}
   if(focus)$('#t-'+name).focus();
   if(name==='ring'&&thumbsStale)thumbsNow();if(name==='export'){updExport();miniSoon(true);}
   if(!DESKTOP.matches)scrollTo({top:0});else $('.inspector').scrollTop=0;}
@@ -53,14 +54,16 @@ async function exportPng(){busy(1,'Rendering…');await new Promise(r=>setTimeou
   try{const r=await exportFile();if(!r.blob)return toast('Export failed.');await saveBlob(r.blob,r.name);}finally{busy(-1);}}
 function projectMeta(e){const r=e.crop,cs=cropSettings(r),m=cropMask(r);
   return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type,crop:{x:r.x,y:r.y,w:r.w,h:r.h,W:st.sw,H:st.sh}},
-  settings:{...Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),...cs},mask:{w:r.w,h:r.h,rle8:b64enc(rle8Enc(m))}};}
+  settings:{...Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),...cs},mask:{w:r.w,h:r.h,rle8:b64enc(rle8Enc(m))},history:logLines().slice(-LOGMAX).map(x=>x.slice(0,100))};}
 async function makeBlob(embed){return(await renderImage(undefined,'png',embed)).blob;}
 async function copyPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const blob=await makeBlob(false);await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('Copied to clipboard.');}
   catch(e){toast('Copy is blocked here. Use Download instead.');}finally{busy(-1);}}
 $('#bDownload').onclick=exportPng;$('#bCopy').onclick=copyPng;
 const WHAT_NOTE={token:'The finished token: picture, ring and pop-out together.',ring:'Only the ring, transparent in the middle. Handy as a reusable frame.',pop:'Only the pop-out part of the picture, transparent elsewhere.',layers:'A .zip with the finished token plus ring, picture and pop-out as separate transparent files. All have the same framing, so they stack exactly.'};
-function updExport(){$('#dlSize').textContent=st.exportSize+' px';
+function updHistList(){const L=logLines(),ol=$('#histList');if(!ol)return;ol.textContent='';L.forEach(x=>{const li=document.createElement('li');li.textContent=x;ol.appendChild(li);});
+  $('#histNote').textContent=L.length?'Saved inside the file as text (a few KB at most). Read-only: it shows what was done, it cannot be replayed.':'Nothing recorded yet.';}
+function updExport(){updHistList();$('#dlSize').textContent=st.exportSize+' px';
   const ext=st.exportWhat==='layers'?'zip':st.exportFmt;$('#fext').textContent='.'+ext;$('#dlWhat').textContent=st.exportWhat==='layers'?'Download layers (.zip)':st.exportWhat==='ring'?'Download ring ('+ext.toUpperCase()+')':st.exportWhat==='pop'?'Download pop-out ('+ext.toUpperCase()+')':'Download '+ext.toUpperCase();
   $('#whatNote').textContent=WHAT_NOTE[st.exportWhat];$('#bDownload').title='Download as '+ext+' (Ctrl/⌘+S)';if(!st.full)return;
   const native=Math.round(Math.min(st.full.width,st.full.height)/st.zoom/(1-2*exportPad()));

@@ -118,3 +118,15 @@ The **Magnet** tool (E) works like Lasso, but the outline sticks to the stronges
 - The ring's outer edge has a 1 px alpha falloff so stray antialiased bits fade out (chain and gems protrude by design and are left alone).
 
 Changing the backdrop of a picture was deliberately left out: this is a token maker, not an image editor.
+
+
+## Guided and Studio (v4)
+
+* **Guided** (default for new visitors): each step shows only the essentials. **Fine-tune** under each step holds every other control; open drawers are remembered. Tools are named by outcome: Click (wand), Paint (brush), Trace (magnetic lasso). Lasso and Isolate move into the More menu.
+* **Studio** (header button, remembered): every control at once, with the original tool names.
+* **Find** (header, or Ctrl/⌘+K): searches every tool, slider and button, opens the right step and Fine-tune drawer, and focuses the control.
+* **Edge style**: Crisp, Natural, Soft set feather and halo removal together. Every individual control stays in Fine-tune, plus a **Nudge edge** amount (1-10 px).
+* **Hide a side**: None, Bottom, Left, Right, Top, or drag the two round handles on the ring to hide any arc of the pop-out behind the ring. Non-destructive (a setting, saved with the token, undoable). Fine-tune sets the arc width and how far the pop-out may overlap the ring.
+* **Tips**: one dismissible line per step (switch off in Help). **Progress**: finished steps show a check. **Ring looks** are drawn on your own picture and pop-out.
+* **Edit history**: a read-only list of what was done is stored in the saved token (Export, Fine-tune).
+* Tests preset Studio through `window.TW_STUDIO`; pass `guided: true` to `openApp` for the Guided view.

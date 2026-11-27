@@ -65,5 +65,9 @@ function thumbsSoon(force){thumbsStale=true;if(tab!=='ring')return;clearTimeout(
 function thumbsNow(){if(tab!=='ring')return;thumbsStale=false;
   PAT_ORDER.forEach(id=>{const P=PAT[id],c=patBtns[id].querySelector('canvas').getContext('2d');c.clearRect(0,0,120,120);
     drawRing(c,60,56,{...st,formula:id,tex:'none',width:.3,count:id===st.formula?st.count:P.n,depth:id===st.formula?st.depth:P.d,lineW:id===st.formula?st.lineW:(P.xd||.1)});});
+  /* each look is drawn on your own picture and pop-out, so you choose between real results */
   $$('#looks .look').forEach(d=>{const l=lookFull(d._look),c=d.querySelector('canvas').getContext('2d');c.clearRect(0,0,112,112);
-    drawRing(c,56,52,{...l,width:Math.min(.34,l.width*2.2)});});}
+    if(!st.src){drawRing(c,56,52,{...l,width:Math.min(.34,l.width*2.2)});return;}
+    const keep={};RING_KEYS.forEach(k=>keep[k]=st[k]);const sv={shadow:st.shadow,iso:st.iso,prev:st.prev,tool:st.tool,vz:st.vz,vx:st.vx,vy:st.vy};
+    Object.assign(st,l,{iso:false,prev:false,vz:1,vx:0,vy:0});
+    try{render(c,112,{clean:true,pad:st.autoFit?st.padCur:st.pad});}finally{Object.assign(st,keep,sv);}});}

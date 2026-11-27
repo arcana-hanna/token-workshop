@@ -4,14 +4,14 @@ const METALS=[['Gold','#d9a521'],['Silver','#b5bcc6'],['Bronze','#b8733a'],['Cop
   ['Bone','#d9cdb0'],['Wood','#7a5230'],['Onyx','#2b2d33'],['Granite','#7d7f84'],['Slate','#4a5560'],['Sandstone','#b89d78']];
 const GRADS=[['Enemy','#ff8a1f','#7a0c10',45],['Ally','#3ddc84','#0b4f3a',45],['Arcane','#b36cff','#1a2a8c',45],['Lava','#ffd23f','#b3111a',90],['Toxic','#d4ff3d','#1b5e20',45],['Frost','#e6f8ff','#2a6fb0',90]];
 const RING_KEYS=['formula','color','accent','width','count','depth','tex','texAmt','texDens','seed','eCol','gradOn','g1','g2','gAng','gMid','colorKey','lAng','lInt','texRot','lineW','eAmt','eLen'];
-const SETTINGS=['ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
+const SETTINGS=['hideOn','hideA','hideW','hideD','ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
 const st={maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,bx:null,by:null,embed:null,
   popCv:mk(),softCv:mk(),selCv:mk(),softDirty:true,popDirty:true,selDirty:true,selCount:0,painting:false,
   ix:0,iy:.05,zoom:1.3,rot:0,flip:1,bgOn:true,bg:'#2b2f3a',
   autoFit:true,pad:.08,padCur:.08,padT:.08,fitDirty:true,lockPad:false,snapPad:true,
   formula:'ridge',color:'#d9a521',accent:'#2b2f3a',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',
   gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1,vz:1,vx:0,vy:0,
-  popOn:true,feather:.5,shadow:0,showSel:true,showFrame:true,iso:false,prev:false,kc:null,embedOn:true,
+  hideOn:false,hideA:90,hideW:120,hideD:0,popOn:true,feather:.5,shadow:0,showSel:true,showFrame:true,iso:false,prev:false,kc:null,embedOn:true,
   bri:0,con:0,sat:0,defr:0,bgC:'#808080',bgAuto:true,eReach:4,eTol:14,eSoft:70,eShift:0,speck:30,gap:0,autoSens:50,autoShrink:0,bsoft:0,strand:false,maskView:false,
   tool:'select',mode:'add',alt:false,space:false,tol:30,contig:true,brush:10,exportSize:512,exportWhat:'token',exportFmt:'webp',pal:[],hover:null};
 const RING_DEFAULT={formula:'ridge',color:'#d9a521',accent:'#2b2d33',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1};
@@ -33,7 +33,7 @@ function applyT(ctx,g){ctx.translate(g.tx,g.ty);ctx.rotate(st.rot);ctx.scale(g.s
 function popBounds(){if(!(st.popOn&&st.selCount&&st.bx&&st.bx.length))return null;
   const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by,hx=.5*k*(Math.abs(co)+Math.abs(si));
   let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
-  for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k,X=x*co-y*si+st.ix,Y=x*si+y*co+st.iy;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}
+  for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k,X=x*co-y*si+st.ix,Y=x*si+y*co+st.iy;if(st.hideOn&&hideAlpha(X,Y)<.5)continue;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}
   return{x0:x0-hx,x1:x1+hx,y0:y0-hx,y1:y1+hx};}
 /* Auto-fit: the ring stays centred and the frame is exactly as large as ring or pop-out needs, so one of them always touches it */
 function recomputeFit(){let d=1;const b=popBounds();

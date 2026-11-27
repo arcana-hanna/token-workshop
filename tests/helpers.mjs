@@ -12,9 +12,10 @@ export async function launch() {
 }
 
 /** Opens the built app in a fresh page. Collects console errors in page.errors. */
-export async function openApp(browser, { width = 1280, height = 800, touch = false, keepCoach = false, storageState, step = 'popout' } = {}) {
+export async function openApp(browser, { width = 1280, height = 800, touch = false, keepCoach = false, storageState, step = 'popout', guided = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, storageState, acceptDownloads: true });
   const page = await ctx.newPage();
+  if (!guided) await page.addInitScript(() => { window.TW_STUDIO = true; });
   page.errors = [];
   page.on('pageerror', (e) => page.errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });

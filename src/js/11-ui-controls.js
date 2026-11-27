@@ -43,6 +43,8 @@ const SL={
  sat:{label:'Saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'How vivid the colours are. -100 is black and white.'},
  defr:{label:'Halo removal',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'defr',tip:'Removes leftover background colour from the soft, semi-transparent edge pixels (hair, fur)'},
  bsoft:{label:'Brush softness',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'none',tip:'0% is a hard brush. Higher values fade the edge of the stroke.'},
+ hideW:{label:'Hidden arc',min:20,max:300,step:5,unit:'°',k:1,def:120,fx:'hide',tip:'How much of the ring the pop-out is hidden behind. You can also drag the round handles on the ring.'},
+ hideD:{label:'Overlap the ring',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'hide',tip:'0% tucks the pop-out fully behind the ring. Higher lets it cover part of the ring.'},
  lInt:{label:'Strength',min:0,max:150,step:1,unit:'%',k:.01,def:100,fx:'ring',tip:'How strong the light and shade are. 0% is flat.'}
 };
 const SLI={},syncers=[];let bgVer=-1;
@@ -52,6 +54,7 @@ function fx(kind){if(kind==='wand'){wandRetune();return;}
   if(kind==='adj'){st.popDirty=true;draw();return;}
   if(kind==='defr'){if(st.bgAuto&&st.defr>0&&bgVer!==st.maskVer){bgVer=st.maskVer;st.bgC=rgbToHex(estimateBg(st.mask,bounds(),Math.round(st.eReach)).c);}st.popDirty=true;draw();return;}
   if(kind==='none'){draw();return;}
+  if(kind==='hide'){hideChanged();return;}
   if(kind==='view'||kind==='fit')st.fitDirty=true;
   if(kind==='soft'){st.softDirty=st.popDirty=st.fitDirty=true;}
   if(kind==='ring')thumbsSoon();draw();}
@@ -115,9 +118,9 @@ function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Selec
   b.className='badge'+(st.tool==='move'||st.space?'':' '+m);b.lastChild.textContent=st.space?'Pan (Space held)':st.tool==='move'?T:T+' · '+(m==='sub'?'Remove':'Add');}
 
 /* ---------- selection actions: toolbar buttons + "More" menu ---------- */
-function clearSel(){if(!st.src||!st.selCount)return;st.mask=new Uint8Array(st.mask.length);maskChanged();draw();commit();toast('Selection cleared. Undo brings it back.');}
-function invertSel(){if(!st.src)return;const m=new Uint8Array(st.mask.length),d=st.sdata;for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>8?255-st.mask[i]:0;st.mask=m;maskChanged();draw();commit();}
-function morphSel(grow){if(!st.src)return;busy(1,grow?'Growing…':'Shrinking…');setTimeout(()=>{morph(grow);busy(-1);draw();commit();},10);}
+function clearSel(){if(!st.src||!st.selCount)return;lab('Selection cleared');st.mask=new Uint8Array(st.mask.length);maskChanged();draw();commit();toast('Selection cleared. Undo brings it back.');}
+function invertSel(){if(!st.src)return;lab('Selection inverted');const m=new Uint8Array(st.mask.length),d=st.sdata;for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>8?255-st.mask[i]:0;st.mask=m;maskChanged();draw();commit();}
+function morphSel(grow){if(!st.src||!st.selCount)return;const n=st.nudge;lab((grow?'Grew':'Shrank')+' the edge by '+n+' px');morph(grow,n);draw();commit();}
 $('#bAuto').onclick=()=>{if(tab!=='popout')setTab('popout');runSuggest();};$('#bClear').onclick=clearSel;
 const menu=$('#moreMenu'),bMore=$('#bMore');
 function closeMenu(){menu.hidden=true;bMore.setAttribute('aria-expanded','false');}
@@ -128,6 +131,9 @@ bMore.onclick=()=>menu.hidden?openMenu():closeMenu();
 document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&!bMore.contains(e.target))closeMenu();});
 menu.addEventListener('keydown',e=>{const bs=[...menu.querySelectorAll('button')],i=bs.indexOf(document.activeElement);
   if(e.key==='Escape'){closeMenu();bMore.focus();}else if(e.key==='ArrowDown'){e.preventDefault();bs[(i+1)%bs.length].focus();}else if(e.key==='ArrowUp'){e.preventDefault();bs[(i+bs.length-1)%bs.length].focus();}});
+$('#bNudgeIn').onclick=()=>morphSel(false);$('#bNudgeOut').onclick=()=>morphSel(true);
+const nudgeN=$('#nudgeN');nudgeN.oninput=()=>{st.nudge=clamp(Math.round(+nudgeN.value)||1,1,10);};nudgeN.onchange=()=>{nudgeN.value=st.nudge;try{localStorage.setItem('tw_nudge',st.nudge);}catch(e){}};
+try{st.nudge=clamp(+localStorage.getItem('tw_nudge')||1,1,10);}catch(e){st.nudge=1;}nudgeN.value=st.nudge;
 $('#mInvert').onclick=()=>{closeMenu();invertSel();};$('#mGrow').onclick=()=>{closeMenu();morphSel(true);};$('#mShrink').onclick=()=>{closeMenu();morphSel(false);};
 /* preview background + isolate view (display only) */
 function setPreviewBg(v){$('#board').dataset.bg=v;$('#tableStrip').dataset.bg=v;$$('#moreMenu [data-bg]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.bg===v)));store.set('tw_bg',v);}
@@ -141,7 +147,7 @@ syncers.push(()=>$('#bPrev').setAttribute('aria-pressed',String(st.prev)));
 syncers.push(updBadge);
 syncers.push(()=>$('#bIso').setAttribute('aria-pressed',String(st.iso)));
 /* ---------- edge tools ---------- */
-const fixNow=()=>{if(!st.selCount)return toast('Choose the pop-out first, then fix its edges.');busy(1,'Fixing edges…');setTimeout(()=>{try{fixEdges(false);}finally{busy(-1);}},20);};
+const fixNow=()=>{if(!st.selCount)return toast('Choose the pop-out first, then fix its edges.');lab('Fix edges automatically');busy(1,'Fixing edges…');setTimeout(()=>{try{fixEdges(false);}finally{busy(-1);}},20);};
 $('#bFixEdges').onclick=fixNow;
 $('#bClean').onclick=()=>{if(!st.selCount)return toast('Nothing is selected yet.');const c=cleanMask(st.mask,bounds(),speckArea(),true);
   if(!c.specks&&!c.filled)return toast('No specks or holes this small.');

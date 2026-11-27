@@ -101,7 +101,7 @@ canvas#cv.grabbing{cursor:grabbing!important}
 /* ---------- tab bar ---------- */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:2px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
   background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--sep)}
-.tab{flex:1;white-space:nowrap;border:0;background:transparent;border-radius:10px;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--sub);font-size:12.5px;font-weight:600}
+.tab{flex:1;min-width:0;white-space:nowrap;border:0;background:transparent;border-radius:10px;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--sub);font-size:12.5px;font-weight:600}
 .tab .n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--fill);font-size:13px;color:var(--fg)}
 .tab[aria-selected="true"]{color:var(--accent)}
 .tab[aria-selected="true"] .n{background:var(--accent);color:var(--accent-fg)}
@@ -251,7 +251,7 @@ kbd{font:600 12px var(--font);background:var(--fill);border-radius:5px;padding:2
   .work .tablestrip .ts-row{flex-direction:column;align-items:center;justify-content:center;gap:14px}
   .inspector{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;border-radius:14px}
   .tabs{position:sticky;top:0;bottom:auto;z-index:5;border:0;border-radius:12px;padding:4px;background:var(--card);box-shadow:var(--shadow);backdrop-filter:none}
-  .tab{flex-direction:row;gap:7px;min-height:42px;font-size:13.5px}
+  .tab{flex-direction:row;gap:5px;min-height:42px;font-size:13px;padding:0 2px}
   .tab .n{width:20px;height:20px;font-size:11.5px}
   .panel{padding:10px 0 24px}
   .toast{bottom:28px}
@@ -359,6 +359,38 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
 .sg-card b{font-weight:600}.sg-card .k{color:var(--sub);font-size:10.5px}
 .sg-card .best{position:absolute;top:6px;left:6px;background:var(--accent);color:var(--accent-fg);border-radius:999px;font-size:10px;font-weight:600;padding:1px 6px}
 @media (max-width:520px){.sg-sub{display:none}}
+.hist{margin:0;padding:0 12px 10px 32px;font-size:13px;color:var(--sub);display:grid;gap:3px;max-height:220px;overflow:auto}
+#rowNudge .grow{gap:6px}
+/* Guided / Studio */
+div.fine{display:contents}
+body.simple .panel:not(.open-fine) .fine{display:none}
+.fineBtn{display:none}
+body.simple .fineBtn{display:block;margin:10px auto 0;border:1px solid var(--sep);background:transparent;color:var(--sub);border-radius:999px;padding:7px 16px;font:600 13px/1 var(--font,inherit);cursor:pointer}
+body.simple .fineBtn[aria-expanded="true"]{color:var(--accent);border-color:var(--accent)}
+body.simple [data-adv]{display:none}
+body:not(.simple) .simple-only{display:none}
+.tip{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:0 0 8px;padding:7px 8px 7px 12px;border-radius:10px;background:var(--fill);color:var(--sub);font-size:13px;line-height:1.35;align-self:stretch}
+.tip .x{border:0;background:transparent;color:var(--sub);font-size:18px;line-height:1;padding:2px 6px;cursor:pointer;border-radius:6px}
+.tab.done .n{font-size:0;background:var(--accent);color:var(--accent-fg)}
+.tab.done .n::after{content:"✓";font-size:13px}
+.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 3px transparent}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none;outline:2px solid var(--accent)}}
+#bMode span{white-space:nowrap}
+#findDlg{padding:0}
+.find{display:grid;gap:8px;min-width:min(480px,86vw)}
+.find input{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--sep);background:var(--fill);color:var(--fg);width:100%}
+#findList{list-style:none;margin:0;padding:0;max-height:min(50vh,360px);overflow:auto;display:grid;gap:2px}
+#findList li{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:8px;cursor:pointer}
+#findList li small{color:var(--sub);white-space:nowrap}
+#findList li[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+#findList li[aria-selected="true"] small{color:inherit;opacity:.85}
+.find-h{margin:0}
+@media (max-width:520px){#bFind span{display:none}#bFind,#bMode{padding-inline:10px}.top h1{font-size:16px}}
+@media (max-width:520px){#bOpen span{display:none}#bOpen{padding-inline:10px}.top{gap:6px}.top h1{font-size:15px}}
+body.simple #p-ring:not([hidden]){display:flex;flex-direction:column}
+body.simple #p-ring #secLooks{order:-1}
+body.simple #p-ring .next,body.simple #p-ring .fineBtn{order:5}
 
 </style>
 </head>
@@ -368,6 +400,8 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
   <h1>Token Workshop</h1>
   <button class="ibtn mob-only" id="bUndo2" title="Undo" aria-label="Undo" disabled><i data-ic="undo"></i></button>
   <button class="ibtn mob-only" id="bRedo2" title="Redo" aria-label="Redo" disabled><i data-ic="redo"></i></button>
+  <button class="btn" id="bFind" aria-label="Find a tool or setting (Ctrl+K)" title="Find any tool or setting (Ctrl+K)"><i data-ic="search"></i><span>Find</span></button>
+  <button class="btn" id="bMode" aria-pressed="false" title="Studio shows every control at once. Guided keeps the essentials and puts the rest under Fine-tune."><span>Studio</span></button>
   <button class="btn" id="bOpen" aria-label="Open a photo or a saved token" title="Open a photo, or a token you exported earlier. You can also drop or paste an image."><i data-ic="upload"></i><span>Open</span></button>
   <button class="ibtn" id="bHelp" title="How it works, shortcuts, appearance" aria-label="Help and shortcuts">?</button>
 </header>
@@ -379,13 +413,13 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
     <div class="tools" role="toolbar" aria-label="Tools">
       <button class="tbtn lbl" data-steps="image" data-tool="move" aria-pressed="false" title="Move (V): drag the picture to reposition it"><i data-ic="move"></i><span>Move</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="select" aria-pressed="true" title="Select (W): click the part that should pop out of the ring"><i data-ic="wand"></i><span>Select</span></button>
-      <button class="tbtn lbl" data-steps="popout" data-tool="lasso" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
-      <button class="tbtn lbl" data-steps="popout" data-tool="magnet" aria-pressed="false" title="Magnetic lasso (E): trace along an edge and the line sticks to it. Hold and drag, or click to place points."><i data-ic="magnet"></i><span>Magnet</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="lasso" data-adv="1" aria-pressed="false" title="Lasso (L): hold and draw around an area, release to select it. Hold Shift or Alt to remove."><i data-ic="lasso"></i><span>Lasso</span></button>
       <button class="tbtn lbl" data-steps="popout" data-tool="brush" aria-pressed="false" title="Brush (B): paint to add or remove parts of the pop-out"><i data-ic="brush"></i><span>Brush</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-tool="magnet" aria-pressed="false" title="Magnetic lasso (E): trace along an edge and the line sticks to it. Hold and drag, or click to place points."><i data-ic="magnet"></i><span>Magnet</span></button>
       <span class="vsep" data-steps="popout"></span>
       <button class="tbtn lbl" data-steps="popout" id="bAuto" title="Suggest pop-outs. Nothing changes until you pick one." aria-label="Suggest pop-outs"><i data-ic="spark"></i><span>Auto</span></button>
       <button class="tbtn lbl" data-steps="popout" id="bClear" title="Clear the whole selection (Delete)" aria-label="Clear selection"><i data-ic="x"></i><span>Clear</span></button>
-      <button class="tbtn lbl" data-steps="popout" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
+      <button class="tbtn lbl" data-steps="popout" data-adv="1" id="bIso" aria-pressed="false" title="Show only the pop-out, hiding the picture and ring (I)" aria-label="Show only the pop-out"><i data-ic="iso"></i><span>Isolate</span></button>
       <button class="tbtn lbl" id="bPrev" aria-pressed="false" title="Preview (P): see the finished token without outlines and tool overlays" aria-label="Preview the finished token"><i data-ic="eye"></i><span>Preview</span></button>
       <button class="tbtn" data-steps="popout" id="bMore" title="More selection tools" aria-label="More selection tools" aria-haspopup="menu" aria-expanded="false"><i data-ic="more"></i><span>More</span></button>
       <span class="vsep push"></span>
@@ -419,6 +453,7 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
           <button class="chip" id="strandChip" aria-pressed="false" title="Hair-aware: Add paints in only what differs from the background. Remove erases only background-like pixels.">Hair-aware</button>
         </div>
       </div>
+      <div class="tip" id="tip" hidden role="note"><span id="tipT"></span><button class="x" id="tipX" aria-label="Hide this tip">×</button></div>
       <div class="sgbar" id="sgBar" hidden role="region" aria-label="Auto suggestions">
         <div class="sg-h"><b>Suggestions</b><span class="sg-sub">Tap to preview. Nothing changes until you use one.</span><span class="sp"></span><button class="chip primary" id="sgUse" disabled>Use this</button><button class="chip" id="sgClose" aria-label="Close suggestions">Ignore</button></div>
         <div class="sg-list" id="sgList" role="group" aria-label="Suggested pop-outs"></div>
@@ -456,7 +491,8 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
     <!-- 1 IMAGE -->
     <section class="panel" id="p-image" role="tabpanel" aria-labelledby="t-image" tabindex="-1">
       <h2 class="cap">Picture</h2>
-      <div class="group"><p class="note" id="srcInfo"></p></div>
+      <div class="group"><p class="note" id="srcInfo"></p><p class="note" style="padding-top:0">Everything runs in your browser. Your pictures are never uploaded.</p></div>
+      <div class="fine">
       <h2 class="cap">Position</h2>
       <div class="group">
         <div data-sl="zoom"></div><div data-sl="rot"></div>
@@ -483,6 +519,8 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         <div class="row"><label for="bgOn">Fill<span class="sub">Shows through transparent areas</span></label>
           <div class="grow"><input id="bg" type="color" aria-label="Fill colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
       </div>
+      </div>
+      <button class="fineBtn" data-fine="image" aria-expanded="false">Fine-tune</button>
       <button class="next" data-next="popout">Next: choose the pop-out <span aria-hidden="true">→</span></button>
     </section>
 
@@ -491,18 +529,29 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
       <h2 class="cap">Selection</h2>
       <div class="group">
         <p class="note" style="padding-bottom:4px"><b id="selStat">Nothing selected</b></p>
-        <p class="note" style="padding-top:0">Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.</p>
+        <p class="note" style="padding-top:0" id="selHelp">Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.</p>
       </div>
-      <h2 class="cap">Edges <span class="sp"></span><button class="link" id="bMaskView" aria-pressed="false" title="Show the selection as black and white to spot holes, specks and halos (M)">Show mask</button></h2>
+      <h2 class="cap">Edges <span class="sp"></span><button class="link fine" id="bMaskView" aria-pressed="false" title="Show the selection as black and white to spot holes, specks and halos (M)">Show mask</button></h2>
       <div class="group">
-        <p class="note" style="padding-bottom:4px">Hair, fur, or a halo of the old background around the outline? Tap once, then adjust.</p>
+        <div class="row" style="padding-block:10px"><div class="seg full" id="edgeSeg" role="group" aria-label="Edge style"><button data-v="crisp" aria-pressed="false" title="Hard, clean edge">Crisp</button><button data-v="natural" aria-pressed="false" title="A slightly soft edge">Natural</button><button data-v="soft" aria-pressed="false" title="A soft edge, good for hair and fur">Soft</button></div></div>
+        <p class="note" style="padding-top:0">Hair, fur, or a halo of the old background around the outline? Tap once, then adjust.</p>
         <div class="acts"><button class="btn primary" id="bFixEdges"><i data-ic="spark"></i>Fix edges automatically</button></div>
+        <div class="fine">
+        <div class="row" id="rowNudge"><label for="nudgeN">Nudge edge<span class="sub">Moves the outline by this many px, as often as you like</span></label><div class="grow"><input id="nudgeN" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-label="Nudge amount in pixels" style="width:52px"><button class="btn" id="bNudgeIn" title="Shrink the outline by the amount">Shrink</button><button class="btn" id="bNudgeOut" title="Grow the outline by the amount">Grow</button></div></div>
         <div data-sl="autoSens"></div><div data-sl="autoShrink"></div><div data-sl="feather"></div>
         <details class="adv" id="edgeAdv"><summary>More</summary>
           <div data-sl="defr"></div><div data-sl="gap"></div>
           <div class="acts"><button class="btn" id="bClean" title="Remove tiny stray bits and fill tiny holes">Remove specks &amp; holes</button></div>
         </details>
+        </div>
       </div>
+      <h2 class="cap">Hide a side</h2>
+      <div class="group">
+        <div class="row" style="padding-block:10px"><div class="seg full" id="hideSeg" role="group" aria-label="Hide a side behind the ring"><button data-v="none" aria-pressed="true">None</button><button data-v="bottom" aria-pressed="false">Bottom</button><button data-v="left" aria-pressed="false">Left</button><button data-v="right" aria-pressed="false">Right</button><button data-v="top" aria-pressed="false">Top</button></div></div>
+        <p class="note" id="hideNote" style="padding-top:0"></p>
+        <div class="fine" id="hideFine" hidden><div data-sl="hideW"></div><div data-sl="hideD"></div></div>
+      </div>
+      <div class="fine">
       <details class="adv" id="lookAdv"><summary>Look &amp; canvas</summary>
         <div class="group">
           <div class="row"><label for="popOn">Show pop-out</label><div class="grow"><span class="switch"><input id="popOn" type="checkbox"><i></i></span></div></div>
@@ -511,6 +560,8 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
           <div data-sl="pad" id="rowPad"></div>
         </div>
       </details>
+      </div>
+      <button class="fineBtn" data-fine="popout" aria-expanded="false">Fine-tune</button>
       <button class="next" data-next="ring">Next: style the ring <span aria-hidden="true">→</span></button>
     </section>
 
@@ -535,7 +586,7 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         </div>
       </details>
 
-      <details class="sec" id="secShape">
+      <details class="sec fine" id="secShape">
         <summary class="cap">Shape</summary>
         <div class="group">
           <div class="grid pat-grid" id="patGrid" role="group" aria-label="Ring shape"></div>
@@ -550,12 +601,12 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         <div class="group"><div class="looks" id="looks" role="list" aria-label="Ring looks"></div></div>
       </details>
 
-      <details class="sec" id="secLight">
+      <details class="sec fine" id="secLight">
         <summary class="cap">Lighting</summary>
         <div class="group"><div data-sl="lAng"></div><div data-sl="lInt"></div></div>
       </details>
 
-      <details class="sec" id="secTex">
+      <details class="sec fine" id="secTex">
         <summary class="cap">Texture</summary>
         <div class="group">
           <div class="chips" id="texGrid" role="group" aria-label="Texture"></div>
@@ -567,17 +618,20 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
           <div class="row" id="rowShuffleTex" hidden><label>Pattern</label><div class="grow"><button class="btn" id="bTexShuffle" title="Generate a different random pattern"><i data-ic="shuffle"></i>New pattern</button></div></div>
         </div>
       </details>
+      <button class="fineBtn" data-fine="ring" aria-expanded="false">Fine-tune</button>
       <button class="next" data-next="export">Next: export <span aria-hidden="true">→</span></button>
     </section>
 
     <!-- 4 EXPORT -->
     <section class="panel" id="p-export" role="tabpanel" aria-labelledby="t-export" tabindex="-1" hidden>
+      <div class="fine"><details class="adv" id="histAdv"><summary>Edit history of this token</summary><div class="group"><p class="note" id="histNote"></p><ol class="hist" id="histList"></ol></div></details></div>
       <h2 class="cap">Size</h2>
       <div class="group">
         <div class="row" style="padding-block:10px"><div class="seg full" id="sizes" role="group" aria-label="Export size in pixels">
           <button data-v="256" aria-pressed="false">256<span class="px">px</span></button><button data-v="512" aria-pressed="true">512<span class="px">px</span></button><button data-v="1024" aria-pressed="false">1024<span class="px">px</span></button><button data-v="2048" aria-pressed="false">2048<span class="px">px</span></button></div></div>
         <p class="note" id="expNote"></p>
       </div>
+      <div class="fine">
       <h2 class="cap">What to export</h2>
       <div class="group">
         <div class="row" style="padding-block:10px"><div class="seg full" id="whatSeg" role="group" aria-label="What to export">
@@ -591,6 +645,7 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         <div class="row"><label for="fname">File name</label><div class="grow"><input id="fname" class="txt" type="text" value="token" maxlength="60" placeholder="token" title="The file extension is added for you"><span id="fext" style="color:var(--sub)">.png</span></div></div>
         <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds the visible part of your picture (plus a 10% margin) and your settings, so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
       </div>
+      </div>
       <div class="dl-row">
         <button class="btn primary big" id="bDownload" title="Download the token as a transparent PNG (Ctrl/⌘+S)"><i data-ic="download"></i><span id="dlWhat">Download PNG</span> <small id="dlSize">512 px</small></button>
         <button class="btn" id="bCopy" title="Copy the token to the clipboard at the selected size (without editable data)">Copy image</button>
@@ -602,11 +657,15 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
         <figure><canvas class="mini" data-s="40" style="width:40px;height:40px"></canvas>Small</figure>
       </div>
       <p class="note" style="padding-inline:4px">Check that the art still reads when the token is small.</p>
+      <button class="fineBtn" data-fine="export" aria-expanded="false">Fine-tune</button>
     </section>
   </aside>
 </main>
 
 <div class="menu" id="moreMenu" role="menu" aria-label="More selection tools" hidden>
+  <button role="menuitem" id="mLasso" class="simple-only"><i data-ic="lasso"></i>Lasso tool</button>
+  <button role="menuitem" id="mIso" class="simple-only"><i data-ic="iso"></i>Show only the pop-out</button>
+  <hr class="simple-only">
   <button role="menuitem" id="mInvert"><i data-ic="invert"></i>Invert selection</button>
   <button role="menuitem" id="mGrow"><i data-ic="grow"></i>Grow selection</button>
   <button role="menuitem" id="mShrink"><i data-ic="shrink"></i>Shrink selection</button>
@@ -649,9 +708,17 @@ body[data-step=ring] #badge,body[data-step=export] #badge{display:none}
     <dt><kbd>Ctrl/⌘</kbd>+<kbd>S</kbd></dt><dd>Download (PNG, WebP or layers)</dd>
     <dt><kbd>Double-click</kbd> a slider</dt><dd>Reset it to its default</dd>
   </dl>
+  <h3>Guidance</h3>
+  <div class="row"><label for="tipsOn">Show tips<span class="sub">One short line per step, until your first action there</span></label><div class="grow"><span class="switch"><input id="tipsOn" type="checkbox"><i></i></span></div></div>
   <h3>Appearance</h3>
   <div class="seg full" id="themeSeg" role="group" aria-label="Appearance"><button data-v="auto" aria-pressed="true">Automatic</button><button data-v="light" aria-pressed="false">Light</button><button data-v="dark" aria-pressed="false">Dark</button></div>
   <div class="foot"><button class="btn primary" id="helpClose">Done</button></div>
+</div></dialog>
+
+<dialog id="findDlg" aria-label="Find a tool or setting"><div class="dlg find">
+  <input id="findIn" type="text" role="combobox" aria-expanded="true" aria-controls="findList" aria-label="Find a tool or setting" placeholder="Find a tool or setting, e.g. feather, brush, size" autocomplete="off">
+  <ul id="findList" role="listbox" aria-label="Results"></ul><p class="note" id="findEmpty" hidden>Nothing matches. Try another word.</p>
+  <p class="note find-h"><kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> go · <kbd>Esc</kbd> close</p>
 </div></dialog>
 
 <dialog id="saveDlg" aria-labelledby="saveH"><form method="dialog" class="dlg" id="saveForm">
@@ -686,6 +753,7 @@ const WORK_MAX=1600,FULL_MAX=3072;
 
 /* ---------- icons ---------- */
 const IC={
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
  move:'<path d="M12 3v18M3 12h18M12 3 9 6M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
@@ -957,14 +1025,14 @@ const METALS=[['Gold','#d9a521'],['Silver','#b5bcc6'],['Bronze','#b8733a'],['Cop
   ['Bone','#d9cdb0'],['Wood','#7a5230'],['Onyx','#2b2d33'],['Granite','#7d7f84'],['Slate','#4a5560'],['Sandstone','#b89d78']];
 const GRADS=[['Enemy','#ff8a1f','#7a0c10',45],['Ally','#3ddc84','#0b4f3a',45],['Arcane','#b36cff','#1a2a8c',45],['Lava','#ffd23f','#b3111a',90],['Toxic','#d4ff3d','#1b5e20',45],['Frost','#e6f8ff','#2a6fb0',90]];
 const RING_KEYS=['formula','color','accent','width','count','depth','tex','texAmt','texDens','seed','eCol','gradOn','g1','g2','gAng','gMid','colorKey','lAng','lInt','texRot','lineW','eAmt','eLen'];
-const SETTINGS=['ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
+const SETTINGS=['hideOn','hideA','hideW','hideD','ix','iy','zoom','rot','flip','bgOn','bg','autoFit','pad','popOn','feather','shadow','bri','con','sat','defr','bgC','bgAuto',...RING_KEYS];
 const st={maskVer:0,partial:0,src:null,full:null,sw:0,sh:0,sdata:null,mask:null,bx:null,by:null,embed:null,
   popCv:mk(),softCv:mk(),selCv:mk(),softDirty:true,popDirty:true,selDirty:true,selCount:0,painting:false,
   ix:0,iy:.05,zoom:1.3,rot:0,flip:1,bgOn:true,bg:'#2b2f3a',
   autoFit:true,pad:.08,padCur:.08,padT:.08,fitDirty:true,lockPad:false,snapPad:true,
   formula:'ridge',color:'#d9a521',accent:'#2b2f3a',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',
   gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1,vz:1,vx:0,vy:0,
-  popOn:true,feather:.5,shadow:0,showSel:true,showFrame:true,iso:false,prev:false,kc:null,embedOn:true,
+  hideOn:false,hideA:90,hideW:120,hideD:0,popOn:true,feather:.5,shadow:0,showSel:true,showFrame:true,iso:false,prev:false,kc:null,embedOn:true,
   bri:0,con:0,sat:0,defr:0,bgC:'#808080',bgAuto:true,eReach:4,eTol:14,eSoft:70,eShift:0,speck:30,gap:0,autoSens:50,autoShrink:0,bsoft:0,strand:false,maskView:false,
   tool:'select',mode:'add',alt:false,space:false,tol:30,contig:true,brush:10,exportSize:512,exportWhat:'token',exportFmt:'webp',pal:[],hover:null};
 const RING_DEFAULT={formula:'ridge',color:'#d9a521',accent:'#2b2d33',width:.11,count:1,depth:.75,tex:'none',texAmt:.6,texDens:3,seed:1,eCol:'#5ec8ff',gradOn:false,g1:'#ff8a1f',g2:'#7a0c10',gAng:Math.PI/4,gMid:.5,colorKey:'Gold',lAng:2.356194,lInt:1,texRot:0,lineW:.1,eAmt:5,eLen:1};
@@ -986,7 +1054,7 @@ function applyT(ctx,g){ctx.translate(g.tx,g.ty);ctx.rotate(st.rot);ctx.scale(g.s
 function popBounds(){if(!(st.popOn&&st.selCount&&st.bx&&st.bx.length))return null;
   const k=2/Math.min(st.sw,st.sh)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,bx=st.bx,by=st.by,hx=.5*k*(Math.abs(co)+Math.abs(si));
   let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
-  for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k,X=x*co-y*si+st.ix,Y=x*si+y*co+st.iy;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}
+  for(let j=0;j<bx.length;j++){const x=bx[j]*k*f,y=by[j]*k,X=x*co-y*si+st.ix,Y=x*si+y*co+st.iy;if(st.hideOn&&hideAlpha(X,Y)<.5)continue;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}
   return{x0:x0-hx,x1:x1+hx,y0:y0-hx,y1:y1+hx};}
 /* Auto-fit: the ring stays centred and the frame is exactly as large as ring or pop-out needs, so one of them always touches it */
 function recomputeFit(){let d=1;const b=popBounds();
@@ -1017,14 +1085,31 @@ function maskChanged(){const m=st.mask,d=st.sdata,w=st.sw,h=st.sh,xs=[],ys=[];le
 function selStat(){const p=st.selCount/(st.sw*st.sh)*100;
   $('#selStat').textContent=st.selCount?'Selected: '+(p<1?'under 1':Math.round(p))+'% of the picture':'Nothing selected yet';}
 function sizeTo(cv,w,h){if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}return cv.getContext('2d');}
-/* feather inward only: hard-edged areas fade at their outline, while already soft (hair) pixels and their neighbours are left alone */
-function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.length);
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,v=m[i];let soft=v>2&&v<253;
-    if(!soft){for(let dy=-1;dy<=1&&!soft;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const q=m[yy*w+xx];if(q>2&&q<253){soft=true;break;}}}}
-    out[i]=soft?v:Math.round(Math.min(v,bl[i]));}
+/* feather inward only. Hard-edged areas fade at their outline over at most r px, but never more than about 60% of the local
+   half-thickness, so thin parts (an ear, a strand) stay solid in the middle and only their outermost pixel or two fade.
+   Already soft (hair) pixels and their neighbours are left alone. Image borders are not edges. */
+function maxFilt(src,w,h,r){const out=new Float32Array(src.length),tmp=new Float32Array(src.length),q=new Int32Array(Math.max(w,h)+1);
+  const pass=(get,set,n)=>{let hd=0,tl=0;for(let i=0;i<n+r;i++){if(i<n){const v=get(i);while(tl>hd&&get(q[tl-1])<=v)tl--;q[tl++]=i;}
+    const o=i-r;if(o>=0){while(q[hd]<o-r)hd++;set(o,get(q[hd]));}}};
+  for(let y=0;y<h;y++){const o=y*w;pass(i=>src[o+i],(i,v)=>{tmp[o+i]=v;},w);}
+  for(let x=0;x<w;x++)pass(i=>tmp[i*w+x],(i,v)=>{out[i*w+x]=v;},h);
   return out;}
-function refreshSoft(){if(!st.softDirty)return;const{sw,sh}=st,ctx=sizeTo(st.softCv,sw,sh);
-  const m=st.feather>0?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
+function featherMask(m,w,h,r){const N=w*h,out=new Uint8Array(N),soft=new Uint8Array(N),D=new Float32Array(N);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,v=m[i];let s=v>2&&v<253;
+    if(!s){for(let dy=-1;dy<=1&&!s;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const q=m[yy*w+xx];if(q>2&&q<253){s=true;break;}}}}
+    soft[i]=s?1:0;D[i]=v<253?0:1e9;}
+  const A=1,B=1.4142;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;let d=D[i];if(!d)continue;
+    if(x>0)d=Math.min(d,D[i-1]+A);if(y>0){d=Math.min(d,D[i-w]+A);if(x>0)d=Math.min(d,D[i-w-1]+B);if(x<w-1)d=Math.min(d,D[i-w+1]+B);}D[i]=d;}
+  for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){const i=y*w+x;let d=D[i];if(!d)continue;
+    if(x<w-1)d=Math.min(d,D[i+1]+A);if(y<h-1){d=Math.min(d,D[i+w]+A);if(x<w-1)d=Math.min(d,D[i+w+1]+B);if(x>0)d=Math.min(d,D[i+w-1]+B);}D[i]=d;}
+  const M=maxFilt(D,w,h,Math.ceil(r*1.5)+1);
+  for(let i=0;i<N;i++){const v=m[i];if(soft[i]||D[i]>=r+1){out[i]=v;continue;}
+    const wd=Math.min(r,Math.max(1,.6*(M[i]-.5))),a=Math.max(0,Math.min(1,.4+.6*(D[i]-1)/wd));out[i]=Math.round(v*a);}
+  return out;}
+function refreshSoft(){const hk=hideKey();if(hk!==st.hKey){st.hKey=hk;st.softDirty=true;}if(!st.softDirty)return;const{sw,sh}=st,ctx=sizeTo(st.softCv,sw,sh);
+  const fk=st.maskVer+','+st.feather+','+sw;if(st.fmKey!==fk||!st.fm){st.fm=st.feather>0?featherMask(st.mask,sw,sh,st.feather):st.mask;st.fmKey=fk;}
+  const m=applyHide(st.fm),id=ctx.createImageData(sw,sh),d=id.data;
   for(let i=0,n=sw*sh;i<n;i++){const j=i*4;d[j]=d[j+1]=d[j+2]=255;d[j+3]=m[i];}
   ctx.putImageData(id,0,0);st.softDirty=false;st.popDirty=true;}
 function refreshPop(){refreshSoft();if(!st.popDirty)return;const x=sizeTo(st.popCv,st.sw,st.sh);
@@ -1061,7 +1146,7 @@ function wandRetune(){if(!wand||wandRaf)return;wandRaf=requestAnimationFrame(()=
 function wandCommit(){if(wand&&H.i===wand.hi){H.a[H.i]=snap();updHist();}else commit();}
 function wandDone(){if(!wand)return;cancelAnimationFrame(wandRaf);wandRaf=0;wandRun();wandCommit();}
 function wandStart(u,v,mode){const B=bounds();if(u<B.x0||v<B.y0||u>=B.x1||v>=B.y1)return;wand={u,v,mode,base:st.mask,hi:-1};wandRun();commit(true);wand.hi=H.i;}
-function morph(grow){const w=st.sw,h=st.sh;let m=st.mask;for(let it=0;it<2;it++){const o=new Uint8Array(m.length);
+function morph(grow,n){const w=st.sw,h=st.sh;let m=st.mask;for(let it=0;it<(n||1);it++){const o=new Uint8Array(m.length);
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;
     const l=x>0?m[i-1]:grow?0:255,r=x<w-1?m[i+1]:grow?0:255,u=y>0?m[i-w]:grow?0:255,dn=y<h-1?m[i+w]:grow?0:255;
     o[i]=grow?Math.max(m[i],l,r,u,dn):Math.min(m[i],l,r,u,dn);}
@@ -1642,11 +1727,53 @@ function sgSnap(m){const W=st.sw,H=st.sh,N=W*H,b=new Uint8Array(N);let any=0;for
   const o2=new Uint8Array(out);for(let y=1;y<H-1;y++)for(let xx=1;xx<W-1;xx++){const i=y*W+xx;if(!corr[i])continue;let s=0;for(let q=-1;q<=1;q++)for(let p=-1;p<=1;p++)s+=out[i+q*W+p];o2[i]=Math.round(s/9);}
   return o2;}
 
+/* ===== 05f-hide.js ===== */
+/* ---------- Hide a side: part of the pop-out tucks behind the ring (non-destructive, works in ring space) ---------- */
+const HIDE_DEF={hideOn:false,hideA:90,hideW:120,hideD:0};
+const HIDE_SIDES={bottom:90,left:180,right:0,top:-90};
+/* alpha multiplier at a point in ring radii (ring centre 0,0; ring outer edge radius 1): 0 = hidden, 1 = shown */
+function hideAlpha(X,Y){if(!st.hideOn)return 1;const r=Math.hypot(X,Y),r0=(1-st.width)+st.hideD*st.width;if(r<r0)return 1;
+  let d=Math.atan2(Y,X)*180/Math.PI-st.hideA;d=((d%360)+540)%360-180;
+  return 1-Math.max(0,Math.min(1,(st.hideW/2-Math.abs(d))*(Math.PI/180)*Math.max(r,.3)/.04));}
+function hideKey(){return st.hideOn?[st.hideA,st.hideW,st.hideD,st.width,st.ix,st.iy,st.zoom,st.rot,st.flip,st.sw,st.sh].join():'';}
+function applyHide(m){if(!st.hideOn)return m;const w=st.sw,h=st.sh,k=2/Math.min(w,h)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,o=m.slice();
+  for(let y=0;y<h;y++){const py=(y+.5-h/2)*k;for(let x=0;x<w;x++){const i=y*w+x;if(!m[i])continue;const px=(x+.5-w/2)*k*f,X=px*co-py*si+st.ix,Y=px*si+py*co+st.iy,a=hideAlpha(X,Y);if(a<1)o[i]=Math.round(m[i]*a);}}
+  return o;}
+function hideChanged(){st.softDirty=st.popDirty=st.fitDirty=true;syncHide();draw();}
+function setHideSide(name){if(name==='none')st.hideOn=false;else{st.hideOn=true;st.hideA=HIDE_SIDES[name];}lab(name==='none'?'Hide a side: off':'Hide a side: '+name);hideChanged();commit();}
+function syncHide(){const b=$$('#hideSeg button');b.forEach(x=>{const v=x.dataset.v,on=v==='none'?!st.hideOn:st.hideOn&&Math.abs(((st.hideA-HIDE_SIDES[v])%360+540)%360-180)<1;x.setAttribute('aria-pressed',String(on));});
+  $('#hideFine').hidden=!st.hideOn;$('#hideNote').textContent=st.hideOn&&!b.some(x=>x.getAttribute('aria-pressed')==='true')?'Custom angle. Drag the round handles on the ring.':'';}
+/* two round handles on the ring end of the hidden arc */
+function hideHandles(g){const a0=(st.hideA-st.hideW/2)*Math.PI/180,a1=(st.hideA+st.hideW/2)*Math.PI/180;
+  return[{k:'s',a:a0,x:g.c+g.R*Math.cos(a0),y:g.c+g.R*Math.sin(a0)},{k:'e',a:a1,x:g.c+g.R*Math.cos(a1),y:g.c+g.R*Math.sin(a1)}];}
+function hideOverlay(ctx,g,S){const R=g.R,r0=R*((1-st.width)+st.hideD*st.width),a0=(st.hideA-st.hideW/2)*Math.PI/180,a1=(st.hideA+st.hideW/2)*Math.PI/180,z=1/st.vz;
+  ctx.save();ctx.beginPath();ctx.arc(g.c,g.c,R*1.9,a0,a1);ctx.arc(g.c,g.c,r0,a1,a0,true);ctx.closePath();ctx.fillStyle='rgba(13,127,120,.16)';ctx.fill();
+  for(const[w,col]of[[5*z,'rgba(0,0,0,.55)'],[2.4*z,'#3cc2b8']]){ctx.lineWidth=w;ctx.strokeStyle=col;ctx.beginPath();ctx.arc(g.c,g.c,R,a0,a1);ctx.stroke();}
+  for(const h of hideHandles(g)){ctx.beginPath();ctx.arc(h.x,h.y,9*z,0,TAU);ctx.fillStyle='#3cc2b8';ctx.fill();ctx.lineWidth=2*z;ctx.strokeStyle='#fff';ctx.stroke();}
+  ctx.restore();}
+let hdrag=null;
+function hideGrab(e){if(!st.hideOn)return false;const g=geom(cv.width,effPad()),q=toTok(pt(e)),tol=Math.max(18,cv.width/24)/st.vz;
+  for(const h of hideHandles(g))if(Math.hypot(q.x-h.x,q.y-h.y)<=tol){hdrag=h.k;return true;}return false;}
+function hideDrag(e){const g=geom(cv.width,effPad()),q=toTok(pt(e)),a=Math.atan2(q.y-g.c,q.x-g.c)*180/Math.PI;
+  const s0=st.hideA-st.hideW/2,e0=st.hideA+st.hideW/2;let s=hdrag==='s'?a:s0,en=hdrag==='e'?a:e0;
+  let w=((en-s)%360+360)%360;w=clamp(w,20,300);if(hdrag==='s')s=en-w;else en=s+w;
+  st.hideW=Math.round(w);st.hideA=(((s+w/2)+540)%360)-180;if(typeof SLI!=='undefined'&&SLI.hideW)SLI.hideW.sync();hideChanged();}
+
 /* ===== 06-history.js ===== */
 /* ---------- history: one stack for selection, view and ring changes ---------- */
 const H={a:[],i:-1};
 function snap(){return{m:st.mask,s:JSON.stringify(SETTINGS.map(k=>st[k]))};}
-function commit(keep){if(!st.src)return;if(!keep)wand=null;const s=snap(),cur=H.a[H.i];if(cur&&cur.m===s.m&&cur.s===s.s)return;
+/* read-only edit history: short text lines, saved with the token. Repeats of the same kind of step are counted, not listed. */
+const LOGMAX=150;st.log=[];
+function lab(t){st.lab=t;}
+const KEYNAME={ix:'moved picture',iy:'moved picture',zoom:'resized picture',rot:'rotated picture',flip:'flipped picture',pad:'canvas padding',autoFit:'auto-fit canvas',popOn:'pop-out on/off',bgOn:'fill',bg:'fill colour'};
+function logStep(prev,s){let t=st.lab;st.lab=null;
+  if(!t){const a=JSON.parse(prev.s),b=JSON.parse(s.s),ch=[];SETTINGS.forEach((k,i)=>{if(JSON.stringify(a[i])!==JSON.stringify(b[i])){const n=KEYNAME[k]||(typeof SLI!=='undefined'&&SLI[k]&&SLI[k].label?SLI[k].label.textContent.toLowerCase():'ring '+k);if(!ch.includes(n))ch.push(n);}});
+    if(prev.m!==s.m&&!ch.length){const T={select:'Wand',lasso:'Lasso',magnet:'Magnet lasso',brush:'Brush'}[st.tool];t=T?T+(typeof curMode==='function'&&curMode()==='sub'?' removed':' added')+' to the selection':'Selection edited';}t=t||(ch.length?'Changed '+ch.slice(0,4).join(', ')+(ch.length>4?' …':''):'');}
+  if(!t)return;const L=st.log,last=L[L.length-1];
+  if(last&&last.t===t)last.n++;else{L.push({t,n:1});if(L.length>LOGMAX)L.shift();}}
+function logLines(){return st.log.map(e=>e.n>1?e.t+' ×'+e.n:e.t);}
+function commit(keep){if(!st.src)return;if(!keep)wand=null;const s=snap(),cur=H.a[H.i];if(cur&&cur.m===s.m&&cur.s===s.s)return;if(cur&&H.i>=0)logStep(cur,s);if(typeof tipDone==='function'&&cur)tipDone();
   H.a.length=H.i+1;H.a.push(s);if(H.a.length>40)H.a.shift();H.i=H.a.length-1;updHist();autosaveSoon();}
 function restore(sn){wand=null;st.mask=sn.m;const v=JSON.parse(sn.s);SETTINGS.forEach((k,i)=>st[k]=v[i]);
   maskChanged();syncUI();thumbsSoon();draw();}
@@ -1682,6 +1809,7 @@ function render(ctx,S,o={}){
   if(!o.clean){
     if(!prev&&tab==='popout'&&st.sgShow&&!iso)sgOverlay(ctx,g,S);
     if(!prev&&tab==='popout'&&st.showSel&&st.selCount>0&&!iso)selOverlay(ctx,g,S);
+    if(!prev&&tab==='popout'&&st.hideOn&&!iso)hideOverlay(ctx,g,S);
     if(st.tool==='brush'&&st.hover&&!st.space){const r=brushR()*g.sc,sub=curMode()==='sub';ctx.save();ctx.beginPath();ctx.arc(st.hover.x,st.hover.y,r,0,TAU);
       ctx.fillStyle=sub?'rgba(255,69,58,.22)':'rgba(48,209,88,.22)';ctx.fill();ctx.lineWidth=2.5/st.vz;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.stroke();ctx.lineWidth=1.2/st.vz;ctx.strokeStyle='#fff';ctx.stroke();ctx.restore();}
     {const L=st.lasso||st.magDraw;if(L&&L.pts.length>1){const sub=L.mode==='sub';ctx.save();applyT(ctx,g);ctx.beginPath();L.pts.forEach((p,i)=>i?ctx.lineTo(p.u,p.v):ctx.moveTo(p.u,p.v));ctx.closePath();
@@ -1772,6 +1900,7 @@ cv.addEventListener('pointerdown',e=>{if(!st.src)return;if(e.pointerType==='mous
   dismissCoach(true);cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
     if(st.painting)endPaint();return;}
+  if(tab==='popout'&&!st.space&&hideGrab(e)){cv.classList.add('grabbing');return;}
   if(st.tool==='move'||st.space){const vw=st.space&&viewTool()&&st.vz>1;drag={x:e.clientX,y:e.clientY,view:vw};if(!vw)st.lockPad=true;cv.classList.add('grabbing');}
   else if(st.tool==='select'){const q=imgPt(e);wandStart(q.u,q.v,curMode(e));}
   else if(st.tool==='lasso'){const q=imgPt(e);st.lasso={pts:[q],mode:curMode(e)};draw();}
@@ -1781,6 +1910,7 @@ cv.addEventListener('pointermove',e=>{
   if(st.tool==='brush'){st.hover=toTok(pt(e));if(!ptrs.has(e.pointerId))draw();}
   if(st.mag&&!ptrs.has(e.pointerId)){magMove(e);return;}
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(hdrag){hideDrag(e);return;}
   if(st.mag){magMove(e);return;}
   if(ptrs.size===2&&gest){const[a,b]=[...ptrs.values()],ratio=Math.hypot(a.x-b.x,a.y-b.y)/gest.d;
     if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
@@ -1792,7 +1922,7 @@ cv.addEventListener('pointermove',e=>{
     if(drag.view){st.vx+=(e.clientX-drag.x)*p.k/S;st.vy+=(e.clientY-drag.y)*p.k/S;clampView();draw();}
     else{const R=S*(.5-effPad())*st.vz;st.ix+=(e.clientX-drag.x)*p.k/R;st.iy+=(e.clientY-drag.y)*p.k/R;viewChanged();}
     drag={x:e.clientX,y:e.clientY,view:drag.view};}});
-const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest;ptrs.delete(e.pointerId);if(ptrs.size<2)gest=null;drag=null;cv.classList.remove('grabbing');
+const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest||hdrag;if(hdrag){hdrag=null;lab('Hide a side: turned');}ptrs.delete(e.pointerId);if(ptrs.size<2)gest=null;drag=null;cv.classList.remove('grabbing');
   if(st.painting)endPaint();
   if(st.lasso)lassoApply();
   if(st.mag)magUp(e);
@@ -1890,9 +2020,9 @@ function loadCanvas(full,info){
   st.sdata=s.getContext('2d',{willReadFrequently:true}).getImageData(0,0,s.width,s.height).data;
   st.mask=new Uint8Array(s.width*s.height);maskChanged();
   st.pal=extractPalette(s);renderPalette();
-  Object.assign(st,ADJ_DEFAULT,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
+  Object.assign(st,ADJ_DEFAULT,HIDE_DEF,{ix:0,iy:0,zoom:1,rot:0,flip:1,snapPad:true,vz:1,vx:0,vy:0,eReach:edgeReachDefault(),gap:0,autoSens:50,autoShrink:0});eSess=null;wand=null;clampView();
   $('#srcInfo').textContent=info;
-  H.a=[];H.i=-1;updHist();if(typeof sgClose==='function')sgClose();}
+  H.a=[];H.i=-1;st.log=[];st.lab=null;updHist();if(typeof sgClose==='function')sgClose();}
 function loadFile(f){
   if(f.size>LIMITS.file)return toast('That file is too large (limit about 120 MB).');
   busy(1,'Loading image…');const url=URL.createObjectURL(f),im=new Image();
@@ -1971,7 +2101,7 @@ const SCHEMA={ix:NUM(-6,6),iy:NUM(-6,6),zoom:NUM(.005,8),rot:NUM(-12.6,12.6),fli
   feather:NUM(0,12),shadow:NUM(0,1),formula:v=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(PAT,v)?v:undefined,color:COLOR,accent:COLOR,width:NUM(.04,.3),count:NUM(0,90),depth:NUM(0,1),
   tex:v=>typeof v==='string'?fixTex(v):undefined,texAmt:NUM(0,1),texDens:NUM(.4,5),seed:v=>Number.isInteger(v)?clamp(v,0,1e9):undefined,eCol:COLOR,gradOn:BOOL,g1:COLOR,g2:COLOR,
   gAng:NUM(-12.6,12.6),gMid:NUM(.05,.95),colorKey:STR(40),lAng:NUM(-12.6,12.6),lInt:NUM(0,1.5),texRot:NUM(-12.6,12.6),lineW:NUM(.01,.4),eAmt:NUM(1,24),eLen:NUM(.2,2),
-  bri:NUM(-100,100),con:NUM(-100,100),sat:NUM(-100,100),defr:NUM(0,1),bgC:COLOR,bgAuto:BOOL};
+  hideOn:BOOL,hideA:NUM(-180,180),hideW:NUM(20,300),hideD:NUM(0,1),bri:NUM(-100,100),con:NUM(-100,100),sat:NUM(-100,100),defr:NUM(0,1),bgC:COLOR,bgAuto:BOOL};
 function sanitizeSettings(o){const out={};if(!o||typeof o!=='object')return out;
   for(const k of SETTINGS){if(!Object.prototype.hasOwnProperty.call(o,k))continue;const v=SCHEMA[k]?SCHEMA[k](o[k]):undefined;if(v!==undefined)out[k]=v;}return out;}
 function validMeta(meta){const M=meta&&meta.mask;
@@ -2007,6 +2137,8 @@ async function restoreProject({meta,img},msg){busy(1,'Opening project…');
     Object.assign(st,RING_DEFAULT,sanitizeSettings(meta.settings));
     if(!PAT[st.formula])st.formula='plain';
     const M=meta.mask,m=typeof M.rle8==='string'?rle8Dec(b64dec(M.rle8),M.w*M.h):rleDec(b64dec(M.rle),M.w*M.h);st.mask=(M.w===st.sw&&M.h===st.sh)?m:resampleMask(m,M.w,M.h);maskChanged();
+    st.log=Array.isArray(meta.history)?meta.history.slice(-LOGMAX).filter(x=>typeof x==='string').map(x=>{const q=/^(.*) ×(\d+)$/.exec(x.slice(0,100));return q?{t:q[1],n:Math.min(9999,+q[2])}:{t:x.slice(0,100),n:1};}):[];
+    st.log.push({t:'Reopened from a saved token',n:1});
     st.padCur=st.pad;st.snapPad=true;syncUI();commit();thumbsSoon();draw();setTab('image');dismissCoach(true);toast(msg||'Project restored. Everything is editable again.');
   }catch(e){toast('Could not read the project data in that file.');}finally{busy(-1);}}
 let pendingOpen=null;
@@ -2065,6 +2197,8 @@ const SL={
  sat:{label:'Saturation',min:-100,max:100,step:1,unit:'',k:1,def:0,fx:'adj',tip:'How vivid the colours are. -100 is black and white.'},
  defr:{label:'Halo removal',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'defr',tip:'Removes leftover background colour from the soft, semi-transparent edge pixels (hair, fur)'},
  bsoft:{label:'Brush softness',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'none',tip:'0% is a hard brush. Higher values fade the edge of the stroke.'},
+ hideW:{label:'Hidden arc',min:20,max:300,step:5,unit:'°',k:1,def:120,fx:'hide',tip:'How much of the ring the pop-out is hidden behind. You can also drag the round handles on the ring.'},
+ hideD:{label:'Overlap the ring',min:0,max:100,step:1,unit:'%',k:.01,def:0,fx:'hide',tip:'0% tucks the pop-out fully behind the ring. Higher lets it cover part of the ring.'},
  lInt:{label:'Strength',min:0,max:150,step:1,unit:'%',k:.01,def:100,fx:'ring',tip:'How strong the light and shade are. 0% is flat.'}
 };
 const SLI={},syncers=[];let bgVer=-1;
@@ -2074,6 +2208,7 @@ function fx(kind){if(kind==='wand'){wandRetune();return;}
   if(kind==='adj'){st.popDirty=true;draw();return;}
   if(kind==='defr'){if(st.bgAuto&&st.defr>0&&bgVer!==st.maskVer){bgVer=st.maskVer;st.bgC=rgbToHex(estimateBg(st.mask,bounds(),Math.round(st.eReach)).c);}st.popDirty=true;draw();return;}
   if(kind==='none'){draw();return;}
+  if(kind==='hide'){hideChanged();return;}
   if(kind==='view'||kind==='fit')st.fitDirty=true;
   if(kind==='soft'){st.softDirty=st.popDirty=st.fitDirty=true;}
   if(kind==='ring')thumbsSoon();draw();}
@@ -2137,9 +2272,9 @@ function updBadge(){const b=$('#badge'),m=curMode(),T={move:'Move',select:'Selec
   b.className='badge'+(st.tool==='move'||st.space?'':' '+m);b.lastChild.textContent=st.space?'Pan (Space held)':st.tool==='move'?T:T+' · '+(m==='sub'?'Remove':'Add');}
 
 /* ---------- selection actions: toolbar buttons + "More" menu ---------- */
-function clearSel(){if(!st.src||!st.selCount)return;st.mask=new Uint8Array(st.mask.length);maskChanged();draw();commit();toast('Selection cleared. Undo brings it back.');}
-function invertSel(){if(!st.src)return;const m=new Uint8Array(st.mask.length),d=st.sdata;for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>8?255-st.mask[i]:0;st.mask=m;maskChanged();draw();commit();}
-function morphSel(grow){if(!st.src)return;busy(1,grow?'Growing…':'Shrinking…');setTimeout(()=>{morph(grow);busy(-1);draw();commit();},10);}
+function clearSel(){if(!st.src||!st.selCount)return;lab('Selection cleared');st.mask=new Uint8Array(st.mask.length);maskChanged();draw();commit();toast('Selection cleared. Undo brings it back.');}
+function invertSel(){if(!st.src)return;lab('Selection inverted');const m=new Uint8Array(st.mask.length),d=st.sdata;for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>8?255-st.mask[i]:0;st.mask=m;maskChanged();draw();commit();}
+function morphSel(grow){if(!st.src||!st.selCount)return;const n=st.nudge;lab((grow?'Grew':'Shrank')+' the edge by '+n+' px');morph(grow,n);draw();commit();}
 $('#bAuto').onclick=()=>{if(tab!=='popout')setTab('popout');runSuggest();};$('#bClear').onclick=clearSel;
 const menu=$('#moreMenu'),bMore=$('#bMore');
 function closeMenu(){menu.hidden=true;bMore.setAttribute('aria-expanded','false');}
@@ -2150,6 +2285,9 @@ bMore.onclick=()=>menu.hidden?openMenu():closeMenu();
 document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&!bMore.contains(e.target))closeMenu();});
 menu.addEventListener('keydown',e=>{const bs=[...menu.querySelectorAll('button')],i=bs.indexOf(document.activeElement);
   if(e.key==='Escape'){closeMenu();bMore.focus();}else if(e.key==='ArrowDown'){e.preventDefault();bs[(i+1)%bs.length].focus();}else if(e.key==='ArrowUp'){e.preventDefault();bs[(i+bs.length-1)%bs.length].focus();}});
+$('#bNudgeIn').onclick=()=>morphSel(false);$('#bNudgeOut').onclick=()=>morphSel(true);
+const nudgeN=$('#nudgeN');nudgeN.oninput=()=>{st.nudge=clamp(Math.round(+nudgeN.value)||1,1,10);};nudgeN.onchange=()=>{nudgeN.value=st.nudge;try{localStorage.setItem('tw_nudge',st.nudge);}catch(e){}};
+try{st.nudge=clamp(+localStorage.getItem('tw_nudge')||1,1,10);}catch(e){st.nudge=1;}nudgeN.value=st.nudge;
 $('#mInvert').onclick=()=>{closeMenu();invertSel();};$('#mGrow').onclick=()=>{closeMenu();morphSel(true);};$('#mShrink').onclick=()=>{closeMenu();morphSel(false);};
 /* preview background + isolate view (display only) */
 function setPreviewBg(v){$('#board').dataset.bg=v;$('#tableStrip').dataset.bg=v;$$('#moreMenu [data-bg]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.bg===v)));store.set('tw_bg',v);}
@@ -2163,7 +2301,7 @@ syncers.push(()=>$('#bPrev').setAttribute('aria-pressed',String(st.prev)));
 syncers.push(updBadge);
 syncers.push(()=>$('#bIso').setAttribute('aria-pressed',String(st.iso)));
 /* ---------- edge tools ---------- */
-const fixNow=()=>{if(!st.selCount)return toast('Choose the pop-out first, then fix its edges.');busy(1,'Fixing edges…');setTimeout(()=>{try{fixEdges(false);}finally{busy(-1);}},20);};
+const fixNow=()=>{if(!st.selCount)return toast('Choose the pop-out first, then fix its edges.');lab('Fix edges automatically');busy(1,'Fixing edges…');setTimeout(()=>{try{fixEdges(false);}finally{busy(-1);}},20);};
 $('#bFixEdges').onclick=fixNow;
 $('#bClean').onclick=()=>{if(!st.selCount)return toast('Nothing is selected yet.');const c=cleanMask(st.mask,bounds(),speckArea(),true);
   if(!c.specks&&!c.filled)return toast('No specks or holes this small.');
@@ -2253,7 +2391,7 @@ function sgRender(){const list=$('#sgList');list.textContent='';
   $('#sgBar').hidden=false;$('#sgUse').disabled=true;sg.sel=-1;sgPreview(null);}
 function sgSelect(i,again){if(!sg)return;if(again&&sg.sel===i){sgApply(sg.pick[i]);return;}
   sg.sel=i;$$('#sgList .sg-card').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));$('#sgUse').disabled=false;sgPreview(sg.pick[i]);}
-function sgApply(c){if(!c)return;let m=c.mask.slice();const matte=!!c.mask.bg;
+function sgApply(c){if(!c)return;lab('Auto suggestion applied'+(c.label?': '+c.label:''));let m=c.mask.slice();const matte=!!c.mask.bg;
   if(matte&&!autoFixOn())for(let i=0;i<m.length;i++)m[i]=m[i]>=128?255:0;
   st.mask=m;maskChanged();let note='Pop-out applied. Fine-tune it with Select, Lasso or Brush, or Undo.';
   if(matte&&autoFixOn()){st.bgC=c.mask.bg;st.bgAuto=true;st.defr=1;eSess=null;}
@@ -2270,6 +2408,88 @@ $('#sgClose').onclick=sgClose;
 
 /* apply the top suggestion straight away (used by the tests; the app always lets the user choose) */
 function suggestBest(kind,id){const r=sgCandidates(),c=id?r.cands.find(x=>x.id===id):sgPick(r.cands).find(x=>!kind||x.kind===kind);if(!c)return false;sgApply(c);return true;}
+
+/* ===== 11b-guided.js ===== */
+/* ---------- Guided and Studio modes, Fine-tune drawers, edge styles, Hide a side, tips, progress, Find ---------- */
+{const sv=store.get('tw_studio');st.studio=sv===null?window.TW_STUDIO===true:sv==='1';}   /* first visit: Guided (tests preset Studio through window.TW_STUDIO) */
+const TOOL_NAMES={select:['Click','Select'],brush:['Paint','Brush'],magnet:['Trace','Magnet']};
+function applyMode(){document.body.classList.toggle('simple',!st.studio);const b=$('#bMode');b.setAttribute('aria-pressed',String(st.studio));b.lastElementChild.textContent=st.studio?'Guided':'Studio';
+  b.title=st.studio?'Back to the guided view: essentials first, the rest under Fine-tune.':'Studio shows every control at once, as in earlier versions.';
+  for(const[k,v]of Object.entries(TOOL_NAMES)){const s=$('.tbtn[data-tool='+k+'] span');if(s)s.textContent=st.studio?v[1]:v[0];}
+  $('#selHelp').innerHTML=st.studio?'Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.':'Start with <b>Auto</b>, then refine with <b>Click</b>, <b>Paint</b> or <b>Trace</b> in the toolbar next to the preview.';
+  if(!st.studio)$('#secLooks').open=true;
+  store.set('tw_studio',st.studio?'1':'0');showTip();}
+$('#bMode').onclick=()=>{st.studio=!st.studio;applyMode();rove();toast(st.studio?'Studio: every control is visible.':'Guided: essentials first. Tap Fine-tune for more.');};
+
+/* Fine-tune drawers: remembered per step */
+let fineOpen={};try{fineOpen=JSON.parse(store.get('tw_fine')||'{}')||{};}catch(e){fineOpen={};}
+function applyFine(){$$('.panel').forEach(p=>p.classList.toggle('open-fine',!!fineOpen[p.id.slice(2)]));
+  $$('.fineBtn').forEach(b=>{const o=!!fineOpen[b.dataset.fine];b.setAttribute('aria-expanded',String(o));b.textContent=o?'Hide fine-tune':'Fine-tune';});}
+function openFineFor(el){const p=el.closest('.panel');if(p&&el.closest('.fine')&&!fineOpen[p.id.slice(2)]){fineOpen[p.id.slice(2)]=1;store.set('tw_fine',JSON.stringify(fineOpen));applyFine();}}
+$$('.fineBtn').forEach(b=>b.onclick=()=>{fineOpen[b.dataset.fine]=fineOpen[b.dataset.fine]?0:1;store.set('tw_fine',JSON.stringify(fineOpen));applyFine();});
+
+/* Edge style: three presets that set feather and halo removal together */
+const EDGE_STYLES={crisp:{feather:.5,defr:1},natural:{feather:2,defr:.5},soft:{feather:4,defr:.8}};
+const edgeNow=()=>Object.keys(EDGE_STYLES).find(k=>Math.abs(EDGE_STYLES[k].feather-st.feather)<.01&&Math.abs(EDGE_STYLES[k].defr-st.defr)<.02)||'';
+bindSeg($('#edgeSeg'),edgeNow,v=>{if(!st.src)return;Object.assign(st,EDGE_STYLES[v]);fx('defr');st.softDirty=st.popDirty=st.fitDirty=true;SLI.feather.sync();SLI.defr.sync();lab('Edge style: '+v);draw();commit();});
+/* Hide a side */
+$$('#hideSeg button').forEach(b=>b.addEventListener('click',()=>{if(st.src)setHideSide(b.dataset.v);}));
+syncers.push(syncHide);
+
+/* tips: one short line, shown once per step until the first action there */
+const TIPS={popout:'Get the person out. Keep the ear over the ring. Hide the bottom behind the border.',ring:'Pick a look, then change its colour.',export:'Choose a size and save. Keep editable lets you reopen it later.'};
+let tipSeen={};try{tipSeen=JSON.parse(store.get('tw_tipseen')||'{}')||{};}catch(e){tipSeen={};}
+let tipsOff=store.get('tw_tips')==='off';
+function showTip(){const t=$('#tip'),k=typeof tab==='string'?tab:'image',on=!st.studio&&!tipsOff&&TIPS[k]&&!tipSeen[k]&&!!st.src;t.hidden=!on;if(on)$('#tipT').textContent=TIPS[k];}
+function tipDone(){if(!$('#tip').hidden){tipSeen[tab]=1;store.set('tw_tipseen',JSON.stringify(tipSeen));$('#tip').hidden=true;}}
+$('#tipX').onclick=()=>{tipDone();};
+{const sw=$('#tipsOn');sw.checked=!tipsOff;sw.addEventListener('change',()=>{tipsOff=!sw.checked;store.set('tw_tips',tipsOff?'off':'on');if(!tipsOff){tipSeen={};store.set('tw_tipseen','{}');}showTip();});}
+
+/* progress: a step shows a check once you have moved past it with something to show */
+let maxStep=0;
+function updProgress(){maxStep=Math.max(maxStep,TABS.indexOf(tab));
+  const ok=[!!st.src,st.selCount>0,true,false];TABS.forEach((t,i)=>$('#t-'+t).classList.toggle('done',i<maxStep&&ok[i]&&i!==TABS.indexOf(tab)));}
+
+/* ---------- Find: search every tool, control and button ---------- */
+let findList=[];
+function findBuild(){const E=[];const add=(name,keys,run,where)=>E.push({name,keys:(keys||'').toLowerCase(),run,where});
+  const T=(tool,name,keys)=>add(name,keys,()=>{setTab('popout');setTool(tool);cv.focus({preventScroll:true});},'Tool');
+  T('select','Click (wand)','select wand magic click colour area');T('brush','Paint (brush)','brush paint draw hair');T('magnet','Trace (magnetic lasso)','magnet magnetic lasso trace edge outline');T('lasso','Lasso','lasso freehand draw outline');
+  add('Move picture','move drag position place',()=>{setTab('image');cv.focus({preventScroll:true});},'Tool');
+  add('Auto suggestions','auto suggest candidates cut out',()=>{$('#bAuto').click();},'Action');
+  add('Preview','preview finished clean',()=>$('#bPrev').click(),'View');add('Isolate pop-out','isolate only pop-out',()=>{setTab('popout');$('#bIso').click();},'View');
+  add('Undo','undo',()=>$('#bUndo').click(),'Action');add('Redo','redo',()=>$('#bRedo').click(),'Action');
+  add(st.studio?'Guided mode':'Studio mode','studio guided simple advanced all controls',()=>$('#bMode').click(),'View');
+  add('Help and shortcuts','help shortcuts keys how',()=>$('#bHelp').click(),'Help');
+  const seen=new Set();
+  $$('.panel').forEach(p=>{const step=p.id.slice(2);
+    p.querySelectorAll('[data-sl]').forEach(h=>{const s=SL[h.dataset.sl];if(!s||seen.has(h.dataset.sl))return;seen.add(h.dataset.sl);add(s.label,(s.tip||'')+' '+h.dataset.sl,()=>findGo(h,SLI[h.dataset.sl].range),'Slider · '+TABLABEL[step]);});
+    p.querySelectorAll('summary,.btn,.link,.chip,.row>label,.seg button,.fineBtn').forEach(el=>{let t=(el.firstChild&&el.firstChild.nodeType===3?el.firstChild.textContent:el.textContent).trim().replace(/\s+/g,' ');
+      if(!t||t.length>40||el.closest('#looks,#gridMetal,#gridGrad,#patGrid,#texGrid,.pal')||el.id==='fname')return;
+      const k=step+'|'+t.toLowerCase();if(seen.has(k))return;seen.add(k);add(t,el.title||'',()=>findGo(el,el.matches('label')?document.getElementById(el.htmlFor)||el:el),TABLABEL[step]);});});
+  return E;}
+const TABLABEL={image:'Image',popout:'Pop-out',ring:'Ring',export:'Export'};
+function findGo(host,focusEl){const p=host.closest('.panel');setTab(p.id.slice(2));openFineFor(host);let d=host.closest('details');while(d){d.open=true;d=d.parentElement&&d.parentElement.closest('details');}
+  requestAnimationFrame(()=>{host.scrollIntoView({block:'center',behavior:REDUCED?'auto':'smooth'});if(focusEl&&focusEl.focus)focusEl.focus({preventScroll:true});host.classList.add('flash');setTimeout(()=>host.classList.remove('flash'),1600);});}
+const findDlg=$('#findDlg'),findIn=$('#findIn'),findUl=$('#findList');let findSel=0,findRes=[];
+function findRender(){const q=findIn.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  findRes=findList.map(e=>{const hay=e.name.toLowerCase()+' '+e.keys;let sc=0;for(const w of q){if(e.name.toLowerCase().startsWith(w))sc+=3;else if(e.name.toLowerCase().includes(w))sc+=2;else if(hay.includes(w))sc+=1;else return null;}return{e,sc};}).filter(Boolean).sort((a,b)=>b.sc-a.sc).slice(0,30);
+  findSel=Math.min(findSel,Math.max(0,findRes.length-1));findUl.textContent='';
+  findRes.forEach((r,i)=>{const li=document.createElement('li');li.setAttribute('role','option');li.setAttribute('aria-selected',String(i===findSel));li.id='fo'+i;
+    const a=document.createElement('span');a.textContent=r.e.name;const b=document.createElement('small');b.textContent=r.e.where;li.append(a,b);li.onclick=()=>findRun(i);findUl.appendChild(li);});
+  findIn.setAttribute('aria-activedescendant',findRes.length?'fo'+findSel:'');
+  $('#findEmpty').hidden=!!findRes.length;}
+function findRun(i){const r=findRes[i];if(!r)return;findDlg.close();setTimeout(()=>r.e.run(),30);}
+function findOpen(){if(findDlg.open)return;findList=findBuild();findIn.value='';findSel=0;findRender();findDlg.showModal();findIn.focus();}
+$('#bFind').onclick=findOpen;
+findIn.addEventListener('input',()=>{findSel=0;findRender();});
+findIn.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();findSel=Math.min(findRes.length-1,findSel+1);findRender();$('#fo'+findSel)?.scrollIntoView({block:'nearest'});}
+  else if(e.key==='ArrowUp'){e.preventDefault();findSel=Math.max(0,findSel-1);findRender();$('#fo'+findSel)?.scrollIntoView({block:'nearest'});}
+  else if(e.key==='Enter'){e.preventDefault();findRun(findSel);}});
+findDlg.addEventListener('click',e=>{if(e.target===findDlg)findDlg.close();});
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();findOpen();}},true);
+/* More menu extras for tools that left the toolbar in Guided mode */
+$('#mLasso').onclick=()=>{closeMenu();setTool('lasso');};$('#mIso').onclick=()=>{closeMenu();$('#bIso').click();};
 
 /* ===== 12-looks.js ===== */
 /* ---------- pattern grid, colour swatches, looks ---------- */
@@ -2339,8 +2559,12 @@ function thumbsSoon(force){thumbsStale=true;if(tab!=='ring')return;clearTimeout(
 function thumbsNow(){if(tab!=='ring')return;thumbsStale=false;
   PAT_ORDER.forEach(id=>{const P=PAT[id],c=patBtns[id].querySelector('canvas').getContext('2d');c.clearRect(0,0,120,120);
     drawRing(c,60,56,{...st,formula:id,tex:'none',width:.3,count:id===st.formula?st.count:P.n,depth:id===st.formula?st.depth:P.d,lineW:id===st.formula?st.lineW:(P.xd||.1)});});
+  /* each look is drawn on your own picture and pop-out, so you choose between real results */
   $$('#looks .look').forEach(d=>{const l=lookFull(d._look),c=d.querySelector('canvas').getContext('2d');c.clearRect(0,0,112,112);
-    drawRing(c,56,52,{...l,width:Math.min(.34,l.width*2.2)});});}
+    if(!st.src){drawRing(c,56,52,{...l,width:Math.min(.34,l.width*2.2)});return;}
+    const keep={};RING_KEYS.forEach(k=>keep[k]=st[k]);const sv={shadow:st.shadow,iso:st.iso,prev:st.prev,tool:st.tool,vz:st.vz,vx:st.vx,vy:st.vy};
+    Object.assign(st,l,{iso:false,prev:false,vz:1,vx:0,vy:0});
+    try{render(c,112,{clean:true,pad:st.autoFit?st.padCur:st.pad});}finally{Object.assign(st,keep,sv);}});}
 
 /* ===== 13-tabs-export.js ===== */
 /* ---------- tabs ---------- */
@@ -2349,6 +2573,7 @@ function setTab(name,focus){tab=name;$('#toast').classList.remove('on');document
   if(name!=='popout'&&typeof sgClose==='function')sgClose();
   stepTool();rove();
   if(name==='popout'&&st.sgPending&&!st.selCount&&st.src){st.sgPending=false;setTimeout(()=>{if(tab==='popout'&&!st.selCount)runSuggest();},80);}
+  if(typeof showTip==='function'){showTip();updProgress();}
   if(focus)$('#t-'+name).focus();
   if(name==='ring'&&thumbsStale)thumbsNow();if(name==='export'){updExport();miniSoon(true);}
   if(!DESKTOP.matches)scrollTo({top:0});else $('.inspector').scrollTop=0;}
@@ -2398,14 +2623,16 @@ async function exportPng(){busy(1,'Rendering…');await new Promise(r=>setTimeou
   try{const r=await exportFile();if(!r.blob)return toast('Export failed.');await saveBlob(r.blob,r.name);}finally{busy(-1);}}
 function projectMeta(e){const r=e.crop,cs=cropSettings(r),m=cropMask(r);
   return{app:'token-workshop',v:3,created:new Date().toISOString(),img:{type:e.type,crop:{x:r.x,y:r.y,w:r.w,h:r.h,W:st.sw,H:st.sh}},
-  settings:{...Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),...cs},mask:{w:r.w,h:r.h,rle8:b64enc(rle8Enc(m))}};}
+  settings:{...Object.fromEntries(SETTINGS.map(k=>[k,st[k]])),...cs},mask:{w:r.w,h:r.h,rle8:b64enc(rle8Enc(m))},history:logLines().slice(-LOGMAX).map(x=>x.slice(0,100))};}
 async function makeBlob(embed){return(await renderImage(undefined,'png',embed)).blob;}
 async function copyPng(){busy(1,'Rendering…');await new Promise(r=>setTimeout(r,20));
   try{const blob=await makeBlob(false);await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('Copied to clipboard.');}
   catch(e){toast('Copy is blocked here. Use Download instead.');}finally{busy(-1);}}
 $('#bDownload').onclick=exportPng;$('#bCopy').onclick=copyPng;
 const WHAT_NOTE={token:'The finished token: picture, ring and pop-out together.',ring:'Only the ring, transparent in the middle. Handy as a reusable frame.',pop:'Only the pop-out part of the picture, transparent elsewhere.',layers:'A .zip with the finished token plus ring, picture and pop-out as separate transparent files. All have the same framing, so they stack exactly.'};
-function updExport(){$('#dlSize').textContent=st.exportSize+' px';
+function updHistList(){const L=logLines(),ol=$('#histList');if(!ol)return;ol.textContent='';L.forEach(x=>{const li=document.createElement('li');li.textContent=x;ol.appendChild(li);});
+  $('#histNote').textContent=L.length?'Saved inside the file as text (a few KB at most). Read-only: it shows what was done, it cannot be replayed.':'Nothing recorded yet.';}
+function updExport(){updHistList();$('#dlSize').textContent=st.exportSize+' px';
   const ext=st.exportWhat==='layers'?'zip':st.exportFmt;$('#fext').textContent='.'+ext;$('#dlWhat').textContent=st.exportWhat==='layers'?'Download layers (.zip)':st.exportWhat==='ring'?'Download ring ('+ext.toUpperCase()+')':st.exportWhat==='pop'?'Download pop-out ('+ext.toUpperCase()+')':'Download '+ext.toUpperCase();
   $('#whatNote').textContent=WHAT_NOTE[st.exportWhat];$('#bDownload').title='Download as '+ext+' (Ctrl/⌘+S)';if(!st.full)return;
   const native=Math.round(Math.min(st.full.width,st.full.height)/st.zoom/(1-2*exportPad()));
@@ -2516,7 +2743,7 @@ applyTheme();buildLooks();
 loadCanvas(sampleArt(),'Sample art. Use Open, drop an image on the preview, or paste one with Ctrl/⌘+V.');
 Object.assign(st,{zoom:1.3,iy:.05});
 {const sel=wandSel(420,250),m=new Uint8Array(st.mask.length);for(let i=0;i<m.length;i++)if(sel[i])m[i]=255;st.mask=m;maskChanged();}   // pre-select the hat so the pop-out shows on first view
-setTab('image');syncUI();commit();draw();
+applyMode();applyFine();setTab('image');syncUI();commit();draw();
 if(!store.get('tw_coach'))$('#coach').hidden=false;
 rove();{const t=store.get('tw_table');setStrip(t===null?DESKTOP.matches:t==='1');}autoRestore();
 

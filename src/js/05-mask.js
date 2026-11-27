@@ -18,14 +18,31 @@ function maskChanged(){const m=st.mask,d=st.sdata,w=st.sw,h=st.sh,xs=[],ys=[];le
 function selStat(){const p=st.selCount/(st.sw*st.sh)*100;
   $('#selStat').textContent=st.selCount?'Selected: '+(p<1?'under 1':Math.round(p))+'% of the picture':'Nothing selected yet';}
 function sizeTo(cv,w,h){if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}return cv.getContext('2d');}
-/* feather inward only: hard-edged areas fade at their outline, while already soft (hair) pixels and their neighbours are left alone */
-function featherMask(m,w,h,r){const bl=blurMask(m,w,h,r),out=new Uint8Array(m.length);
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,v=m[i];let soft=v>2&&v<253;
-    if(!soft){for(let dy=-1;dy<=1&&!soft;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const q=m[yy*w+xx];if(q>2&&q<253){soft=true;break;}}}}
-    out[i]=soft?v:Math.round(Math.min(v,bl[i]));}
+/* feather inward only. Hard-edged areas fade at their outline over at most r px, but never more than about 60% of the local
+   half-thickness, so thin parts (an ear, a strand) stay solid in the middle and only their outermost pixel or two fade.
+   Already soft (hair) pixels and their neighbours are left alone. Image borders are not edges. */
+function maxFilt(src,w,h,r){const out=new Float32Array(src.length),tmp=new Float32Array(src.length),q=new Int32Array(Math.max(w,h)+1);
+  const pass=(get,set,n)=>{let hd=0,tl=0;for(let i=0;i<n+r;i++){if(i<n){const v=get(i);while(tl>hd&&get(q[tl-1])<=v)tl--;q[tl++]=i;}
+    const o=i-r;if(o>=0){while(q[hd]<o-r)hd++;set(o,get(q[hd]));}}};
+  for(let y=0;y<h;y++){const o=y*w;pass(i=>src[o+i],(i,v)=>{tmp[o+i]=v;},w);}
+  for(let x=0;x<w;x++)pass(i=>tmp[i*w+x],(i,v)=>{out[i*w+x]=v;},h);
   return out;}
-function refreshSoft(){if(!st.softDirty)return;const{sw,sh}=st,ctx=sizeTo(st.softCv,sw,sh);
-  const m=st.feather>0?featherMask(st.mask,sw,sh,st.feather):st.mask,id=ctx.createImageData(sw,sh),d=id.data;
+function featherMask(m,w,h,r){const N=w*h,out=new Uint8Array(N),soft=new Uint8Array(N),D=new Float32Array(N);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,v=m[i];let s=v>2&&v<253;
+    if(!s){for(let dy=-1;dy<=1&&!s;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const q=m[yy*w+xx];if(q>2&&q<253){s=true;break;}}}}
+    soft[i]=s?1:0;D[i]=v<253?0:1e9;}
+  const A=1,B=1.4142;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;let d=D[i];if(!d)continue;
+    if(x>0)d=Math.min(d,D[i-1]+A);if(y>0){d=Math.min(d,D[i-w]+A);if(x>0)d=Math.min(d,D[i-w-1]+B);if(x<w-1)d=Math.min(d,D[i-w+1]+B);}D[i]=d;}
+  for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){const i=y*w+x;let d=D[i];if(!d)continue;
+    if(x<w-1)d=Math.min(d,D[i+1]+A);if(y<h-1){d=Math.min(d,D[i+w]+A);if(x<w-1)d=Math.min(d,D[i+w+1]+B);if(x>0)d=Math.min(d,D[i+w-1]+B);}D[i]=d;}
+  const M=maxFilt(D,w,h,Math.ceil(r*1.5)+1);
+  for(let i=0;i<N;i++){const v=m[i];if(soft[i]||D[i]>=r+1){out[i]=v;continue;}
+    const wd=Math.min(r,Math.max(1,.6*(M[i]-.5))),a=Math.max(0,Math.min(1,.4+.6*(D[i]-1)/wd));out[i]=Math.round(v*a);}
+  return out;}
+function refreshSoft(){const hk=hideKey();if(hk!==st.hKey){st.hKey=hk;st.softDirty=true;}if(!st.softDirty)return;const{sw,sh}=st,ctx=sizeTo(st.softCv,sw,sh);
+  const fk=st.maskVer+','+st.feather+','+sw;if(st.fmKey!==fk||!st.fm){st.fm=st.feather>0?featherMask(st.mask,sw,sh,st.feather):st.mask;st.fmKey=fk;}
+  const m=applyHide(st.fm),id=ctx.createImageData(sw,sh),d=id.data;
   for(let i=0,n=sw*sh;i<n;i++){const j=i*4;d[j]=d[j+1]=d[j+2]=255;d[j+3]=m[i];}
   ctx.putImageData(id,0,0);st.softDirty=false;st.popDirty=true;}
 function refreshPop(){refreshSoft();if(!st.popDirty)return;const x=sizeTo(st.popCv,st.sw,st.sh);
@@ -62,7 +79,7 @@ function wandRetune(){if(!wand||wandRaf)return;wandRaf=requestAnimationFrame(()=
 function wandCommit(){if(wand&&H.i===wand.hi){H.a[H.i]=snap();updHist();}else commit();}
 function wandDone(){if(!wand)return;cancelAnimationFrame(wandRaf);wandRaf=0;wandRun();wandCommit();}
 function wandStart(u,v,mode){const B=bounds();if(u<B.x0||v<B.y0||u>=B.x1||v>=B.y1)return;wand={u,v,mode,base:st.mask,hi:-1};wandRun();commit(true);wand.hi=H.i;}
-function morph(grow){const w=st.sw,h=st.sh;let m=st.mask;for(let it=0;it<2;it++){const o=new Uint8Array(m.length);
+function morph(grow,n){const w=st.sw,h=st.sh;let m=st.mask;for(let it=0;it<(n||1);it++){const o=new Uint8Array(m.length);
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;
     const l=x>0?m[i-1]:grow?0:255,r=x<w-1?m[i+1]:grow?0:255,u=y>0?m[i-w]:grow?0:255,dn=y<h-1?m[i+w]:grow?0:255;
     o[i]=grow?Math.max(m[i],l,r,u,dn):Math.min(m[i],l,r,u,dn);}
