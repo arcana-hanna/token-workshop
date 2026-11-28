@@ -14,9 +14,6 @@
   <h1>Token Workshop</h1>
   <button class="ibtn mob-only" id="bUndo2" title="Undo" aria-label="Undo" disabled><i data-ic="undo"></i></button>
   <button class="ibtn mob-only" id="bRedo2" title="Redo" aria-label="Redo" disabled><i data-ic="redo"></i></button>
-  <button class="btn" id="bFind" aria-label="Find a tool or setting (Ctrl+K)" title="Find any tool or setting (Ctrl+K)"><i data-ic="search"></i><span>Find</span></button>
-  <button class="btn" id="bMode" aria-pressed="false" title="Studio shows every control at once. Guided keeps the essentials and puts the rest under Fine-tune."><span>Studio</span></button>
-  <button class="btn" id="bOpen" aria-label="Open a photo or a saved token" title="Open a photo, or a token you exported earlier. You can also drop or paste an image."><i data-ic="upload"></i><span>Open</span></button>
   <button class="ibtn" id="bHelp" title="How it works, shortcuts, appearance" aria-label="Help and shortcuts">?</button>
 </header>
 <input id="file" type="file" accept="image/*" hidden>
@@ -40,8 +37,9 @@
       <button class="tbtn mob-hide" id="bUndo" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" disabled><i data-ic="undo"></i><span>Undo</span></button>
       <button class="tbtn mob-hide" id="bRedo" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" disabled><i data-ic="redo"></i><span>Redo</span></button>
       <span class="vsep mob-hide"></span>
-      <button class="tbtn mob-hide" id="bZoomIn" title="Zoom the workspace in (hold to repeat). Only changes what you see, never the token." aria-label="Zoom in"><i data-ic="zin"></i><span>Zoom +</span></button>
-      <button class="tbtn mob-hide" id="bZoomOut" title="Zoom the workspace out (hold to repeat). Zoom out past 100% to see the picture around the token." aria-label="Zoom out"><i data-ic="zout"></i><span>Zoom −</span></button>
+      <button class="tbtn mob-hide" id="bZoomIn" title="Zoom the view in (hold to repeat). Changes what you see, never the token or the picture." aria-label="Zoom view in"><i data-ic="zin"></i><span>View +</span></button>
+      <button class="tbtn mob-hide" id="bZoomOut" title="Zoom the view out (hold to repeat). Zoom out past 100% to see more canvas around the ring, for example a pop-out that sticks out." aria-label="Zoom view out"><i data-ic="zout"></i><span>View −</span></button>
+      <button class="tbtn mob-hide" id="bViewFit" title="Fit the view back to the token. Only changes what you see." aria-label="Fit view"><i data-ic="fitv"></i><span>Fit view</span></button>
     </div>
 
     <div class="canvas-col">
@@ -68,10 +66,6 @@
         </div>
       </div>
       <div class="tip" id="tip" hidden role="note"><span id="tipT"></span><button class="x" id="tipX" aria-label="Hide this tip">×</button></div>
-      <div class="sgbar" id="sgBar" hidden role="region" aria-label="Auto suggestions">
-        <div class="sg-h"><b>Suggestions</b><span class="sg-sub">Tap to preview. Nothing changes until you use one.</span><span class="sp"></span><button class="chip primary" id="sgUse" disabled>Use this</button><button class="chip" id="sgClose" aria-label="Close suggestions">Ignore</button></div>
-        <div class="sg-list" id="sgList" role="group" aria-label="Suggested pop-outs"></div>
-      </div>
       <div class="work">
       <div class="board" id="board" data-bg="checker">
         <canvas id="cv" tabindex="0" role="application" aria-label="Token preview. In Move, arrow keys move the picture. In Select and Brush, arrow keys move a cursor and Enter applies it; Shift plus Enter removes. Plus and minus zoom. Press question mark for all shortcuts."></canvas>
@@ -105,7 +99,8 @@
     <!-- 1 IMAGE -->
     <section class="panel" id="p-image" role="tabpanel" aria-labelledby="t-image" tabindex="-1">
       <h2 class="cap">Picture</h2>
-      <div class="group"><p class="note" id="srcInfo"></p><p class="note" style="padding-top:0">Everything runs in your browser. Your pictures are never uploaded.</p></div>
+      <div class="group"><p class="note" id="srcInfo"></p><p class="note" style="padding-top:0">Everything runs in your browser. Your pictures are never uploaded.</p>
+        <div class="acts"><button class="btn" id="bOpen" aria-label="Open a photo or a saved token" title="Open a photo, or a token you exported earlier. You can also drop or paste an image."><i data-ic="upload"></i><span>Open</span></button></div></div>
       <div class="fine">
       <h2 class="cap">Position</h2>
       <div class="group">
@@ -134,7 +129,7 @@
           <div class="grow"><input id="bg" type="color" aria-label="Fill colour"><span class="switch"><input id="bgOn" type="checkbox"><i></i></span></div></div>
       </div>
       </div>
-      <button class="fineBtn" data-fine="image" aria-expanded="false">Fine-tune</button>
+      <button class="fineBtn" data-fine="image" aria-expanded="false">Show all options</button>
       <button class="next" data-next="popout">Next: choose the pop-out <span aria-hidden="true">→</span></button>
     </section>
 
@@ -175,7 +170,7 @@
         </div>
       </details>
       </div>
-      <button class="fineBtn" data-fine="popout" aria-expanded="false">Fine-tune</button>
+      <button class="fineBtn" data-fine="popout" aria-expanded="false">Show all options</button>
       <button class="next" data-next="ring">Next: style the ring <span aria-hidden="true">→</span></button>
     </section>
 
@@ -232,7 +227,7 @@
           <div class="row" id="rowShuffleTex" hidden><label>Pattern</label><div class="grow"><button class="btn" id="bTexShuffle" title="Generate a different random pattern"><i data-ic="shuffle"></i>New pattern</button></div></div>
         </div>
       </details>
-      <button class="fineBtn" data-fine="ring" aria-expanded="false">Fine-tune</button>
+      <button class="fineBtn" data-fine="ring" aria-expanded="false">Show all options</button>
       <button class="next" data-next="export">Next: export <span aria-hidden="true">→</span></button>
     </section>
 
@@ -245,6 +240,10 @@
           <button data-v="256" aria-pressed="false">256<span class="px">px</span></button><button data-v="512" aria-pressed="true">512<span class="px">px</span></button><button data-v="1024" aria-pressed="false">1024<span class="px">px</span></button><button data-v="2048" aria-pressed="false">2048<span class="px">px</span></button></div></div>
         <p class="note" id="expNote"></p>
       </div>
+      <h2 class="cap">File name</h2>
+      <div class="group">
+        <div class="row"><label for="fname">File name</label><div class="grow"><input id="fname" class="txt" type="text" value="token" maxlength="60" placeholder="token" title="The file extension is added for you"><span id="fext" style="color:var(--sub)">.png</span></div></div>
+      </div>
       <div class="fine">
       <h2 class="cap">What to export</h2>
       <div class="group">
@@ -256,7 +255,6 @@
       <div class="group">
         <div class="row"><label>Format</label><div class="grow"><div class="seg" id="fmtSeg" role="group" aria-label="File format"><button data-v="png" aria-pressed="false">PNG</button><button data-v="webp" aria-pressed="true">WebP</button></div></div></div>
         <p class="note" style="padding-block:0 6px">WebP files are smaller. Both formats keep transparency and the editable data.</p>
-        <div class="row"><label for="fname">File name</label><div class="grow"><input id="fname" class="txt" type="text" value="token" maxlength="60" placeholder="token" title="The file extension is added for you"><span id="fext" style="color:var(--sub)">.png</span></div></div>
         <div class="row"><label for="embedOn">Keep editable<span class="sub">Embeds the visible part of your picture (plus a 10% margin) and your settings, so you can reopen this token later with Open. Makes the file bigger.</span></label><div class="grow"><span class="switch"><input id="embedOn" type="checkbox"><i></i></span></div></div>
       </div>
       </div>
@@ -271,7 +269,7 @@
         <figure><canvas class="mini" data-s="40" style="width:40px;height:40px"></canvas>Small</figure>
       </div>
       <p class="note" style="padding-inline:4px">Check that the art still reads when the token is small.</p>
-      <button class="fineBtn" data-fine="export" aria-expanded="false">Fine-tune</button>
+      <button class="fineBtn" data-fine="export" aria-expanded="false">Show all options</button>
     </section>
   </aside>
 </main>
@@ -328,6 +326,13 @@
   <div class="seg full" id="themeSeg" role="group" aria-label="Appearance"><button data-v="auto" aria-pressed="true">Automatic</button><button data-v="light" aria-pressed="false">Light</button><button data-v="dark" aria-pressed="false">Dark</button></div>
   <div class="foot"><button class="btn primary" id="helpClose">Done</button></div>
 </div></dialog>
+
+<div class="sgbar" id="sgBar" hidden role="dialog" aria-modal="true" aria-labelledby="sgTitle">
+  <div class="sg-wrap">
+    <div class="sg-h"><div><h2 id="sgTitle">Auto</h2><p class="sg-sub">Choose which option to apply.</p></div><button class="chip" id="sgClose" aria-label="Close without applying">Cancel</button></div>
+    <div class="sg-list" id="sgList" role="group" aria-label="Suggested pop-outs"></div>
+  </div>
+</div>
 
 <dialog id="findDlg" aria-label="Find a tool or setting"><div class="dlg find">
   <input id="findIn" type="text" role="combobox" aria-expanded="true" aria-controls="findList" aria-label="Find a tool or setting" placeholder="Find a tool or setting, e.g. feather, brush, size" autocomplete="off">

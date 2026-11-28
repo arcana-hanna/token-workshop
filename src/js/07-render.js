@@ -69,17 +69,19 @@ new ResizeObserver(()=>{const r=cv.getBoundingClientRect(),S=clamp(Math.round(r.
 
 /* ---------- view helpers ---------- */
 function viewChanged(){st.fitDirty=true;draw();}
+/* zoom the picture so the point under the cursor or fingers stays where it is */
+function ringPt(q){const g=geom(cv.width,effPad());return{x:(q.x-g.c)/g.R,y:(q.y-g.c)/g.R};}
+function setZoomAt(z,q){z=clamp(z,.1,8);const P=ringPt(q),f=z/st.zoom;st.ix=P.x-f*(P.x-st.ix);st.iy=P.y-f*(P.y-st.iy);st.zoom=z;SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
 function setZoom(z){st.zoom=clamp(z,.1,8);SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
 /* workspace zoom (Select / Brush): magnifies the screen only, never the exported token */
 const viewTool=()=>st.tool!=='move';
 function toTok(p){const S=cv.width;return{x:(p.x-st.vx*S)/st.vz,y:(p.y-st.vy*S)/st.vz};}
 /* workspace zoom 40% to 800%; zoomed out, the view stays centred and shows the rest of the picture around the token */
 function clampView(){st.vz=clamp(st.vz,.4,8);if(st.vz<1){st.vx=st.vy=(1-st.vz)/2;}else{st.vx=clamp(st.vx,1-st.vz,0);st.vy=clamp(st.vy,1-st.vz,0);}$('#viewReset').hidden=Math.abs(st.vz-1)<.001;}
-function zoomAt(z,px,py){const S=cv.width,t=toTok({x:px,y:py});st.vz=clamp(z,.4,8);st.vx=(px-t.x*st.vz)/S;st.vy=(py-t.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
+function zoomAt(z,px,py){const S=cv.width,t=toTok({x:px,y:py});st.vz=clamp(z,.4,8);st.vx=(px-t.x*st.vz)/S;st.vy=(py-t.y*st.vz)/S;clampView();hud('View '+Math.round(st.vz*100)+'%');draw();}
 function zoomStep(dir){zoomAt(st.vz*(dir>0?1.25:.8),cv.width/2,cv.height/2);}
 function zoomKey(dir,big){zoomAt(st.vz*(1+dir*(big?.4:.15)),cv.width/2,cv.height/2);}
 function resetWorkspace(){st.vz=1;st.vx=st.vy=0;clampView();draw();}
 function stepZoom(dir){setZoom(Math.round(st.zoom/.05+dir)*.05);}
 function resetView(){st.vz=1;st.vx=st.vy=0;clampView();st.ix=0;st.iy=0;st.zoom=1;st.rot=0;st.flip=1;SLI.zoom.sync();SLI.rot.sync();viewChanged();}
-let wheelHint=0;
 function brushR(){return st.brush/100*Math.min(st.sw,st.sh)/(2*st.zoom);}

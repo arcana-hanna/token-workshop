@@ -16,6 +16,7 @@ const WORK_MAX=1600,FULL_MAX=3072;
 
 /* ---------- icons ---------- */
 const IC={
+ fitv:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
@@ -995,9 +996,11 @@ function sgSnap(m){const W=st.sw,H=st.sh,N=W*H,b=new Uint8Array(N);let any=0;for
 const HIDE_DEF={hideOn:false,hideA:90,hideW:120,hideD:0};
 const HIDE_SIDES={bottom:90,left:180,right:0,top:-90};
 /* alpha multiplier at a point in ring radii (ring centre 0,0; ring outer edge radius 1): 0 = hidden, 1 = shown */
-function hideAlpha(X,Y){if(!st.hideOn)return 1;const r=Math.hypot(X,Y),r0=(1-st.width)+st.hideD*st.width;if(r<r0)return 1;
+function hideAlpha(X,Y){if(!st.hideOn)return 1;const r=Math.hypot(X,Y),r0=(1-st.width)+st.hideD*st.width;if(r<r0-.016)return 1;
   let d=Math.atan2(Y,X)*180/Math.PI-st.hideA;d=((d%360)+540)%360-180;
-  return 1-Math.max(0,Math.min(1,(st.hideW/2-Math.abs(d))*(Math.PI/180)*Math.max(r,.3)/.04));}
+  /* the hidden part fades in smoothly in both directions (no stair-steps along the ring's inner edge or the arc's ends) */
+  const ang=Math.max(0,Math.min(1,(st.hideW/2-Math.abs(d))*(Math.PI/180)*Math.max(r,.3)/.06)),rad=Math.max(0,Math.min(1,(r-(r0-.016))/.016)),t=ang*rad;
+  return 1-t*t*(3-2*t);}
 function hideKey(){return st.hideOn?[st.hideA,st.hideW,st.hideD,st.width,st.ix,st.iy,st.zoom,st.rot,st.flip,st.sw,st.sh].join():'';}
 function applyHide(m){if(!st.hideOn)return m;const w=st.sw,h=st.sh,k=2/Math.min(w,h)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,o=m.slice();
   for(let y=0;y<h;y++){const py=(y+.5-h/2)*k;for(let x=0;x<w;x++){const i=y*w+x;if(!m[i])continue;const px=(x+.5-w/2)*k*f,X=px*co-py*si+st.ix,Y=px*si+py*co+st.iy,a=hideAlpha(X,Y);if(a<1)o[i]=Math.round(m[i]*a);}}
@@ -1117,19 +1120,21 @@ new ResizeObserver(()=>{const r=cv.getBoundingClientRect(),S=clamp(Math.round(r.
 
 /* ---------- view helpers ---------- */
 function viewChanged(){st.fitDirty=true;draw();}
+/* zoom the picture so the point under the cursor or fingers stays where it is */
+function ringPt(q){const g=geom(cv.width,effPad());return{x:(q.x-g.c)/g.R,y:(q.y-g.c)/g.R};}
+function setZoomAt(z,q){z=clamp(z,.1,8);const P=ringPt(q),f=z/st.zoom;st.ix=P.x-f*(P.x-st.ix);st.iy=P.y-f*(P.y-st.iy);st.zoom=z;SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
 function setZoom(z){st.zoom=clamp(z,.1,8);SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
 /* workspace zoom (Select / Brush): magnifies the screen only, never the exported token */
 const viewTool=()=>st.tool!=='move';
 function toTok(p){const S=cv.width;return{x:(p.x-st.vx*S)/st.vz,y:(p.y-st.vy*S)/st.vz};}
 /* workspace zoom 40% to 800%; zoomed out, the view stays centred and shows the rest of the picture around the token */
 function clampView(){st.vz=clamp(st.vz,.4,8);if(st.vz<1){st.vx=st.vy=(1-st.vz)/2;}else{st.vx=clamp(st.vx,1-st.vz,0);st.vy=clamp(st.vy,1-st.vz,0);}$('#viewReset').hidden=Math.abs(st.vz-1)<.001;}
-function zoomAt(z,px,py){const S=cv.width,t=toTok({x:px,y:py});st.vz=clamp(z,.4,8);st.vx=(px-t.x*st.vz)/S;st.vy=(py-t.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
+function zoomAt(z,px,py){const S=cv.width,t=toTok({x:px,y:py});st.vz=clamp(z,.4,8);st.vx=(px-t.x*st.vz)/S;st.vy=(py-t.y*st.vz)/S;clampView();hud('View '+Math.round(st.vz*100)+'%');draw();}
 function zoomStep(dir){zoomAt(st.vz*(dir>0?1.25:.8),cv.width/2,cv.height/2);}
 function zoomKey(dir,big){zoomAt(st.vz*(1+dir*(big?.4:.15)),cv.width/2,cv.height/2);}
 function resetWorkspace(){st.vz=1;st.vx=st.vy=0;clampView();draw();}
 function stepZoom(dir){setZoom(Math.round(st.zoom/.05+dir)*.05);}
 function resetView(){st.vz=1;st.vx=st.vy=0;clampView();st.ix=0;st.iy=0;st.zoom=1;st.rot=0;st.flip=1;SLI.zoom.sync();SLI.rot.sync();viewChanged();}
-let wheelHint=0;
 function brushR(){return st.brush/100*Math.min(st.sw,st.sh)/(2*st.zoom);}
 
 /* ===== 08-pointer.js ===== */
@@ -1161,7 +1166,7 @@ function endPaint(){flushDirty();st.painting=false;maskChanged();commit();draw()
 cv.addEventListener('pointerdown',e=>{if(!st.src)return;if(e.pointerType==='mouse'&&e.button!==0)return;
   cv.focus({preventScroll:true});st.kc=null;
   dismissCoach(true);cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
+  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2)),ix:st.ix,iy:st.iy};gest.P=ringPt(gest.tok);drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
     if(st.painting)endPaint();return;}
   if(tab==='popout'&&!st.space&&hideGrab(e)){cv.classList.add('grabbing');return;}
   if(st.tool==='move'||st.space){const vw=st.space&&viewTool()&&st.vz>1;drag={x:e.clientX,y:e.clientY,view:vw};if(!vw)st.lockPad=true;cv.classList.add('grabbing');}
@@ -1176,8 +1181,9 @@ cv.addEventListener('pointermove',e=>{
   if(hdrag){hideDrag(e);return;}
   if(st.mag){magMove(e);return;}
   if(ptrs.size===2&&gest){const[a,b]=[...ptrs.values()],ratio=Math.hypot(a.x-b.x,a.y-b.y)/gest.d;
-    if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
-    else{st.zoom=clamp(gest.z*ratio,.1,8);SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
+    if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('View '+Math.round(st.vz*100)+'%');draw();}
+    else{const z=clamp(gest.z*ratio,.1,8),P=ringPt(toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))),f=z/gest.z;   /* the picture point between your fingers stays under them, and two-finger drags pan */
+      st.ix=P.x-f*(gest.P.x-gest.ix);st.iy=P.y-f*(gest.P.y-gest.iy);st.zoom=z;SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
     return;}
   if(st.lasso){const q=imgPt(e),l=st.lasso.pts[st.lasso.pts.length-1];if(Math.hypot(q.u-l.u,q.v-l.v)>=Math.max(1,st.sw/600)){st.lasso.pts.push(q);draw();}return;}
   if(st.painting)paintTo(e);
@@ -1193,10 +1199,9 @@ const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest||hdrag;if
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('pointerleave',()=>{st.hover=null;draw();});
 cv.addEventListener('wheel',e=>{if(!st.src)return;
-  if(!(e.ctrlKey||e.metaKey)){if(Date.now()-wheelHint>9000){wheelHint=Date.now();toast('Hold Ctrl (⌘ on Mac) and scroll to zoom the picture.');}return;}
   e.preventDefault();const dz=Math.exp(-e.deltaY*(Math.abs(e.deltaY)<30?.01:.0025));
-  if(viewTool()){const p=pt(e);zoomAt(st.vz*dz,p.x,p.y);return;}
-  st.lockPad=true;setZoom(st.zoom*dz);
+  if(viewTool()){const p=pt(e);zoomAt(st.vz*dz,p.x,p.y);return;}   /* selection steps: the wheel zooms the view; Move: it zooms the picture */
+  st.lockPad=true;setZoomAt(st.zoom*dz,toTok(pt(e)));
   clearTimeout(wheelT);wheelT=setTimeout(()=>{st.lockPad=false;st.fitDirty=true;draw();commit();},350);},{passive:false});
 
 /* drag & drop + paste */
@@ -1296,6 +1301,7 @@ function loadFile(f){
     loadCanvas(c,f.name+' · '+im.naturalWidth+'×'+im.naturalHeight+' px'+(k<1?' (kept at '+c.width+'×'+c.height+' for export)':'')+'.');
     {const base=(f.name||'').replace(/\.[^.]*$/,'').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,70);
      if(base&&!/^(image|blob|unnamed)$/i.test(base))$('#fname').value=base+'-token';}
+    st.zoom=clamp((1-st.width)*Math.min(st.sw,st.sh)/Math.hypot(st.sw,st.sh),.1,8);   /* start with the whole picture inside the ring; zoom in on the part you want */
     st.popOn=true;syncUI();commit();draw();busy(-1);dismissCoach(true);setTab('image');
     st.sgPending=true;};
   im.onerror=()=>{busy(-1);toast('Could not read that image.');};im.src=url;}
@@ -1433,7 +1439,7 @@ function renderPalette(){
 
 /* ---------- slider factory: label · slider · typed value · double-click resets ---------- */
 const SL={
- zoom:{label:'Zoom',min:10,max:800,step:1,unit:'%',k:.01,def:100,fx:'view',tip:'Scale the picture inside the ring'},
+ zoom:{label:'Zoom picture',min:10,max:800,step:1,unit:'%',k:.01,def:100,fx:'view',tip:'Scale the picture inside the ring'},
  rot:{label:'Rotate',min:-180,max:180,step:1,unit:'°',k:Math.PI/180,def:0,fx:'view',tip:'Rotate the picture'},
  pad:{label:'Margin',min:0,max:45,step:.1,unit:'%',k:.01,def:8,fx:'draw',tip:'Empty space around the ring so pop-out art can extend past it'},
  feather:{label:'Feather',min:0,max:12,step:.5,unit:'px',k:1,def:.5,fx:'soft',tip:'Fades the outer edge of the cut-out inward. Soft hair edges are left alone. Try Show mask to see it.'},
@@ -1588,6 +1594,7 @@ function holdBtn(btn,fn){let t=0,iv=0,held=false;
   ['pointerup','pointerleave','pointercancel'].forEach(n=>btn.addEventListener(n,stop));
   btn.addEventListener('click',e=>{if(e.detail===0){fn();commit();}});}
 holdBtn($('#bPicSmaller'),()=>stepZoom(-1));holdBtn($('#bPicLarger'),()=>stepZoom(1));
+$('#bViewFit').onclick=resetWorkspace;
 holdBtn($('#bZoomIn'),()=>zoomStep(1));holdBtn($('#bZoomOut'),()=>zoomStep(-1));
 $('#bReset').onclick=()=>{resetView();commit();};
 $('#viewReset').onclick=resetWorkspace;
@@ -1621,7 +1628,7 @@ function push(dir){if(!popBounds())return;fitMode();const o=overflow(st.pad);
 [['bPushL','L'],['bPushR','R'],['bPushU','U'],['bPushD','D']].forEach(([i,d])=>$('#'+i).onclick=()=>push(d));
 
 /* ===== 11a-suggest-ui.js ===== */
-/* ---------- Auto suggestions: strip of options, preview on the canvas, nothing applied until the user picks one ---------- */
+/* ---------- Auto suggestions: a full-screen layer with large options; clicking one applies it (Undo reverts) ---------- */
 /* exported suggestBest */
 let sg=null;
 const SG_KIND={whole:'Whole figure',pop:'Head & hair only'};
@@ -1633,7 +1640,7 @@ function sgOverlay(ctx,g,S){const c=st.sgShow;if(!c)return;
     for(let i=0;i<W*H;i++){id.data[i*4]=48;id.data[i*4+1]=209;id.data[i*4+2]=88;id.data[i*4+3]=m[i];}x.putImageData(id,0,0);st.sgCv=cv2;}
   ctx.save();ctx.globalAlpha=.5;applyT(ctx,g);ctx.drawImage(st.sgCv,0,0,st.sw,st.sh);ctx.restore();}
 /* small picture of what a candidate selects: the area around the ring, with the rest dimmed */
-function sgThumb(c,I){const T=112,cv2=mk();cv2.width=cv2.height=T*2;const x=cv2.getContext('2d'),W=st.sw,H=st.sh,k=I.k,cx=I.cx/k,cy=I.cy/k,half=I.R/k*1.8,sx=cx-half,sy=cy-half,sz=half*2,P=T*2;
+function sgThumb(c,I){const T=220,cv2=mk();cv2.width=cv2.height=T*2;const x=cv2.getContext('2d'),W=st.sw,H=st.sh,k=I.k,cx=I.cx/k,cy=I.cy/k,half=I.R/k*1.8,sx=cx-half,sy=cy-half,sz=half*2,P=T*2;
   x.fillStyle='#d8d8de';x.fillRect(0,0,P,P);x.fillStyle='#ececf0';for(let i=0;i<8;i++)for(let j=0;j<8;j++)if((i+j)%2)x.fillRect(i*P/8,j*P/8,P/8,P/8);
   x.imageSmoothingQuality='high';x.save();x.globalAlpha=.28;x.drawImage(st.src,sx,sy,sz,sz,0,0,P,P);x.restore();
   const p=mk();p.width=p.height=P;const px=p.getContext('2d');px.imageSmoothingQuality='high';px.drawImage(st.src,sx,sy,sz,sz,0,0,P,P);
@@ -1643,20 +1650,17 @@ function sgThumb(c,I){const T=112,cv2=mk();cv2.width=cv2.height=T*2;const x=cv2.
   x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=3;x.beginPath();x.arc(P/2,P/2,P/3.6,0,TAU);x.stroke();x.strokeStyle='rgba(0,0,0,.55)';x.lineWidth=1.5;x.stroke();
   return cv2;}
 function sgRender(){const list=$('#sgList');list.textContent='';
-  sg.pick.forEach((c,i)=>{const b=document.createElement('button');b.className='sg-card';b.type='button';b.setAttribute('aria-pressed','false');
-    b.title=c.name+': '+SG_KIND[c.kind]+'. Tap to preview, tap again to use it.';
+  sg.pick.forEach((c,i)=>{const b=document.createElement('button');b.className='sg-card';b.type='button';
+    b.title=c.name+': '+SG_KIND[c.kind]+'. Click to use it.';
     if(i===0){const t=document.createElement('span');t.className='best';t.textContent='Best guess';b.appendChild(t);}
     b.appendChild(sgThumb(c,sg.I));
     const n=document.createElement('b');n.textContent=c.name;const k=document.createElement('span');k.className='k';k.textContent=SG_KIND[c.kind];b.append(n,k);
-    b.onclick=()=>sgSelect(i,true);b.onmouseenter=()=>{if(matchMedia('(hover:hover)').matches)sgPreview(c);};
-    b.onmouseleave=()=>{sgPreview(sg&&sg.sel>=0?sg.pick[sg.sel]:null);};
+    b.onclick=()=>sgApply(c);
     list.appendChild(b);});
-  $('#sgBar').hidden=false;$('#sgUse').disabled=true;sg.sel=-1;sgPreview(null);}
-function sgSelect(i,again){if(!sg)return;if(again&&sg.sel===i){sgApply(sg.pick[i]);return;}
-  sg.sel=i;$$('#sgList .sg-card').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));$('#sgUse').disabled=false;sgPreview(sg.pick[i]);}
+  $('#sgBar').dataset.n=sg.pick.length;$('#sgBar').hidden=false;sg.sel=-1;sgPreview(null);const f=list.querySelector('.sg-card');if(f)f.focus({preventScroll:true});}
 function sgApply(c){if(!c)return;lab('Auto suggestion applied'+(c.label?': '+c.label:''));let m=c.mask.slice();const matte=!!c.mask.bg;
   if(matte&&!autoFixOn())for(let i=0;i<m.length;i++)m[i]=m[i]>=128?255:0;
-  st.mask=m;maskChanged();let note='Pop-out applied. Fine-tune it with Select, Lasso or Brush, or Undo.';
+  st.mask=m;maskChanged();let note='Pop-out applied. Refine it with Click, Paint or Trace, or Undo.';
   if(matte&&autoFixOn()){st.bgC=c.mask.bg;st.bgAuto=true;st.defr=1;eSess=null;}
   else if(!matte&&autoFixOn()){try{fixEdges(true);}catch(e){}}
   st.popOn=true;sgClose();syncUI();draw();commit();toast(note);}
@@ -1666,7 +1670,7 @@ function runSuggest(){if(!st.src)return;busy(1,'Finding suggestions…');
     const pick=r?sgPick(r.cands).filter(c=>c.score>(c.kind==='pop'?-.3:0)):[];
     if(!pick.length){sgClose();toast('No clear suggestion. Open the Pop-out step and click the part that should pop out.');setTab('popout');setTool('select');return;}
     sg={I:r.I,pick,sel:-1};sgRender();},30);}
-$('#sgUse').onclick=()=>{if(sg&&sg.sel>=0)sgApply(sg.pick[sg.sel]);};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&sg&&!$('#sgBar').hidden){e.preventDefault();e.stopPropagation();sgClose();}},true);
 $('#sgClose').onclick=sgClose;
 
 /* apply the top suggestion straight away (used by the tests; the app always lets the user choose) */
@@ -1674,20 +1678,18 @@ function suggestBest(kind,id){const r=sgCandidates(),c=id?r.cands.find(x=>x.id==
 
 /* ===== 11b-guided.js ===== */
 /* ---------- Guided and Studio modes, Fine-tune drawers, edge styles, Hide a side, tips, progress, Find ---------- */
-{const sv=store.get('tw_studio');st.studio=sv===null?window.TW_STUDIO===true:sv==='1';}   /* first visit: Guided (tests preset Studio through window.TW_STUDIO) */
+st.studio=window.TW_STUDIO===true;   /* always Guided; tests preset the all-visible layout through window.TW_STUDIO */
 const TOOL_NAMES={select:['Click','Select'],brush:['Paint','Brush'],magnet:['Trace','Magnet']};
-function applyMode(){document.body.classList.toggle('simple',!st.studio);const b=$('#bMode');b.setAttribute('aria-pressed',String(st.studio));b.lastElementChild.textContent=st.studio?'Guided':'Studio';
-  b.title=st.studio?'Back to the guided view: essentials first, the rest under Fine-tune.':'Studio shows every control at once, as in earlier versions.';
+function applyMode(){document.body.classList.toggle('simple',!st.studio);
   for(const[k,v]of Object.entries(TOOL_NAMES)){const s=$('.tbtn[data-tool='+k+'] span');if(s)s.textContent=st.studio?v[1]:v[0];}
   $('#selHelp').innerHTML=st.studio?'Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.':'Start with <b>Auto</b>, then refine with <b>Click</b>, <b>Paint</b> or <b>Trace</b> in the toolbar next to the preview.';
   if(!st.studio)$('#secLooks').open=true;
-  store.set('tw_studio',st.studio?'1':'0');showTip();}
-$('#bMode').onclick=()=>{st.studio=!st.studio;applyMode();rove();toast(st.studio?'Studio: every control is visible.':'Guided: essentials first. Tap Fine-tune for more.');};
+  showTip();}
 
 /* Fine-tune drawers: remembered per step */
 let fineOpen={};try{fineOpen=JSON.parse(store.get('tw_fine')||'{}')||{};}catch(e){fineOpen={};}
 function applyFine(){$$('.panel').forEach(p=>p.classList.toggle('open-fine',!!fineOpen[p.id.slice(2)]));
-  $$('.fineBtn').forEach(b=>{const o=!!fineOpen[b.dataset.fine];b.setAttribute('aria-expanded',String(o));b.textContent=o?'Hide fine-tune':'Fine-tune';});}
+  $$('.fineBtn').forEach(b=>{const o=!!fineOpen[b.dataset.fine];b.setAttribute('aria-expanded',String(o));b.textContent=o?'Hide extra options':'Show all options';});}
 function openFineFor(el){const p=el.closest('.panel');if(p&&el.closest('.fine')&&!fineOpen[p.id.slice(2)]){fineOpen[p.id.slice(2)]=1;store.set('tw_fine',JSON.stringify(fineOpen));applyFine();}}
 $$('.fineBtn').forEach(b=>b.onclick=()=>{fineOpen[b.dataset.fine]=fineOpen[b.dataset.fine]?0:1;store.set('tw_fine',JSON.stringify(fineOpen));applyFine();});
 
@@ -1722,7 +1724,6 @@ function findBuild(){const E=[];const add=(name,keys,run,where)=>E.push({name,ke
   add('Auto suggestions','auto suggest candidates cut out',()=>{$('#bAuto').click();},'Action');
   add('Preview','preview finished clean',()=>$('#bPrev').click(),'View');add('Isolate pop-out','isolate only pop-out',()=>{setTab('popout');$('#bIso').click();},'View');
   add('Undo','undo',()=>$('#bUndo').click(),'Action');add('Redo','redo',()=>$('#bRedo').click(),'Action');
-  add(st.studio?'Guided mode':'Studio mode','studio guided simple advanced all controls',()=>$('#bMode').click(),'View');
   add('Help and shortcuts','help shortcuts keys how',()=>$('#bHelp').click(),'Help');
   const seen=new Set();
   $$('.panel').forEach(p=>{const step=p.id.slice(2);
@@ -1744,7 +1745,6 @@ function findRender(){const q=findIn.value.trim().toLowerCase().split(/\s+/).fil
   $('#findEmpty').hidden=!!findRes.length;}
 function findRun(i){const r=findRes[i];if(!r)return;findDlg.close();setTimeout(()=>r.e.run(),30);}
 function findOpen(){if(findDlg.open)return;findList=findBuild();findIn.value='';findSel=0;findRender();findDlg.showModal();findIn.focus();}
-$('#bFind').onclick=findOpen;
 findIn.addEventListener('input',()=>{findSel=0;findRender();});
 findIn.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();findSel=Math.min(findRes.length-1,findSel+1);findRender();$('#fo'+findSel)?.scrollIntoView({block:'nearest'});}
   else if(e.key==='ArrowUp'){e.preventDefault();findSel=Math.max(0,findSel-1);findRender();$('#fo'+findSel)?.scrollIntoView({block:'nearest'});}

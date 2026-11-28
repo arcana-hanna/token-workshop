@@ -18,7 +18,7 @@ const SCENE = `(() => {
   x.fillStyle = '#d9a07c'; x.beginPath(); x.ellipse(300, 285, 82, 105, 0, 0, 7); x.fill();                                       // face
   return c; })()`;
 
-test('Auto applies nothing: it offers suggestions, preview does not change the pop-out, a second tap applies, Undo reverts', async () => {
+test('Auto applies nothing by itself: a full-screen layer offers large options, one click applies, Undo reverts', async () => {
   const page = await openApp(browser);
   const r0 = await page.evaluate(async (src) => { loadCanvas(eval(src), 'scene'); st.zoom = 2.2; viewChanged(); st.sgPending = false; setTab('popout'); clearSel(); commit(); return { sel: st.selCount }; }, SCENE);
   assert.equal(r0.sel, 0);
@@ -28,10 +28,10 @@ test('Auto applies nothing: it offers suggestions, preview does not change the p
   assert.ok(cards >= 2 && cards <= 4, 'cards ' + cards);
   assert.equal(await page.evaluate(() => st.selCount), 0, 'nothing applied by Auto itself');
   assert.equal(await page.$eval('#sgList .sg-card .best', (e) => e.textContent), 'Best guess');
-  await page.click('#sgList .sg-card >> nth=0');
-  const prev = await page.evaluate(() => ({ sel: st.selCount, show: !!st.sgShow, use: !document.querySelector('#sgUse').disabled }));
-  assert.deepEqual(prev, { sel: 0, show: true, use: true });
-  await page.click('#sgList .sg-card >> nth=0');   // second tap applies
+  const lay = await page.evaluate(() => { const r = document.querySelector('#sgBar').getBoundingClientRect(), c = document.querySelector('#sgList .sg-card canvas').getBoundingClientRect();
+    return { full: r.width >= innerWidth - 1 && r.height >= innerHeight - 1, card: c.width, sub: document.querySelector('.sg-sub').textContent }; });
+  assert.ok(lay.full && lay.card >= 150 && /Choose which option to apply/.test(lay.sub), JSON.stringify(lay));
+  await page.click('#sgList .sg-card >> nth=0');   // one click applies
   const done = await page.evaluate(() => ({ sel: st.selCount, bar: document.querySelector('#sgBar').hidden, show: st.sgShow }));
   assert.ok(done.sel > 1000 && done.bar && !done.show, JSON.stringify(done));
   await page.evaluate(() => undo());

@@ -130,3 +130,6 @@ Changing the backdrop of a picture was deliberately left out: this is a token ma
 * **Tips**: one dismissible line per step (switch off in Help). **Progress**: finished steps show a check. **Ring looks** are drawn on your own picture and pop-out.
 * **Edit history**: a read-only list of what was done is stored in the saved token (Export, Fine-tune).
 * Tests preset Studio through `window.TW_STUDIO`; pass `guided: true` to `openApp` for the Guided view.
+
+* **Auto** opens a full-screen layer with large options ("Choose which option to apply."). One click applies; Cancel/Esc closes; Undo reverts.
+* **Image step**: a new picture starts fully inside the ring. The wheel (or pinch) zooms the picture around the cursor/fingers; in the selection steps the wheel zooms the view.

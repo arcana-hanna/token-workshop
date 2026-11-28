@@ -16,7 +16,7 @@ function renderPalette(){
 
 /* ---------- slider factory: label · slider · typed value · double-click resets ---------- */
 const SL={
- zoom:{label:'Zoom',min:10,max:800,step:1,unit:'%',k:.01,def:100,fx:'view',tip:'Scale the picture inside the ring'},
+ zoom:{label:'Zoom picture',min:10,max:800,step:1,unit:'%',k:.01,def:100,fx:'view',tip:'Scale the picture inside the ring'},
  rot:{label:'Rotate',min:-180,max:180,step:1,unit:'°',k:Math.PI/180,def:0,fx:'view',tip:'Rotate the picture'},
  pad:{label:'Margin',min:0,max:45,step:.1,unit:'%',k:.01,def:8,fx:'draw',tip:'Empty space around the ring so pop-out art can extend past it'},
  feather:{label:'Feather',min:0,max:12,step:.5,unit:'px',k:1,def:.5,fx:'soft',tip:'Fades the outer edge of the cut-out inward. Soft hair edges are left alone. Try Show mask to see it.'},
@@ -171,6 +171,7 @@ function holdBtn(btn,fn){let t=0,iv=0,held=false;
   ['pointerup','pointerleave','pointercancel'].forEach(n=>btn.addEventListener(n,stop));
   btn.addEventListener('click',e=>{if(e.detail===0){fn();commit();}});}
 holdBtn($('#bPicSmaller'),()=>stepZoom(-1));holdBtn($('#bPicLarger'),()=>stepZoom(1));
+$('#bViewFit').onclick=resetWorkspace;
 holdBtn($('#bZoomIn'),()=>zoomStep(1));holdBtn($('#bZoomOut'),()=>zoomStep(-1));
 $('#bReset').onclick=()=>{resetView();commit();};
 $('#viewReset').onclick=resetWorkspace;

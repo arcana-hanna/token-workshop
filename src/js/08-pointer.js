@@ -26,7 +26,7 @@ function endPaint(){flushDirty();st.painting=false;maskChanged();commit();draw()
 cv.addEventListener('pointerdown',e=>{if(!st.src)return;if(e.pointerType==='mouse'&&e.button!==0)return;
   cv.focus({preventScroll:true});st.kc=null;
   dismissCoach(true);cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))};drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
+  if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom,vz:st.vz,tok:toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2)),ix:st.ix,iy:st.iy};gest.P=ringPt(gest.tok);drag=null;if(st.lasso||st.mag){st.lasso=null;magCancel();draw();}if(!viewTool())st.lockPad=true;
     if(st.painting)endPaint();return;}
   if(tab==='popout'&&!st.space&&hideGrab(e)){cv.classList.add('grabbing');return;}
   if(st.tool==='move'||st.space){const vw=st.space&&viewTool()&&st.vz>1;drag={x:e.clientX,y:e.clientY,view:vw};if(!vw)st.lockPad=true;cv.classList.add('grabbing');}
@@ -41,8 +41,9 @@ cv.addEventListener('pointermove',e=>{
   if(hdrag){hideDrag(e);return;}
   if(st.mag){magMove(e);return;}
   if(ptrs.size===2&&gest){const[a,b]=[...ptrs.values()],ratio=Math.hypot(a.x-b.x,a.y-b.y)/gest.d;
-    if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('Workspace '+Math.round(st.vz*100)+'%');draw();}
-    else{st.zoom=clamp(gest.z*ratio,.1,8);SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
+    if(viewTool()){const m=cpt((a.x+b.x)/2,(a.y+b.y)/2),S=cv.width;st.vz=clamp(gest.vz*ratio,.4,8);st.vx=(m.x-gest.tok.x*st.vz)/S;st.vy=(m.y-gest.tok.y*st.vz)/S;clampView();hud('View '+Math.round(st.vz*100)+'%');draw();}
+    else{const z=clamp(gest.z*ratio,.1,8),P=ringPt(toTok(cpt((a.x+b.x)/2,(a.y+b.y)/2))),f=z/gest.z;   /* the picture point between your fingers stays under them, and two-finger drags pan */
+      st.ix=P.x-f*(gest.P.x-gest.ix);st.iy=P.y-f*(gest.P.y-gest.iy);st.zoom=z;SLI.zoom.sync();hud('Picture '+Math.round(st.zoom*100)+'%');viewChanged();}
     return;}
   if(st.lasso){const q=imgPt(e),l=st.lasso.pts[st.lasso.pts.length-1];if(Math.hypot(q.u-l.u,q.v-l.v)>=Math.max(1,st.sw/600)){st.lasso.pts.push(q);draw();}return;}
   if(st.painting)paintTo(e);
@@ -58,10 +59,9 @@ const endP=e=>{if(!ptrs.has(e.pointerId))return;const moved=drag||gest||hdrag;if
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('pointerleave',()=>{st.hover=null;draw();});
 cv.addEventListener('wheel',e=>{if(!st.src)return;
-  if(!(e.ctrlKey||e.metaKey)){if(Date.now()-wheelHint>9000){wheelHint=Date.now();toast('Hold Ctrl (⌘ on Mac) and scroll to zoom the picture.');}return;}
   e.preventDefault();const dz=Math.exp(-e.deltaY*(Math.abs(e.deltaY)<30?.01:.0025));
-  if(viewTool()){const p=pt(e);zoomAt(st.vz*dz,p.x,p.y);return;}
-  st.lockPad=true;setZoom(st.zoom*dz);
+  if(viewTool()){const p=pt(e);zoomAt(st.vz*dz,p.x,p.y);return;}   /* selection steps: the wheel zooms the view; Move: it zooms the picture */
+  st.lockPad=true;setZoomAt(st.zoom*dz,toTok(pt(e)));
   clearTimeout(wheelT);wheelT=setTimeout(()=>{st.lockPad=false;st.fitDirty=true;draw();commit();},350);},{passive:false});
 
 /* drag & drop + paste */

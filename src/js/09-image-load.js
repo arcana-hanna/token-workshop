@@ -19,6 +19,7 @@ function loadFile(f){
     loadCanvas(c,f.name+' · '+im.naturalWidth+'×'+im.naturalHeight+' px'+(k<1?' (kept at '+c.width+'×'+c.height+' for export)':'')+'.');
     {const base=(f.name||'').replace(/\.[^.]*$/,'').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,70);
      if(base&&!/^(image|blob|unnamed)$/i.test(base))$('#fname').value=base+'-token';}
+    st.zoom=clamp((1-st.width)*Math.min(st.sw,st.sh)/Math.hypot(st.sw,st.sh),.1,8);   /* start with the whole picture inside the ring; zoom in on the part you want */
     st.popOn=true;syncUI();commit();draw();busy(-1);dismissCoach(true);setTab('image');
     st.sgPending=true;};
   im.onerror=()=>{busy(-1);toast('Could not read that image.');};im.src=url;}

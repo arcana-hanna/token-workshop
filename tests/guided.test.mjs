@@ -7,7 +7,7 @@ before(async () => { browser = await launch(); });
 after(async () => { await browser.close(); });
 const vis = (page, sel) => page.evaluate((s) => { const e = document.querySelector(s); return !!(e && e.offsetParent); }, sel);
 
-test('Guided is the default: essentials first, tools renamed, Fine-tune opens the rest, Studio shows everything', async () => {
+test('Guided only: essentials first, tools renamed, "Show all options" opens the rest; no Find, Studio or Open buttons in the header', async () => {
   const page = await openApp(browser, { guided: true, step: 'popout' });
   assert.ok(await page.evaluate(() => document.body.classList.contains('simple')));
   assert.deepEqual(await page.evaluate(() => ['select', 'brush', 'magnet'].map(t => document.querySelector('.tbtn[data-tool=' + t + '] span').textContent)), ['Click', 'Paint', 'Trace']);
@@ -18,9 +18,9 @@ test('Guided is the default: essentials first, tools renamed, Fine-tune opens th
   assert.ok(await vis(page, '#r_feather') && await vis(page, '#bNudgeIn'));
   await page.click('.fineBtn[data-fine=popout]');
   assert.ok(!(await vis(page, '#r_feather')));
-  await page.click('#bMode');
-  assert.ok(await vis(page, '#r_feather') && await vis(page, '.tbtn[data-tool=lasso]'));
-  assert.deepEqual(await page.evaluate(() => document.querySelector('.tbtn[data-tool=select] span').textContent), 'Select');
+  assert.equal(await page.textContent('.fineBtn[data-fine=popout]'), 'Show all options');
+  const head = await page.evaluate(() => ({ find: !!document.querySelector('#bFind'), mode: !!document.querySelector('#bMode'), openInHeader: !!document.querySelector('.top #bOpen'), openInImage: !!document.querySelector('#p-image #bOpen'), view: [...document.querySelectorAll('#bZoomIn span,#bZoomOut span,#bViewFit span')].map(e => e.textContent), zoomLabel: SL.zoom.label }));
+  assert.deepEqual(head, { find: false, mode: false, openInHeader: false, openInImage: true, view: ['View +', 'View −', 'Fit view'], zoomLabel: 'Zoom picture' });
   assert.deepEqual(page.errors, []);
 });
 
@@ -30,7 +30,7 @@ test('Guided: a new visitor sees only essentials on every step; the ring step op
   await page.click('#t-ring');
   assert.ok(await vis(page, '#secLooks') && !(await vis(page, '#secShape')) && !(await vis(page, '#secTex')));
   await page.click('#t-export');
-  assert.ok(await vis(page, '#sizes') && await vis(page, '#bDownload') && !(await vis(page, '#whatSeg')));
+  assert.ok(await vis(page, '#sizes') && await vis(page, '#bDownload') && await vis(page, '#fname') && !(await vis(page, '#whatSeg')));
 });
 
 test('Edge styles set feather and halo removal together and highlight when they match', async () => {
@@ -117,4 +117,21 @@ test('steps that are done show a check', async () => {
   const page = await openApp(browser, { guided: true, step: 'image' });
   await page.click('#t-popout'); await page.click('#t-ring');
   assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('.tab')].map(t => t.classList.contains('done'))), [true, true, false, false]);
+});
+
+test('Image step: the wheel zooms the picture around the cursor; a new picture starts fully inside the ring', async () => {
+  const page = await openApp(browser, { step: 'image', width: 1100, height: 900 });
+  const SC = `(()=>{const c=document.createElement('canvas');c.width=800;c.height=500;const x=c.getContext('2d');const g=x.createLinearGradient(0,0,800,0);g.addColorStop(0,'#c33');g.addColorStop(1,'#36c');x.fillStyle=g;x.fillRect(0,0,800,500);return c;})()`;
+  await page.evaluate(async (src) => { const c = eval(src), blob = await new Promise((res) => c.toBlob(res, 'image/png')); loadFile(new File([blob], 'wide.png', { type: 'image/png' })); await new Promise((r) => setTimeout(r, 700)); }, SC);
+  const fit = await page.evaluate(() => { const k = 2 / Math.min(st.sw, st.sh) * st.zoom, half = k * Math.hypot(st.sw, st.sh) / 2; return { half, ri: 1 - st.width }; });
+  assert.ok(fit.half <= fit.ri + 1e-6 && fit.half > fit.ri * .9, 'whole picture just fits the ring ' + JSON.stringify(fit));
+  const r = await page.evaluate(() => cv.getBoundingClientRect());
+  const at = { x: r.left + r.width * .62, y: r.top + r.height * .4 };
+  const under = () => page.evaluate(({ x, y }) => { const r = cv.getBoundingClientRect(), s = cv.width / r.width, q = toTok({ x: (x - r.left) * s, y: (y - r.top) * s }), g = geom(cv.width, effPad()), p = toImg(g, q.x, q.y); return [p.u, p.v, st.zoom, st.vz]; }, at);
+  const a = await under();
+  await page.mouse.move(at.x, at.y); await page.mouse.wheel(0, -300); await page.waitForTimeout(100);
+  const b = await under();
+  assert.ok(b[2] > a[2] * 1.2, 'zoomed in ' + a[2] + ' → ' + b[2]);
+  assert.equal(b[3], a[3], 'the view is not touched');
+  assert.ok(Math.abs(b[0] - a[0]) < 2 && Math.abs(b[1] - a[1]) < 2, 'point under the cursor stays put: ' + a + ' → ' + b);
 });

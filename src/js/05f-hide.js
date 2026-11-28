@@ -2,9 +2,11 @@
 const HIDE_DEF={hideOn:false,hideA:90,hideW:120,hideD:0};
 const HIDE_SIDES={bottom:90,left:180,right:0,top:-90};
 /* alpha multiplier at a point in ring radii (ring centre 0,0; ring outer edge radius 1): 0 = hidden, 1 = shown */
-function hideAlpha(X,Y){if(!st.hideOn)return 1;const r=Math.hypot(X,Y),r0=(1-st.width)+st.hideD*st.width;if(r<r0)return 1;
+function hideAlpha(X,Y){if(!st.hideOn)return 1;const r=Math.hypot(X,Y),r0=(1-st.width)+st.hideD*st.width;if(r<r0-.016)return 1;
   let d=Math.atan2(Y,X)*180/Math.PI-st.hideA;d=((d%360)+540)%360-180;
-  return 1-Math.max(0,Math.min(1,(st.hideW/2-Math.abs(d))*(Math.PI/180)*Math.max(r,.3)/.04));}
+  /* the hidden part fades in smoothly in both directions (no stair-steps along the ring's inner edge or the arc's ends) */
+  const ang=Math.max(0,Math.min(1,(st.hideW/2-Math.abs(d))*(Math.PI/180)*Math.max(r,.3)/.06)),rad=Math.max(0,Math.min(1,(r-(r0-.016))/.016)),t=ang*rad;
+  return 1-t*t*(3-2*t);}
 function hideKey(){return st.hideOn?[st.hideA,st.hideW,st.hideD,st.width,st.ix,st.iy,st.zoom,st.rot,st.flip,st.sw,st.sh].join():'';}
 function applyHide(m){if(!st.hideOn)return m;const w=st.sw,h=st.sh,k=2/Math.min(w,h)*st.zoom,co=Math.cos(st.rot),si=Math.sin(st.rot),f=st.flip,o=m.slice();
   for(let y=0;y<h;y++){const py=(y+.5-h/2)*k;for(let x=0;x<w;x++){const i=y*w+x;if(!m[i])continue;const px=(x+.5-w/2)*k*f,X=px*co-py*si+st.ix,Y=px*si+py*co+st.iy,a=hideAlpha(X,Y);if(a<1)o[i]=Math.round(m[i]*a);}}

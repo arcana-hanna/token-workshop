@@ -1,18 +1,16 @@
 /* ---------- Guided and Studio modes, Fine-tune drawers, edge styles, Hide a side, tips, progress, Find ---------- */
-{const sv=store.get('tw_studio');st.studio=sv===null?window.TW_STUDIO===true:sv==='1';}   /* first visit: Guided (tests preset Studio through window.TW_STUDIO) */
+st.studio=window.TW_STUDIO===true;   /* always Guided; tests preset the all-visible layout through window.TW_STUDIO */
 const TOOL_NAMES={select:['Click','Select'],brush:['Paint','Brush'],magnet:['Trace','Magnet']};
-function applyMode(){document.body.classList.toggle('simple',!st.studio);const b=$('#bMode');b.setAttribute('aria-pressed',String(st.studio));b.lastElementChild.textContent=st.studio?'Guided':'Studio';
-  b.title=st.studio?'Back to the guided view: essentials first, the rest under Fine-tune.':'Studio shows every control at once, as in earlier versions.';
+function applyMode(){document.body.classList.toggle('simple',!st.studio);
   for(const[k,v]of Object.entries(TOOL_NAMES)){const s=$('.tbtn[data-tool='+k+'] span');if(s)s.textContent=st.studio?v[1]:v[0];}
   $('#selHelp').innerHTML=st.studio?'Pick what pops out with <b>Select</b>, <b>Lasso</b>, <b>Brush</b> or <b>Auto</b> in the toolbar next to the preview.':'Start with <b>Auto</b>, then refine with <b>Click</b>, <b>Paint</b> or <b>Trace</b> in the toolbar next to the preview.';
   if(!st.studio)$('#secLooks').open=true;
-  store.set('tw_studio',st.studio?'1':'0');showTip();}
-$('#bMode').onclick=()=>{st.studio=!st.studio;applyMode();rove();toast(st.studio?'Studio: every control is visible.':'Guided: essentials first. Tap Fine-tune for more.');};
+  showTip();}
 
 /* Fine-tune drawers: remembered per step */
 let fineOpen={};try{fineOpen=JSON.parse(store.get('tw_fine')||'{}')||{};}catch(e){fineOpen={};}
 function applyFine(){$$('.panel').forEach(p=>p.classList.toggle('open-fine',!!fineOpen[p.id.slice(2)]));
-  $$('.fineBtn').forEach(b=>{const o=!!fineOpen[b.dataset.fine];b.setAttribute('aria-expanded',String(o));b.textContent=o?'Hide fine-tune':'Fine-tune';});}
+  $$('.fineBtn').forEach(b=>{const o=!!fineOpen[b.dataset.fine];b.setAttribute('aria-expanded',String(o));b.textContent=o?'Hide extra options':'Show all options';});}
 function openFineFor(el){const p=el.closest('.panel');if(p&&el.closest('.fine')&&!fineOpen[p.id.slice(2)]){fineOpen[p.id.slice(2)]=1;store.set('tw_fine',JSON.stringify(fineOpen));applyFine();}}
 $$('.fineBtn').forEach(b=>b.onclick=()=>{fineOpen[b.dataset.fine]=fineOpen[b.dataset.fine]?0:1;store.set('tw_fine',JSON.stringify(fineOpen));applyFine();});
 
@@ -47,7 +45,6 @@ function findBuild(){const E=[];const add=(name,keys,run,where)=>E.push({name,ke
   add('Auto suggestions','auto suggest candidates cut out',()=>{$('#bAuto').click();},'Action');
   add('Preview','preview finished clean',()=>$('#bPrev').click(),'View');add('Isolate pop-out','isolate only pop-out',()=>{setTab('popout');$('#bIso').click();},'View');
   add('Undo','undo',()=>$('#bUndo').click(),'Action');add('Redo','redo',()=>$('#bRedo').click(),'Action');
-  add(st.studio?'Guided mode':'Studio mode','studio guided simple advanced all controls',()=>$('#bMode').click(),'View');
   add('Help and shortcuts','help shortcuts keys how',()=>$('#bHelp').click(),'Help');
   const seen=new Set();
   $$('.panel').forEach(p=>{const step=p.id.slice(2);
@@ -69,7 +66,6 @@ function findRender(){const q=findIn.value.trim().toLowerCase().split(/\s+/).fil
   $('#findEmpty').hidden=!!findRes.length;}
 function findRun(i){const r=findRes[i];if(!r)return;findDlg.close();setTimeout(()=>r.e.run(),30);}
 function findOpen(){if(findDlg.open)return;findList=findBuild();findIn.value='';findSel=0;findRender();findDlg.showModal();findIn.focus();}
-$('#bFind').onclick=findOpen;
 findIn.addEventListener('input',()=>{findSel=0;findRender();});
 findIn.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();findSel=Math.min(findRes.length-1,findSel+1);findRender();$('#fo'+findSel)?.scrollIntoView({block:'nearest'});}
   else if(e.key==='ArrowUp'){e.preventDefault();findSel=Math.max(0,findSel-1);findRender();$('#fo'+findSel)?.scrollIntoView({block:'nearest'});}
